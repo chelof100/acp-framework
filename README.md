@@ -1,8 +1,21 @@
 # ACP Framework — Agent Control Protocol
 
-**El primer marco completo para gobernar agentes de IA autónomos.**
+Arquitectura Constitucional para la Gobernanza de Agentes Autónomos
 
-Combina visión estratégica, arquitectura de gobernanza y protocolo técnico en un sistema coherente y verificable.
+ACP (Agent Control Protocol) es un framework integral de gobernanza y ejecución verificable para agentes de IA autónomos.
+
+Define un marco unificado que integra:
+
+Fundamentos arquitectónicos de soberanía institucional
+
+Modelo formal de gobernanza (GAT)
+
+Protocolo criptográfico de control y delegación
+
+Infraestructura de cumplimiento y certificación pública
+
+ACP no es únicamente un protocolo de mensajería o firma.
+Es una arquitectura constitucional que establece reglas formales bajo las cuales un agente autónomo puede actuar.
 
 **Versión:** 1.2 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
 
