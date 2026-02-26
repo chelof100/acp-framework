@@ -1,7 +1,5 @@
 Submission Draft — IEEE S&P / NDSS
 
-Ahora estructuramos el paper académico.
-
 Title
 
 ACP: A Byzantine-Resilient Decentralized Capability Authorization Architecture
