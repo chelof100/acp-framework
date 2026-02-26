@@ -1,0 +1,4 @@
+Nivel,Nombre,Responsabilidad,Entregables clave,Objetivo de madurez
+1,Arquitectura Soberana de IA,Estrategia institucional y soberanía,"Política de board, roadmap de sustitución",Todas las organizaciones
+2,Modelo GAT,Arquitectura de sistemas y principios,"Modelo de 6 capas, matriz de madurez, reglas de orquestación",Equipos de arquitectura
+3,Protocolo ACP,Ejecución en tiempo real y auditoría,"Capability Tokens, Execution Tokens, Audit Ledger, Motor de Riesgo",Equipos de ingeniería

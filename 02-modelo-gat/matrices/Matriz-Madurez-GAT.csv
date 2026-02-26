@@ -1,0 +1,7 @@
+Nivel,Nombre,Característica principal,Tecnologías clave,Tiempo típico
+0,Automatización básica,Decisión y ejecución acopladas,Scripts / Zapier,-
+1,Validación estructural,Separación básica decisión-ejecución,Guardrails básicos,4-6 semanas
+2,Trazabilidad completa,Logs estructurados persistentes,ACP + OpenTelemetry,8-12 semanas
+3,Control dinámico,Permisos configurables en tiempo real,ACP + Policy Engine,12-16 semanas
+4,Gobernanza multiagente,Orquestación + límites de delegación,ACP + GAT Registry,4-6 meses
+5,Arquitectura soberana,Desacoplamiento total de proveedor,ACP + GAT completo,6-9 meses

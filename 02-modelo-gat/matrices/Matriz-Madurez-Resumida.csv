@@ -1,0 +1,6 @@
+Nivel,Nombre,Clave
+0–1,Básico,Decisión = Ejecución
+2,Trazable,Logs estructurados
+3,Controlado,ACP + permisos dinámicos
+4,Multiagente gobernado,Orquestación + límites
+5,Soberano,Sustituible + independiente
