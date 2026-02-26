@@ -1,12 +1,14 @@
 Submission Draft — IEEE S&P / NDSS
 
+> **Nota de estado:** Este paper describe **ACP-D**, la extensión descentralizada de la especificación ACP, orientada a la hoja de ruta arquitectónica v2.0. La especificación de producción actual (ACP v1.x) utiliza un emisor centralizado con firma unilateral Ed25519 y verificación criptográfica local. ACP-D — con firma de umbral, consenso BFT y gobernanza descentralizada — es una evolución arquitectónica planificada, aún no implementada.
+
 Title
 
-ACP: A Byzantine-Resilient Decentralized Capability Authorization Architecture
+ACP-D: A Byzantine-Resilient Decentralized Capability Authorization Architecture
 
 Abstract
 
-Proponemos ACP, un sistema de autorización basado en capacidades que elimina emisores centralizados y reemplaza la firma unilateral por consenso criptográfico tolerante a fallos bizantinos. ACP integra gobernanza verificable, reputación adaptativa y vinculación económica opcional. Demostramos formalmente su seguridad bajo modelo n ≥ 3f+1 y validamos propiedades mediante modelado TLA+.
+Proponemos ACP-D, una extensión descentralizada de la arquitectura de autorización basada en capacidades del Agent Control Protocol (ACP). Construida sobre el modelo criptográfico de capacidades de ACP v1.x, ACP-D elimina el emisor centralizado y reemplaza la firma unilateral por consenso criptográfico tolerante a fallos bizantinos. ACP-D integra gobernanza verificable, reputación adaptativa y vinculación económica opcional. Demostramos formalmente su seguridad bajo modelo n ≥ 3f+1 y validamos propiedades mediante modelado TLA+.
 
 1. Introduction
 
@@ -126,4 +128,4 @@ Costo computacional zk
 
 10. Conclusion
 
-ACP introduce autorización tolerante a fallos bizantinos como primitiva nativa en sistemas distribuidos.
+ACP-D introduce autorización tolerante a fallos bizantinos como primitiva nativa en sistemas distribuidos, extendiendo el modelo de capacidades de ACP v1.x hacia una arquitectura de gobernanza completamente descentralizada.
