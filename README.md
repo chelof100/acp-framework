@@ -17,7 +17,7 @@ Infraestructura de cumplimiento y certificación pública
 ACP no es únicamente un protocolo de mensajería o firma.
 Es una arquitectura constitucional que establece reglas formales bajo las cuales un agente autónomo puede actuar.
 
-**Versión:** 1.2 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
+**Versión:** 1.3 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
 
 ---
 
@@ -260,6 +260,7 @@ Documentación académica y técnica para audiencias externas.
 | **v1.0** | ✅ Completo | 10 documentos normativos — sistema centralizado |
 | **v1.1** | ✅ Completo | PAY-1.0, REP-1.1, ITA-1.1 BFT + Architecture Spec |
 | **v1.2** | ✅ Completo | CONF-1.1 (5 niveles), compliance chain completa, 12 test vectors |
+| **v1.3** | ✅ Completo | Binario IUT (acp-evaluate, 12/12 PASS), compliance runner (ACR-1.0), Python SDK |
 | **v2.0** | 📋 Especificado | ACP-D full (BFT, ZK-proofs, DIDs) |
 | **Paper** | ✍️ En preparación | Objetivo IEEE S&P / NDSS |
 
