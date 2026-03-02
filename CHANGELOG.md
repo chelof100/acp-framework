@@ -9,6 +9,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.3.0] — 2026-03-02
+
+### Corregido — Python SDK (reconciliado con Go server v1.0)
+- **`sdk/python/acp/identity.py`** — Formato AgentID corregido: era `"acp:agent:"+base64url(SHA-256(pk))`, ahora `base58(SHA-256(pk))` igualando Go `DeriveAgentID()`
+- **`sdk/python/acp/signer.py`** — Campo de firma en capability token: era anidado `capability["proof"]["signature"]` (estilo W3C VC), ahora plano `capability["sig"]` según ACP-CT-1.0
+- **`sdk/python/acp/client.py`** — Transporte HTTP para `/acp/v1/verify`: era cuerpo JSON, ahora headers HTTP (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`); binding PoP corregido a `Method|Path|Challenge|base64url(SHA-256(body))` según ACP-HP-1.0; método `register()` añadido
+- **`sdk/python/examples/agent_payment.py`** — Campos del token alineados con struct Go `CapabilityToken`; paso register añadido; demo PoP offline usa binding corregido; flag `--print-pubkey` para flujo de configuración del servidor
+
 ### Agregado — Implementación de Referencia (IUT + Runner)
 - **`pkg/iut`** — Paquete IUT central: `Evaluate()` (lógica L1/L2), `SignCapability()` (Ed25519 sobre SHA-256(JCS(cap))), `resolveDIDKey()` (did:key: → clave pública Ed25519), `checkDelegation()` (reglas DCMA-1.0)
 - **`cmd/acp-evaluate`** — Binario IUT conforme ACP-IUT-PROTOCOL-1.0: lee TestVector de STDIN, escribe Response en STDOUT; flag `--manifest`
