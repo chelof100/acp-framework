@@ -1,0 +1,61 @@
+# Servidor de Referencia ACP — docker-compose para desarrollo local
+#
+# Uso:
+#   1. Copiar .env.example a .env y completar ACP_INSTITUTION_PUBLIC_KEY
+#   2. docker compose up
+#
+# La clave pública de institución es la clave pública Ed25519 del emisor
+# de tokens de capacidad, codificada en base64url sin padding.
+#
+# Para generar una clave de prueba con el SDK Python:
+#   PYTHONPATH=../sdk/python python -c "
+#   from acp.identity import AgentIdentity
+#   import base64
+#   a = AgentIdentity.generate()
+#   print(base64.urlsafe_b64encode(a.public_key_bytes).rstrip(b'=').decode())
+#   "
+#
+# Clave de prueba RFC 8037 test key A (seed 9d61b19d...):
+#   ACP_INSTITUTION_PUBLIC_KEY=cA4s58S2dEJ-qye6EpJaJKKaVfvPT8mAQf97Vo8TInk
+#
+# Endpoints:
+#   GET  http://localhost:${ACP_PORT:-8080}/acp/v1/challenge   — nonce de desafío
+#   POST http://localhost:${ACP_PORT:-8080}/acp/v1/verify       — verifica CT + PoP
+#   POST http://localhost:${ACP_PORT:-8080}/acp/v1/register     — registra clave de agente
+#   GET  http://localhost:${ACP_PORT:-8080}/acp/v1/health       — health check
+
+services:
+  acp-server:
+    image: ghcr.io/chelof100/acp-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: acp-server
+    ports:
+      - "${ACP_PORT:-8080}:8080"
+    environment:
+      ACP_INSTITUTION_PUBLIC_KEY: "${ACP_INSTITUTION_PUBLIC_KEY:?ACP_INSTITUTION_PUBLIC_KEY es requerido}"
+      ACP_ADDR: ":8080"
+      ACP_LOG_LEVEL: "${ACP_LOG_LEVEL:-info}"
+    restart: unless-stopped
+    healthcheck:
+      # distroless no tiene shell — invocar el binario directamente
+      test: ["/acp-server", "-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "acp.version=1.0.0"
+      - "acp.spec=ACP-CT-1.0,ACP-HP-1.0,ACP-SIGN-1.0"
+
+  # ── Opcional: scraping de métricas Prometheus ───────────────────────────────
+  # Descomentar si se agrega endpoint /metrics.
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   ports:
+  #     - "9090:9090"
+  #   depends_on:
+  #     - acp-server
