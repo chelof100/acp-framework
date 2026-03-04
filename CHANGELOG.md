@@ -1,13 +1,33 @@
 # Changelog — ACP (Agent Control Protocol)
 
-All notable changes to the ACP specification are documented in this file.
+Todos los cambios notables a la especificación ACP se documentan en este archivo.
 
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+El formato sigue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
 ## [Unreleased]
+
+---
+
+## [1.4.0] — 2026-03-04
+
+### Agregado — TypeScript SDK
+- **`sdk/typescript/src/identity.ts`** — Clase `AgentIdentity`: método estático `generate()` (par de claves Ed25519 via libsodium), `agentId` (base58-SHA-256 según ACP-SIGN-1.0), `did` (formato did:key:z6Mk...)
+- **`sdk/typescript/src/signer.ts`** — Clase `ACPSigner`: `signCapability()` (Ed25519 sobre SHA-256(JCS(cap))), `signPoP()` (binding `Method|Path|Challenge|base64url(SHA-256(body))` según ACP-HP-1.0)
+- **`sdk/typescript/src/client.ts`** — Clase `ACPClient`: `register()`, `verify()`, `health()` con transporte de headers ACP-HP-1.0 correcto (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`)
+- **`sdk/typescript/tests/`** — 68 tests pasando: suite identity (formato AgentID, formato DID, par de claves), suite signer (firma capability, binding PoP), suite client (flujos register/verify/health)
+
+### Agregado — Rust SDK
+- **`sdk/rust/src/identity.rs`** — Struct `AgentIdentity`: `generate()` (ed25519-dalek), `agent_id()` (base58-SHA-256 según ACP-SIGN-1.0), `did()` (formato did:key:z6Mk...)
+- **`sdk/rust/src/signer.rs`** — Struct `ACPSigner`: `sign_capability()` (Ed25519 sobre SHA-256(JCS(cap))), `sign_pop()` (binding PoP ACP-HP-1.0)
+- **`sdk/rust/src/client.rs`** — Struct `ACPClient`: métodos async `register()`, `verify()`, `health()` via reqwest
+- **`sdk/rust/tests/`** — 43 tests pasando: suites de test identity/signer/client
+- **`sdk/rust/Cargo.toml`** — dependencias: ed25519-dalek, sha2, bs58, serde_json, reqwest, tokio
+
+### Agregado — Docker CI/CD
+- **`.github/workflows/docker.yml`** — Build y push automático de imagen Docker en merge a main; multi-plataforma (linux/amd64, linux/arm64); imágenes etiquetadas `chelof100/acp-go:{version}` y `chelof100/acp-go:latest`
 
 ---
 
@@ -135,7 +155,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-[Unreleased]: https://github.com/traslaia/acp-protocol/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/traslaia/acp-protocol/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/traslaia/acp-protocol/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/traslaia/acp-protocol/releases/tag/v1.0.0
+[Unreleased]: https://github.com/chelof100/acp-framework/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/chelof100/acp-framework/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/chelof100/acp-framework/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/chelof100/acp-framework/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/chelof100/acp-framework/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/chelof100/acp-framework/releases/tag/v1.0.0

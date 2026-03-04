@@ -1,4 +1,4 @@
-//! Tests for AgentIdentity — ACP-SIGN-1.0 identity primitives.
+//! Tests para AgentIdentity — primitivas de identidad ACP-SIGN-1.0.
 
 use acp_sdk::{AgentIdentity, derive_agent_id};
 
@@ -33,10 +33,10 @@ fn public_key_hex_is_64_chars() {
 fn agent_id_is_base58_format() {
     let agent = AgentIdentity::generate();
     let id = agent.agent_id();
-    // Base58 uses Bitcoin alphabet — no 0, O, I, l
+    // Base58 usa el alfabeto Bitcoin — sin 0, O, I, l
     assert!(id.chars().all(|c| !"0OIl".contains(c)));
-    // SHA-256 → 32 bytes → ~43-44 base58 chars
-    assert!(id.len() >= 40 && id.len() <= 50, "unexpected length: {}", id.len());
+    // SHA-256 → 32 bytes → ~43-44 chars en base58
+    assert!(id.len() >= 40 && id.len() <= 50, "longitud inesperada: {}", id.len());
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn derive_agent_id_is_deterministic() {
 fn debug_format_does_not_expose_private_key() {
     let agent = AgentIdentity::generate();
     let debug = format!("{:?}", agent);
-    // Should show agent_id and did, but NOT private key bytes
+    // Debe mostrar agent_id y did, pero NO los bytes de la clave privada
     assert!(debug.contains("agent_id"));
     assert!(debug.contains("did"));
 }

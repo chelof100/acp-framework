@@ -1,13 +1,13 @@
 """
-acp.signer — JCS canonicalization + Ed25519 signing pipeline (ACP-SIGN-1.0)
+acp.signer — Canonicalización JCS + pipeline de firma Ed25519 (ACP-SIGN-1.0)
 
-ACP signing pipeline:
-  1. Canonicalize the capability object using JCS (RFC 8785)
-  2. Compute SHA-256 of the canonical bytes
-  3. Sign the digest with Ed25519
-  4. Embed the signature as base64url in the capability's flat "sig" field (ACP-CT-1.0)
+Pipeline de firma ACP:
+  1. Canonicalizar el objeto capability usando JCS (RFC 8785)
+  2. Calcular SHA-256 de los bytes canónicos
+  3. Firmar el digest con Ed25519
+  4. Embeber la firma como base64url en el campo plano "sig" del capability (ACP-CT-1.0)
 
-Usage:
+Uso:
     from acp.identity import AgentIdentity
     from acp.signer import ACPSigner
 
@@ -20,15 +20,15 @@ Usage:
         "sub": agent.agent_id,
         "iat": 1700000000,
         "exp": 1700003600,
-        "nonce": "random-nonce",
+        "nonce": "nonce-aleatorio",
         "cap": ["acp:cap:financial.payment"],
         "resource": "org.example/accounts/ACC-001",
     }
 
     signed = signer.sign_capability(capability)
-    # signed["sig"] contains the base64url Ed25519 signature (flat field)
+    # signed["sig"] contiene la firma Ed25519 en base64url (campo plano)
 
-    # Verify
+    # Verificar
     is_valid = ACPSigner.verify_capability(signed, agent.public_key_bytes)
 """
 from __future__ import annotations
@@ -58,10 +58,10 @@ def _jcs_canonicalize(obj: Any) -> bytes:
     """
     JSON Canonicalization Scheme (RFC 8785).
 
-    Produces deterministic UTF-8 bytes:
-    - Object keys sorted lexicographically
-    - No whitespace
-    - Unicode escapes for control characters
+    Produce bytes UTF-8 determinísticos:
+    - Claves de objeto ordenadas lexicográficamente
+    - Sin espacios
+    - Escapes Unicode para caracteres de control
     """
     if obj is None:
         return b"null"
@@ -70,7 +70,7 @@ def _jcs_canonicalize(obj: Any) -> bytes:
     if isinstance(obj, int):
         return str(obj).encode()
     if isinstance(obj, float):
-        # Use JSON representation (no trailing zeros)
+        # Usar representación JSON (sin ceros finales)
         return json.dumps(obj, separators=(",", ":")).encode()
     if isinstance(obj, str):
         return json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode()
@@ -78,19 +78,19 @@ def _jcs_canonicalize(obj: Any) -> bytes:
         items = b",".join(_jcs_canonicalize(v) for v in obj)
         return b"[" + items + b"]"
     if isinstance(obj, dict):
-        # Sort keys lexicographically by their Unicode code points
+        # Ordenar claves lexicográficamente por puntos de código Unicode
         sorted_pairs = sorted(obj.items(), key=lambda kv: kv[0])
         items = b",".join(
             _jcs_canonicalize(k) + b":" + _jcs_canonicalize(v)
             for k, v in sorted_pairs
         )
         return b"{" + items + b"}"
-    raise TypeError(f"Not JSON-serializable: {type(obj)}")
+    raise TypeError(f"No serializable a JSON: {type(obj)}")
 
 
 class ACPSigner:
     """
-    ACP signing and verification pipeline (ACP-SIGN-1.0).
+    Pipeline de firma y verificación ACP (ACP-SIGN-1.0).
 
     Pipeline: JCS(capability) → SHA-256 → Ed25519.sign → base64url
     """
@@ -98,19 +98,19 @@ class ACPSigner:
     def __init__(self, identity: AgentIdentity) -> None:
         self._identity = identity
 
-    # ─── Signing ──────────────────────────────────────────────────────────────
+    # ─── Firma ────────────────────────────────────────────────────────────────
 
     def sign_capability(self, capability: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Sign a capability object and embed the signature in capability["sig"].
+        Firma un objeto capability y embebe la firma en capability["sig"].
 
-        The capability dict is NOT modified in-place. A copy is returned with
-        the "sig" field added/replaced (flat field per ACP-CT-1.0).
+        El dict capability NO se modifica en lugar. Se retorna una copia con
+        el campo "sig" agregado/reemplazado (campo plano según ACP-CT-1.0).
 
-        The signing input is the canonical JCS bytes of the capability WITHOUT
-        the "sig" field (so the signature is not included in what's signed).
+        La entrada de firma son los bytes JCS canónicos del capability SIN
+        el campo "sig" (para que la firma no esté incluida en lo que se firma).
         """
-        # Strip existing signature before signing
+        # Eliminar firma existente antes de firmar
         cap_to_sign = {k: v for k, v in capability.items() if k != "sig"}
 
         canonical = _jcs_canonicalize(cap_to_sign)
@@ -123,10 +123,10 @@ class ACPSigner:
         return signed
 
     def sign_bytes(self, data: bytes) -> bytes:
-        """Sign arbitrary bytes directly (for PoP challenges)."""
+        """Firma bytes arbitrarios directamente (para desafíos PoP)."""
         return self._identity.sign(data)
 
-    # ─── Verification ─────────────────────────────────────────────────────────
+    # ─── Verificación ─────────────────────────────────────────────────────────
 
     @staticmethod
     def verify_capability(
@@ -134,16 +134,16 @@ class ACPSigner:
         public_key_bytes: bytes,
     ) -> bool:
         """
-        Verify a signed capability against a 32-byte Ed25519 public key.
+        Verifica un capability firmado contra una clave pública Ed25519 de 32 bytes.
 
-        Returns True if the signature is valid, False otherwise.
-        Expects the signature in the flat "sig" field (ACP-CT-1.0).
+        Retorna True si la firma es válida, False en caso contrario.
+        Espera la firma en el campo plano "sig" (ACP-CT-1.0).
         """
         sig_b64 = capability.get("sig")
         if not sig_b64:
             return False
 
-        # Reconstruct signing input (capability without "sig")
+        # Reconstruir entrada de firma (capability sin "sig")
         cap_to_verify = {k: v for k, v in capability.items() if k != "sig"}
 
         try:
@@ -159,5 +159,5 @@ class ACPSigner:
 
     @staticmethod
     def canonicalize(obj: Any) -> bytes:
-        """Expose JCS canonicalization for external use."""
+        """Expone la canonicalización JCS para uso externo."""
         return _jcs_canonicalize(obj)

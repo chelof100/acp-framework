@@ -1,19 +1,19 @@
 """
-acp.client — HTTP ACP client with automatic PoP handshake (ACP-HP-1.0)
+acp.client — Cliente HTTP ACP con handshake PoP automático (ACP-HP-1.0)
 
-The ACPClient handles the full ACP authorization flow:
-  1. POST /acp/v1/register → register agent's public key (once per agent)
-  2. GET  /acp/v1/challenge → receive one-time nonce
-  3. Sign PoP: Method|Path|Challenge|base64url(SHA-256(body)) → Ed25519
-  4. POST /acp/v1/verify   → send token + PoP via HTTP headers, receive decision
+El ACPClient maneja el flujo completo de autorización ACP:
+  1. POST /acp/v1/register → registrar clave pública del agente (una vez por agente)
+  2. GET  /acp/v1/challenge → recibir nonce de un solo uso
+  3. Firmar PoP: Method|Path|Challenge|base64url(SHA-256(body)) → Ed25519
+  4. POST /acp/v1/verify   → enviar token + PoP via headers HTTP, recibir decisión
 
-HTTP headers used by verify():
+Headers HTTP usados por verify():
   Authorization:   Bearer <capability_token_json>
   X-ACP-Agent-ID:  <agent_id>
   X-ACP-Challenge: <challenge>
   X-ACP-Signature: <pop_signature>
 
-Usage:
+Uso:
     from acp.identity import AgentIdentity
     from acp.signer import ACPSigner
     from acp.client import ACPClient
@@ -26,10 +26,10 @@ Usage:
         signer=signer,
     )
 
-    # Register agent with the server (once)
+    # Registrar agente con el servidor (una vez)
     client.register()
 
-    # Verify a capability token
+    # Verificar un token de capacidad
     result = client.verify(capability_token=signed_token)
     print(result)  # {"ok": true, "agent_id": "...", "capabilities": [...]}
 """
@@ -48,7 +48,7 @@ from .signer import ACPSigner
 
 
 class ACPError(Exception):
-    """Raised when the ACP server returns an error or the request fails."""
+    """Lanzado cuando el servidor ACP retorna un error o la solicitud falla."""
 
     def __init__(self, message: str, status_code: Optional[int] = None) -> None:
         super().__init__(message)
@@ -56,7 +56,7 @@ class ACPError(Exception):
 
 
 def _post_json(url: str, body: Dict[str, Any], timeout: int = 10) -> Dict[str, Any]:
-    """Minimal HTTP POST with JSON body, no external dependencies."""
+    """POST HTTP mínimo con body JSON, sin dependencias externas."""
     data = json.dumps(body).encode("utf-8")
     req = Request(url, data=data, headers={"Content-Type": "application/json"})
     try:
@@ -72,11 +72,11 @@ def _post_json(url: str, body: Dict[str, Any], timeout: int = 10) -> Dict[str, A
             f"HTTP {e.code}: {err.get('error', str(err))}", status_code=e.code
         ) from e
     except URLError as e:
-        raise ACPError(f"Connection failed: {e.reason}") from e
+        raise ACPError(f"Conexión fallida: {e.reason}") from e
 
 
 def _get_json(url: str, timeout: int = 10) -> Dict[str, Any]:
-    """Minimal HTTP GET returning parsed JSON."""
+    """GET HTTP mínimo que retorna JSON parseado."""
     req = Request(url)
     try:
         with urlopen(req, timeout=timeout) as resp:
@@ -84,15 +84,15 @@ def _get_json(url: str, timeout: int = 10) -> Dict[str, Any]:
     except HTTPError as e:
         raise ACPError(f"HTTP {e.code}", status_code=e.code) from e
     except URLError as e:
-        raise ACPError(f"Connection failed: {e.reason}") from e
+        raise ACPError(f"Conexión fallida: {e.reason}") from e
 
 
 class ACPClient:
     """
-    ACP HTTP client implementing the Challenge/PoP handshake (ACP-HP-1.0).
+    Cliente HTTP ACP que implementa el handshake Challenge/PoP (ACP-HP-1.0).
 
-    The client is stateless between calls. Each `verify()` call performs a
-    fresh challenge request to prevent replay attacks.
+    El cliente no mantiene estado entre llamadas. Cada llamada a `verify()` realiza
+    una nueva solicitud de desafío para prevenir ataques de replay.
     """
 
     def __init__(
@@ -104,27 +104,27 @@ class ACPClient:
     ) -> None:
         """
         Args:
-            server_url: Base URL of the ACP validator (e.g. "http://localhost:8080")
-            identity:   Agent identity (Ed25519 key pair)
-            signer:     ACPSigner instance for producing PoP signatures
-            timeout:    HTTP timeout in seconds
+            server_url: URL base del validador ACP (ej. "http://localhost:8080")
+            identity:   Identidad del agente (par de claves Ed25519)
+            signer:     Instancia de ACPSigner para producir firmas PoP
+            timeout:    Timeout HTTP en segundos
         """
         self._server = server_url.rstrip("/")
         self._identity = identity
         self._signer = signer
         self._timeout = timeout
 
-    # ─── Public API ───────────────────────────────────────────────────────────
+    # ─── API Pública ──────────────────────────────────────────────────────────
 
     def register(self) -> Dict[str, Any]:
         """
-        Register this agent's public key with the ACP server.
+        Registra la clave pública de este agente con el servidor ACP.
 
         POST /acp/v1/register
         Body: {"agent_id": "<agent_id>", "public_key_hex": "<base64url(pubkey)>"}
 
-        Must be called once before verify(). In production this endpoint is
-        restricted to institutional administrators.
+        Debe llamarse una vez antes de verify(). En producción este endpoint
+        está restringido a administradores institucionales.
         """
         pubkey_b64 = base64.urlsafe_b64encode(
             self._identity.public_key_bytes
@@ -140,30 +140,30 @@ class ACPClient:
         capability_token: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        Full ACP verification flow (ACP-HP-1.0):
-          1. GET /acp/v1/challenge  → one-time nonce
-          2. Compute PoP: Method|Path|Challenge|base64url(SHA-256(body))
-          3. POST /acp/v1/verify via HTTP headers (Authorization + X-ACP-*)
+        Flujo completo de verificación ACP (ACP-HP-1.0):
+          1. GET /acp/v1/challenge  → nonce de un solo uso
+          2. Calcular PoP: Method|Path|Challenge|base64url(SHA-256(body))
+          3. POST /acp/v1/verify via headers HTTP (Authorization + X-ACP-*)
 
         Args:
-            capability_token: Signed capability token dict (from ACPSigner).
+            capability_token: Dict de token de capacidad firmado (de ACPSigner).
 
         Returns:
             {"ok": true, "agent_id": "...", "capabilities": [...], ...}
 
         Raises:
-            ACPError on HTTP or connection failure.
+            ACPError en caso de error HTTP o de conexión.
         """
-        # Step 1: Get challenge
+        # Paso 1: Obtener desafío
         challenge_resp = self._get_challenge()
         challenge = challenge_resp["challenge"]
 
-        # Step 2: Serialize token and compute PoP over empty body
+        # Paso 2: Serializar token y calcular PoP sobre body vacío
         token_json = json.dumps(capability_token, separators=(",", ":"))
         body = b""
         pop_sig = self._sign_pop("POST", "/acp/v1/verify", challenge, body)
 
-        # Step 3: POST with ACP headers
+        # Paso 3: POST con headers ACP
         return self._post_with_acp_headers(
             f"{self._server}/acp/v1/verify",
             body=body,
@@ -174,13 +174,13 @@ class ACPClient:
         )
 
     def health(self) -> Dict[str, Any]:
-        """GET /acp/v1/health — check server availability."""
+        """GET /acp/v1/health — verificar disponibilidad del servidor."""
         return _get_json(f"{self._server}/acp/v1/health", timeout=self._timeout)
 
-    # ─── Internal ─────────────────────────────────────────────────────────────
+    # ─── Interno ──────────────────────────────────────────────────────────────
 
     def _get_challenge(self) -> Dict[str, Any]:
-        """Fetch a one-time 128-bit challenge nonce (ACP-HP-1.0 §2)."""
+        """Obtiene un nonce de desafío de 128 bits de un solo uso (ACP-HP-1.0 §2)."""
         return _get_json(
             f"{self._server}/acp/v1/challenge", timeout=self._timeout
         )
@@ -189,12 +189,12 @@ class ACPClient:
         self, method: str, path: str, challenge: str, body: bytes
     ) -> str:
         """
-        Compute Proof-of-Possession signature (ACP-HP-1.0 channel binding).
+        Calcula la firma de Prueba de Posesión (ACP-HP-1.0 channel binding).
 
         signed_payload = Method + "|" + Path + "|" + Challenge + "|" + base64url(SHA-256(body))
         sig = Ed25519(sk, SHA-256(signed_payload_bytes))
 
-        Returns base64url-encoded signature (no padding).
+        Retorna firma codificada en base64url (sin padding).
         """
         body_hash = hashlib.sha256(body).digest()
         body_hash_b64 = base64.urlsafe_b64encode(body_hash).rstrip(b"=").decode()
@@ -212,7 +212,7 @@ class ACPClient:
         challenge: str,
         pop_sig: str,
     ) -> Dict[str, Any]:
-        """POST request with ACP authentication headers."""
+        """POST con headers de autenticación ACP."""
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {token_json}",
@@ -234,4 +234,4 @@ class ACPClient:
                 f"HTTP {e.code}: {err.get('error', str(err))}", status_code=e.code
             ) from e
         except URLError as e:
-            raise ACPError(f"Connection failed: {e.reason}") from e
+            raise ACPError(f"Conexión fallida: {e.reason}") from e

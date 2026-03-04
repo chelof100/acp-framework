@@ -1,19 +1,19 @@
 /**
- * acp/client — HTTP ACP client with automatic PoP handshake (ACP-HP-1.0)
+ * acp/client — Cliente HTTP ACP con handshake PoP automático (ACP-HP-1.0)
  *
- * The ACPClient handles the full ACP authorization flow:
- *   1. POST /acp/v1/register → register agent's public key (once per agent)
- *   2. GET  /acp/v1/challenge → receive one-time nonce
- *   3. Sign PoP: Method|Path|Challenge|base64url(SHA-256(body)) → SHA-256 → Ed25519
- *   4. POST /acp/v1/verify   → send token + PoP via HTTP headers, receive decision
+ * El ACPClient maneja el flujo completo de autorización ACP:
+ *   1. POST /acp/v1/register → registrar clave pública del agente (una vez por agente)
+ *   2. GET  /acp/v1/challenge → recibir nonce de un solo uso
+ *   3. Firmar PoP: Method|Path|Challenge|base64url(SHA-256(body)) → SHA-256 → Ed25519
+ *   4. POST /acp/v1/verify   → enviar token + PoP via headers HTTP, recibir decisión
  *
- * HTTP headers used by verify():
+ * Headers HTTP usados por verify():
  *   Authorization:   Bearer <capability_token_json>
  *   X-ACP-Agent-ID:  <agent_id>
  *   X-ACP-Challenge: <challenge>
  *   X-ACP-Signature: <pop_signature>
  *
- * Zero runtime dependencies — uses only Node.js built-in `node:crypto` and `fetch` (Node 18+).
+ * Sin dependencias externas en runtime — usa solo `node:crypto` de Node.js y `fetch` (Node 18+).
  *
  * @example
  * ```typescript
@@ -23,10 +23,10 @@
  * const signer = new ACPSigner(agent);
  * const client = new ACPClient('http://localhost:8080', agent, signer);
  *
- * // Register agent with the server (once)
+ * // Registrar agente con el servidor (una vez)
  * await client.register();
  *
- * // Verify a capability token
+ * // Verificar un token de capacidad
  * const result = await client.verify(signedToken);
  * console.log(result); // { ok: true, agent_id: '...', capabilities: [...] }
  * ```
@@ -38,9 +38,9 @@ import { ACPSigner } from './signer';
 
 // ─── ACPError ─────────────────────────────────────────────────────────────────
 
-/** Thrown when the ACP server returns an error or the request fails. */
+/** Lanzado cuando el servidor ACP retorna un error o la solicitud falla. */
 export class ACPError extends Error {
-  /** HTTP status code, if applicable. */
+  /** Código de estado HTTP, si aplica. */
   readonly statusCode?: number;
 
   constructor(message: string, statusCode?: number) {
@@ -53,10 +53,10 @@ export class ACPError extends Error {
 // ─── ACPClient ────────────────────────────────────────────────────────────────
 
 /**
- * ACP HTTP client implementing the Challenge/PoP handshake (ACP-HP-1.0).
+ * Cliente HTTP ACP que implementa el handshake Challenge/PoP (ACP-HP-1.0).
  *
- * The client is stateless between calls. Each verify() call performs a
- * fresh challenge request to prevent replay attacks.
+ * El cliente no mantiene estado entre llamadas. Cada llamada a verify() realiza
+ * una nueva solicitud de desafío para prevenir ataques de replay.
  */
 export class ACPClient {
   private readonly _server: string;
@@ -65,10 +65,10 @@ export class ACPClient {
   private readonly _timeoutMs: number;
 
   /**
-   * @param serverUrl  Base URL of the ACP validator (e.g. "http://localhost:8080")
-   * @param identity   Agent identity (Ed25519 key pair)
-   * @param signer     ACPSigner instance for producing PoP signatures
-   * @param timeoutMs  HTTP timeout in milliseconds (default: 10000)
+   * @param serverUrl  URL base del validador ACP (ej. "http://localhost:8080")
+   * @param identity   Identidad del agente (par de claves Ed25519)
+   * @param signer     Instancia de ACPSigner para producir firmas PoP
+   * @param timeoutMs  Timeout HTTP en milisegundos (por defecto: 10000)
    */
   constructor(
     serverUrl: string,
@@ -82,16 +82,16 @@ export class ACPClient {
     this._timeoutMs = timeoutMs;
   }
 
-  // ─── Public API ─────────────────────────────────────────────────────────────
+  // ─── API Pública ─────────────────────────────────────────────────────────────
 
   /**
-   * Register this agent's public key with the ACP server.
+   * Registra la clave pública de este agente con el servidor ACP.
    *
    * POST /acp/v1/register
    * Body: { "agent_id": "<agent_id>", "public_key_hex": "<base64url(pubkey)>" }
    *
-   * Must be called once before verify(). In production, this endpoint is
-   * restricted to institutional administrators.
+   * Debe llamarse una vez antes de verify(). En producción, este endpoint
+   * está restringido a administradores institucionales.
    */
   async register(): Promise<Record<string, unknown>> {
     const pubKeyB64 = this._identity.publicKeyBytes.toString('base64url');
@@ -102,30 +102,30 @@ export class ACPClient {
   }
 
   /**
-   * Full ACP verification flow (ACP-HP-1.0):
-   *   1. GET /acp/v1/challenge  → one-time nonce
-   *   2. Compute PoP: Method|Path|Challenge|base64url(SHA-256(body))
-   *   3. POST /acp/v1/verify via HTTP headers (Authorization + X-ACP-*)
+   * Flujo completo de verificación ACP (ACP-HP-1.0):
+   *   1. GET /acp/v1/challenge  → nonce de un solo uso
+   *   2. Calcular PoP: Method|Path|Challenge|base64url(SHA-256(body))
+   *   3. POST /acp/v1/verify via headers HTTP (Authorization + X-ACP-*)
    *
-   * @param capabilityToken Signed capability token object (from ACPSigner)
+   * @param capabilityToken Objeto de token de capacidad firmado (de ACPSigner)
    * @returns { ok: true, agent_id: '...', capabilities: [...] }
    */
   async verify(
     capabilityToken: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
-    // Step 1: Get challenge
+    // Paso 1: Obtener desafío
     const challengeResp = await this._getJson('/acp/v1/challenge');
     const challenge = challengeResp['challenge'] as string | undefined;
     if (!challenge) {
-      throw new ACPError("server response missing 'challenge' field");
+      throw new ACPError("la respuesta del servidor no contiene el campo 'challenge'");
     }
 
-    // Step 2: Serialize token (compact JSON) and compute PoP over empty body
+    // Paso 2: Serializar token (JSON compacto) y calcular PoP sobre body vacío
     const tokenJson = JSON.stringify(capabilityToken);
     const body = Buffer.alloc(0);
     const popSig = this._signPop('POST', '/acp/v1/verify', challenge, body);
 
-    // Step 3: POST with ACP headers
+    // Paso 3: POST con headers ACP
     return this._postWithAcpHeaders(
       '/acp/v1/verify',
       body,
@@ -137,21 +137,21 @@ export class ACPClient {
   }
 
   /**
-   * GET /acp/v1/health — check server availability.
+   * GET /acp/v1/health — verificar disponibilidad del servidor.
    */
   async health(): Promise<Record<string, unknown>> {
     return this._getJson('/acp/v1/health');
   }
 
-  // ─── Internal ───────────────────────────────────────────────────────────────
+  // ─── Interno ─────────────────────────────────────────────────────────────────
 
   /**
-   * Compute Proof-of-Possession signature (ACP-HP-1.0 channel binding).
+   * Calcula la firma de Prueba de Posesión (ACP-HP-1.0 channel binding).
    *
    * signed_payload = Method + "|" + Path + "|" + Challenge + "|" + base64url(SHA-256(body))
    * sig = Ed25519(sk, SHA-256(signed_payload_bytes))
    *
-   * Returns base64url-encoded signature (no padding).
+   * Retorna firma codificada en base64url (sin padding).
    */
   private _signPop(
     method: string,
@@ -181,7 +181,7 @@ export class ACPClient {
       return (await resp.json()) as Record<string, unknown>;
     } catch (err) {
       if (err instanceof ACPError) throw err;
-      throw new ACPError(`Connection failed: ${(err as Error).message}`);
+      throw new ACPError(`Conexión fallida: ${(err as Error).message}`);
     } finally {
       clearTimeout(timer);
     }
@@ -212,7 +212,7 @@ export class ACPClient {
       return (await resp.json()) as Record<string, unknown>;
     } catch (err) {
       if (err instanceof ACPError) throw err;
-      throw new ACPError(`Connection failed: ${(err as Error).message}`);
+      throw new ACPError(`Conexión fallida: ${(err as Error).message}`);
     } finally {
       clearTimeout(timer);
     }
@@ -253,7 +253,7 @@ export class ACPClient {
       return (await resp.json()) as Record<string, unknown>;
     } catch (err) {
       if (err instanceof ACPError) throw err;
-      throw new ACPError(`Connection failed: ${(err as Error).message}`);
+      throw new ACPError(`Conexión fallida: ${(err as Error).message}`);
     } finally {
       clearTimeout(timer);
     }

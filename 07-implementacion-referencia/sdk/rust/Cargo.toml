@@ -2,7 +2,7 @@
 name = "acp-sdk"
 version = "1.0.0"
 edition = "2021"
-description = "ACP (Agent Control Protocol) SDK for Rust — Agent identity, capability signing, and HTTP client"
+description = "SDK de ACP (Protocolo de Control de Agentes) para Rust — Identidad de agente, firma de capacidades y cliente HTTP"
 license = "Apache-2.0"
 repository = "https://github.com/chelof100/acp-framework-en"
 keywords = ["acp", "agent", "capability", "ed25519", "protocol"]

@@ -1,8 +1,8 @@
-//! # ACP SDK for Rust
+//! # ACP SDK para Rust
 //!
-//! Agent Control Protocol (ACP) v1.0 client SDK.
+//! SDK cliente del Protocolo de Control de Agentes (ACP) v1.0.
 //!
-//! ## Quick Start
+//! ## Inicio Rápido
 //!
 //! ```rust,no_run
 //! use acp_sdk::{AgentIdentity, ACPSigner, ACPClient};

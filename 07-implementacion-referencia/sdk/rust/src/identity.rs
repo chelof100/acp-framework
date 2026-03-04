@@ -1,54 +1,54 @@
-//! ACP Agent Identity — Ed25519 keypair, AgentID (base58), DID (did:key)
+//! Identidad de Agente ACP — par de claves Ed25519, AgentID (base58), DID (did:key)
 //!
-//! Implements ACP-SIGN-1.0 §3 identity primitives.
+//! Implementa las primitivas de identidad ACP-SIGN-1.0 §3.
 
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use rand::rngs::OsRng;
 use sha2::{Sha256, Digest};
 
-/// Ed25519 agent identity.
+/// Identidad de agente Ed25519.
 ///
-/// AgentID  = base58(SHA-256(raw 32-byte pubkey))
-/// DID      = "did:key:z" + base58(0xed 0x01 || pubkey)
+/// AgentID  = base58(SHA-256(clave pública raw de 32 bytes))
+/// DID      = "did:key:z" + base58(0xed 0x01 || clave pública)
 #[derive(Clone)]
 pub struct AgentIdentity {
     signing_key: SigningKey,
 }
 
 impl AgentIdentity {
-    /// Generate a new random Ed25519 keypair.
+    /// Genera un nuevo par de claves Ed25519 aleatorio.
     pub fn generate() -> Self {
         let signing_key = SigningKey::generate(&mut OsRng);
         Self { signing_key }
     }
 
-    /// Reconstruct from raw 32-byte private key bytes.
+    /// Reconstruye la identidad a partir de 32 bytes raw de clave privada.
     pub fn from_private_bytes(bytes: &[u8; 32]) -> Self {
         let signing_key = SigningKey::from_bytes(bytes);
         Self { signing_key }
     }
 
-    /// Raw 32-byte private key.
+    /// Clave privada raw de 32 bytes.
     pub fn private_key_bytes(&self) -> [u8; 32] {
         self.signing_key.to_bytes()
     }
 
-    /// Raw 32-byte public key.
+    /// Clave pública raw de 32 bytes.
     pub fn public_key_bytes(&self) -> [u8; 32] {
         self.signing_key.verifying_key().to_bytes()
     }
 
-    /// Public key as lowercase hex (for registration).
+    /// Clave pública en hexadecimal minúscula (para el registro).
     pub fn public_key_hex(&self) -> String {
         hex::encode(self.public_key_bytes())
     }
 
-    /// AgentID = base58btc(SHA-256(raw pubkey)).
+    /// AgentID = base58btc(SHA-256(clave pública raw)).
     pub fn agent_id(&self) -> String {
         derive_agent_id(&self.public_key_bytes())
     }
 
-    /// DID = "did:key:z" + base58btc(0xed01 || raw pubkey).
+    /// DID = "did:key:z" + base58btc(0xed01 || clave pública raw).
     pub fn did(&self) -> String {
         let pubkey = self.public_key_bytes();
         let mut multicodec = vec![0xed_u8, 0x01];
@@ -56,24 +56,24 @@ impl AgentIdentity {
         format!("did:key:z{}", bs58::encode(&multicodec).into_string())
     }
 
-    /// Sign arbitrary bytes. Returns 64-byte Ed25519 signature.
+    /// Firma bytes arbitrarios. Devuelve una firma Ed25519 de 64 bytes.
     pub fn sign(&self, message: &[u8]) -> Signature {
         self.signing_key.sign(message)
     }
 
-    /// Verify a signature against this identity's public key.
+    /// Verifica una firma contra la clave pública de esta identidad.
     pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
         self.signing_key.verifying_key().verify(message, signature).is_ok()
     }
 
-    /// Access the inner verifying key.
+    /// Accede a la clave de verificación interna.
     pub fn verifying_key(&self) -> VerifyingKey {
         self.signing_key.verifying_key()
     }
 }
 
-/// Derive AgentID from raw 32-byte public key bytes.
-/// AgentID = base58btc(SHA-256(pubkey))
+/// Deriva el AgentID a partir de los bytes raw de la clave pública (32 bytes).
+/// AgentID = base58btc(SHA-256(clave pública))
 pub fn derive_agent_id(public_key_bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(public_key_bytes);

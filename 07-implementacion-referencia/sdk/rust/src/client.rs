@@ -1,6 +1,6 @@
-//! ACP HTTP Client — register/verify/health with automatic PoP handshake
+//! Cliente HTTP ACP — register/verify/health con handshake PoP automático
 //!
-//! Implements ACP-HP-1.0 Challenge/PoP handshake transparently.
+//! Implementa el handshake Challenge/PoP de ACP-HP-1.0 de forma transparente.
 
 use serde_json::Value;
 use sha2::{Sha256, Digest};
@@ -9,7 +9,7 @@ use crate::identity::AgentIdentity;
 use crate::signer::ACPSigner;
 use crate::error::ACPError;
 
-/// ACP HTTP client for agent-to-institution communication.
+/// Cliente HTTP ACP para comunicación agente-institución.
 pub struct ACPClient<'a> {
     server_url: String,
     identity: &'a AgentIdentity,
@@ -17,9 +17,9 @@ pub struct ACPClient<'a> {
 }
 
 impl<'a> ACPClient<'a> {
-    /// Create a new client.
+    /// Crea un nuevo cliente.
     ///
-    /// `server_url` — base URL, e.g. "http://localhost:8080"
+    /// `server_url` — URL base, p.ej. "http://localhost:8080"
     pub fn new(server_url: &str, identity: &'a AgentIdentity, signer: &'a ACPSigner<'a>) -> Self {
         Self {
             server_url: server_url.trim_end_matches('/').to_string(),
@@ -28,10 +28,10 @@ impl<'a> ACPClient<'a> {
         }
     }
 
-    /// Register this agent's public key with the institution.
+    /// Registra la clave pública de este agente en la institución.
     ///
     /// POST /acp/v1/register
-    /// Body: {"agent_id": "<base58>", "public_key_hex": "<64-char hex>"}
+    /// Cuerpo: {"agent_id": "<base58>", "public_key_hex": "<hex de 64 chars>"}
     pub fn register(&self) -> Result<Value, ACPError> {
         let body = serde_json::json!({
             "agent_id": self.identity.agent_id(),
@@ -40,27 +40,27 @@ impl<'a> ACPClient<'a> {
         self.post_json("/acp/v1/register", &body)
     }
 
-    /// Verify a signed capability token (full Challenge/PoP handshake).
+    /// Verifica un token de capacidad firmado (handshake Challenge/PoP completo).
     ///
     /// 1. GET /acp/v1/challenge → nonce
-    /// 2. Build PoP: SHA-256(Method|Path|Challenge|base64url(SHA-256(body)))
-    /// 3. POST /acp/v1/verify with ACP headers + token as Bearer
+    /// 2. Construye PoP: SHA-256(Método|Ruta|Challenge|base64url(SHA-256(cuerpo)))
+    /// 3. POST /acp/v1/verify con cabeceras ACP + token como Bearer
     pub fn verify(&self, capability_token: &Value) -> Result<Value, ACPError> {
-        // Step 1: Get challenge
+        // Paso 1: Obtener challenge
         let challenge_resp = self.get_json("/acp/v1/challenge")?;
         let challenge = challenge_resp
             .get("challenge")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ACPError::UnexpectedResponse("missing 'challenge' field".into()))?
+            .ok_or_else(|| ACPError::UnexpectedResponse("campo 'challenge' ausente".into()))?
             .to_string();
 
-        // Step 2: Build token JSON body
+        // Paso 2: Construir el cuerpo JSON del token
         let body_bytes = serde_json::to_vec(capability_token)?;
 
-        // Step 3: Compute PoP signature
+        // Paso 3: Calcular firma PoP
         let pop = self.sign_pop("POST", "/acp/v1/verify", &challenge, &body_bytes);
 
-        // Step 4: POST with ACP headers
+        // Paso 4: POST con cabeceras ACP
         let token_json = serde_json::to_string(capability_token)?;
         let url = format!("{}/acp/v1/verify", self.server_url);
 
@@ -84,14 +84,14 @@ impl<'a> ACPClient<'a> {
         serde_json::from_str(&body_str).map_err(ACPError::from)
     }
 
-    /// Check server health.
+    /// Verifica el estado del servidor.
     ///
     /// GET /acp/v1/health
     pub fn health(&self) -> Result<Value, ACPError> {
         self.get_json("/acp/v1/health")
     }
 
-    // ─── Internal helpers ────────────────────────────────────────────────────
+    // ─── Ayudantes internos ──────────────────────────────────────────────────
 
     fn get_json(&self, path: &str) -> Result<Value, ACPError> {
         let url = format!("{}{}", self.server_url, path);
@@ -128,25 +128,25 @@ impl<'a> ACPClient<'a> {
         serde_json::from_str(&resp_body).map_err(ACPError::from)
     }
 
-    /// Compute PoP signature.
+    /// Calcula la firma PoP.
     ///
-    /// PoP = base64url(Ed25519(SHA-256("METHOD|/path|challenge|base64url(SHA-256(body))")))
+    /// PoP = base64url(Ed25519(SHA-256("MÉTODO|/ruta|challenge|base64url(SHA-256(cuerpo))")))
     fn sign_pop(&self, method: &str, path: &str, challenge: &str, body: &[u8]) -> String {
-        // Hash body
+        // Hash del cuerpo
         let mut body_hasher = Sha256::new();
         body_hasher.update(body);
         let body_hash = body_hasher.finalize();
         let body_hash_b64 = URL_SAFE_NO_PAD.encode(body_hash);
 
-        // Build PoP message
+        // Construye el mensaje PoP
         let pop_message = format!("{method}|{path}|{challenge}|{body_hash_b64}");
 
-        // SHA-256 the message
+        // SHA-256 del mensaje
         let mut msg_hasher = Sha256::new();
         msg_hasher.update(pop_message.as_bytes());
         let msg_digest = msg_hasher.finalize();
 
-        // Ed25519 sign
+        // Firma Ed25519
         let sig = self.signer.sign_raw(&msg_digest);
         URL_SAFE_NO_PAD.encode(sig.to_bytes())
     }

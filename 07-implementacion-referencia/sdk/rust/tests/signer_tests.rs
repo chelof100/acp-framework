@@ -1,4 +1,4 @@
-//! Tests for ACPSigner — JCS canonicalization + Ed25519 signing.
+//! Tests para ACPSigner — canonicalización JCS + firma Ed25519.
 
 use acp_sdk::{AgentIdentity, ACPSigner, jcs_canonicalize};
 use serde_json::{json, Value};
@@ -16,7 +16,7 @@ fn make_capability() -> Value {
     })
 }
 
-// ─── JCS canonicalization tests ──────────────────────────────────────────────
+// ─── tests de canonicalización JCS ───────────────────────────────────────────
 
 #[test]
 fn jcs_sorts_keys_lexicographically() {
@@ -39,7 +39,7 @@ fn jcs_handles_arrays() {
     let obj = json!({"arr": [3, 1, 2]});
     let canonical = jcs_canonicalize(&obj).unwrap();
     let s = String::from_utf8(canonical).unwrap();
-    // Arrays are NOT sorted — order is preserved
+    // Los arrays NO se ordenan — se preserva el orden original
     assert_eq!(s, r#"{"arr":[3,1,2]}"#);
 }
 
@@ -68,7 +68,7 @@ fn jcs_produces_no_whitespace() {
     assert!(!s.contains('\n'));
 }
 
-// ─── sign_capability tests ────────────────────────────────────────────────────
+// ─── tests de sign_capability ────────────────────────────────────────────────
 
 #[test]
 fn sign_capability_adds_sig_field() {
@@ -85,7 +85,7 @@ fn sign_capability_does_not_mutate_original() {
     let signer = ACPSigner::new(&agent);
     let cap = make_capability();
     let _ = signer.sign_capability(&cap).unwrap();
-    // Original should not have "sig"
+    // El original no debe tener "sig"
     assert!(cap.get("sig").is_none());
 }
 
@@ -96,10 +96,10 @@ fn sign_capability_sig_is_base64url() {
     let cap = make_capability();
     let signed = signer.sign_capability(&cap).unwrap();
     let sig = signed["sig"].as_str().unwrap();
-    // Base64url chars only (no +, /, =)
+    // Solo caracteres base64url (sin +, /, =)
     assert!(sig.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_'));
-    // Ed25519 sig = 64 bytes → 86 base64url chars (no padding)
-    assert_eq!(sig.len(), 86, "unexpected sig length: {}", sig.len());
+    // Firma Ed25519 = 64 bytes → 86 chars en base64url (sin padding)
+    assert_eq!(sig.len(), 86, "longitud de firma inesperada: {}", sig.len());
 }
 
 #[test]
@@ -129,7 +129,7 @@ fn different_nonces_produce_different_sigs() {
     assert_ne!(s1["sig"], s2["sig"]);
 }
 
-// ─── verify_capability tests ───────────────────────────────────────────────────
+// ─── tests de verify_capability ───────────────────────────────────────────────
 
 #[test]
 fn verify_valid_signature() {
@@ -156,7 +156,7 @@ fn verify_fails_tampered_field() {
     let signer = ACPSigner::new(&agent);
     let cap = make_capability();
     let mut signed = signer.sign_capability(&cap).unwrap();
-    signed["cap"] = json!("acp:cap:financial.write"); // tampered
+    signed["cap"] = json!("acp:cap:financial.write"); // campo alterado
     let pk = agent.public_key_bytes();
     assert!(!ACPSigner::verify_capability(&signed, &pk).unwrap());
 }
@@ -183,7 +183,7 @@ fn verify_fails_invalid_base64() {
     assert!(ACPSigner::verify_capability(&signed, &pk).is_err());
 }
 
-// ─── canonicalize public API ──────────────────────────────────────────────────
+// ─── API pública de canonicalize ─────────────────────────────────────────────
 
 #[test]
 fn canonicalize_matches_jcs_canonicalize() {

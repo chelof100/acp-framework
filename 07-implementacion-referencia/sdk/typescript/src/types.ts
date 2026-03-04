@@ -1,105 +1,105 @@
 /**
- * ACP Type Definitions — ACP-CT-1.0, ACP-HP-1.0, ACP-SIGN-1.0
+ * Definiciones de tipos ACP — ACP-CT-1.0, ACP-HP-1.0, ACP-SIGN-1.0
  */
 
 // ─── Capability Token ─────────────────────────────────────────────────────────
 
-/** ACP Capability Token as defined in ACP-CT-1.0 §5 */
+/** Token de capacidad ACP según ACP-CT-1.0 §5 */
 export interface CapabilityToken {
-  /** Protocol version — must be "1.0" */
+  /** Versión del protocolo — debe ser "1.0" */
   ver: string;
-  /** Issuer AgentID: base58(SHA-256(issuer_pubkey)) */
+  /** AgentID del emisor: base58(SHA-256(issuer_pubkey)) */
   iss: string;
-  /** Subject AgentID — the agent authorized to use this token */
+  /** AgentID del sujeto — el agente autorizado a usar este token */
   sub: string;
-  /** Capability identifiers granted (e.g., ["acp:cap:financial.payment"]) */
+  /** Identificadores de capacidad otorgados (ej. ["acp:cap:financial.payment"]) */
   cap: string[];
-  /** Resource scope (e.g., "org.bank/accounts/ACC-001") */
+  /** Alcance del recurso (ej. "org.bank/accounts/ACC-001") */
   res: string;
-  /** Issued-at Unix timestamp */
+  /** Timestamp Unix de emisión */
   iat: number;
-  /** Expiration Unix timestamp */
+  /** Timestamp Unix de expiración */
   exp: number;
-  /** Random nonce — 128-bit base64url, prevents replay attacks */
+  /** Nonce aleatorio — base64url de 128 bits, previene ataques de replay */
   nonce: string;
-  /** Delegation constraints */
+  /** Restricciones de delegación */
   deleg: DelegationConstraints;
-  /** Parent token hash for delegated tokens (null for root tokens) */
+  /** Hash del token padre para tokens delegados (null para tokens raíz) */
   parent_hash: string | null;
-  /** Domain-specific constraints (e.g., max_amount_usd) */
+  /** Restricciones específicas del dominio (ej. max_amount_usd) */
   constraints?: Record<string, unknown>;
-  /** Revocation endpoint configuration */
+  /** Configuración del endpoint de revocación */
   rev?: RevocationConfig;
-  /** Ed25519 signature over SHA-256(JCS(payload_without_sig)) */
+  /** Firma Ed25519 sobre SHA-256(JCS(payload_sin_sig)) */
   sig?: string;
 }
 
-/** Delegation constraints embedded in every token */
+/** Restricciones de delegación embebidas en cada token */
 export interface DelegationConstraints {
-  /** Whether the subject may further delegate this token */
+  /** Si el sujeto puede delegar este token a otros */
   allowed: boolean;
-  /** Maximum remaining delegation depth (0 = no further delegation) */
+  /** Profundidad máxima de delegación restante (0 = sin más delegación) */
   max_depth: number;
 }
 
-/** Revocation endpoint configuration */
+/** Configuración del endpoint de revocación */
 export interface RevocationConfig {
-  /** Type of revocation check */
+  /** Tipo de verificación de revocación */
   type: "endpoint" | "crl";
-  /** URI for revocation check */
+  /** URI para verificación de revocación */
   uri: string;
 }
 
-/** A CapabilityToken with the `sig` field populated */
+/** Un CapabilityToken con el campo `sig` poblado */
 export type SignedCapabilityToken = CapabilityToken & { sig: string };
 
-// ─── ACP Error Codes ─────────────────────────────────────────────────────────
+// ─── Códigos de Error ACP ─────────────────────────────────────────────────────
 
-/** Standardized error codes per ACP-CT-1.0 §8 */
+/** Códigos de error estandarizados según ACP-CT-1.0 §8 */
 export type ACPErrorCode =
-  | "CT-001" // malformed JSON
-  | "CT-002" // unsupported version
-  | "CT-003" // token expired
-  | "CT-004" // iat in future
-  | "CT-005" // revoked
-  | "CT-006" // invalid signature
-  | "CT-007" // issuer mismatch
-  | "CT-008" // empty capabilities
-  | "CT-009" // missing resource
-  | "CT-010" // delegation depth exceeded
-  | "CT-011" // subject mismatch
-  | "CT-012" // nonce replay
-  | "CT-013"; // constraint violation
+  | "CT-001" // JSON malformado
+  | "CT-002" // versión no soportada
+  | "CT-003" // token expirado
+  | "CT-004" // iat en el futuro
+  | "CT-005" // revocado
+  | "CT-006" // firma inválida
+  | "CT-007" // emisor no coincide
+  | "CT-008" // capacidades vacías
+  | "CT-009" // recurso faltante
+  | "CT-010" // profundidad de delegación excedida
+  | "CT-011" // sujeto no coincide
+  | "CT-012" // replay de nonce
+  | "CT-013"; // violación de restricción
 
-// ─── ACP HTTP Headers ─────────────────────────────────────────────────────────
+// ─── Headers HTTP ACP ─────────────────────────────────────────────────────────
 
-/** ACP HTTP Security Headers (ACP-HP-1.0) */
+/** Headers HTTP de seguridad ACP (ACP-HP-1.0) */
 export interface ACPHeaders {
   Authorization: string;        // Bearer <token_json>
   "X-ACP-Agent-ID": string;    // AgentID
-  "X-ACP-Challenge": string;   // challenge nonce
-  "X-ACP-Signature": string;   // PoP signature
+  "X-ACP-Challenge": string;   // nonce de desafío
+  "X-ACP-Signature": string;   // firma PoP
   "Content-Type": string;
 }
 
-// ─── Client Options ───────────────────────────────────────────────────────────
+// ─── Opciones del Cliente ─────────────────────────────────────────────────────
 
-/** Options for ACPClient constructor */
+/** Opciones para el constructor de ACPClient */
 export interface ACPClientOptions {
-  /** Base URL of the ACP-compatible server (no trailing slash) */
+  /** URL base del servidor compatible con ACP (sin barra final) */
   baseUrl: string;
-  /** Request timeout in milliseconds (default: 10000) */
+  /** Timeout de solicitud en milisegundos (por defecto: 10000) */
   timeoutMs?: number;
 }
 
-/** Options for client.execute() */
+/** Opciones para client.execute() */
 export interface ExecuteOptions {
-  /** HTTP method */
+  /** Método HTTP */
   method: string;
-  /** API path starting with "/" */
+  /** Ruta de la API comenzando con "/" */
   path: string;
-  /** Raw JSON capability token string */
+  /** String JSON del token de capacidad raw */
   capabilityToken: string;
-  /** Optional request body (will be JSON-serialized) */
+  /** Cuerpo de la solicitud opcional (se serializará a JSON) */
   payload?: Record<string, unknown>;
 }

@@ -1,34 +1,34 @@
-//! ACP SDK error types.
+//! Tipos de error del SDK ACP.
 
 use thiserror::Error;
 
-/// ACP SDK errors.
+/// Errores del SDK ACP.
 #[derive(Debug, Error)]
 pub enum ACPError {
-    #[error("HTTP error {status}: {body}")]
+    #[error("Error HTTP {status}: {body}")]
     Http { status: u16, body: String },
 
-    #[error("Network error: {0}")]
+    #[error("Error de red: {0}")]
     Network(String),
 
-    #[error("Invalid input: {0}")]
+    #[error("Entrada inválida: {0}")]
     InvalidInput(String),
 
-    #[error("Missing signature field in capability")]
+    #[error("Campo de firma ausente en la capacidad")]
     MissingSignature,
 
-    #[error("Cryptographic error: {0}")]
+    #[error("Error criptográfico: {0}")]
     CryptoError(String),
 
-    #[error("JSON error: {0}")]
+    #[error("Error JSON: {0}")]
     Json(#[from] serde_json::Error),
 
-    #[error("Server returned unexpected response: {0}")]
+    #[error("El servidor devolvió una respuesta inesperada: {0}")]
     UnexpectedResponse(String),
 }
 
 impl ACPError {
-    /// Returns the HTTP status code if this is an HTTP error.
+    /// Devuelve el código de estado HTTP si este es un error HTTP.
     pub fn status_code(&self) -> Option<u16> {
         match self {
             ACPError::Http { status, .. } => Some(*status),

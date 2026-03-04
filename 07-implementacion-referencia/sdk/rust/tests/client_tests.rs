@@ -1,6 +1,6 @@
-//! Tests for ACPClient — HTTP client with PoP handshake.
+//! Tests para ACPClient — cliente HTTP con handshake PoP.
 //!
-//! Uses mockito for HTTP mocking (no real server needed).
+//! Usa mockito para simular HTTP (no se necesita un servidor real).
 
 use acp_sdk::{AgentIdentity, ACPSigner, ACPClient, ACPError};
 use mockito::{Server, Matcher};
@@ -12,7 +12,7 @@ fn setup() -> (AgentIdentity, mockito::ServerGuard) {
     (agent, server)
 }
 
-// ─── health() tests ──────────────────────────────────────────────────────────
+// ─── tests de health() ───────────────────────────────────────────────────────
 
 #[test]
 fn health_returns_ok() {
@@ -44,7 +44,7 @@ fn health_returns_error_on_503() {
     assert_eq!(result.unwrap_err().status_code(), Some(503));
 }
 
-// ─── register() tests ────────────────────────────────────────────────────────
+// ─── tests de register() ─────────────────────────────────────────────────────
 
 #[test]
 fn register_posts_to_correct_url() {
@@ -97,7 +97,7 @@ fn register_returns_error_on_409_conflict() {
     assert_eq!(err.status_code(), Some(409));
 }
 
-// ─── verify() tests ───────────────────────────────────────────────────────────
+// ─── tests de verify() ────────────────────────────────────────────────────────
 
 fn mock_verify(server: &mut mockito::Server, agent: &AgentIdentity) -> (mockito::Mock, mockito::Mock) {
     let challenge_mock = server.mock("GET", "/acp/v1/challenge")
@@ -111,13 +111,13 @@ fn mock_verify(server: &mut mockito::Server, agent: &AgentIdentity) -> (mockito:
         .with_status(200)
         .with_header("content-type", "application/json")
         .with_body(r#"{"decision":"PERMIT","agent_id":"<id>"}"#)
-        // Must have Authorization Bearer header
+        // Debe tener cabecera Authorization Bearer
         .match_header("Authorization", Matcher::Regex(r"^Bearer \{".to_string()))
-        // Must have X-ACP-Agent-ID header
+        // Debe tener cabecera X-ACP-Agent-ID
         .match_header("X-ACP-Agent-ID", agent_id.as_str())
-        // Must have X-ACP-Challenge header
+        // Debe tener cabecera X-ACP-Challenge
         .match_header("X-ACP-Challenge", "test-challenge-nonce")
-        // Must have X-ACP-Signature header (any non-empty value)
+        // Debe tener cabecera X-ACP-Signature (cualquier valor no vacío)
         .match_header("X-ACP-Signature", Matcher::Regex(r"^[A-Za-z0-9\-_]{80,}$".to_string()))
         .create();
 
@@ -150,7 +150,7 @@ fn verify_returns_error_when_challenge_missing() {
     let _m = server.mock("GET", "/acp/v1/challenge")
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(r#"{"nonce":"wrong-field-name"}"#)  // missing "challenge" key
+        .with_body(r#"{"nonce":"wrong-field-name"}"#)  // falta el campo "challenge"
         .create();
 
     let cap = json!({"ver":"1.0","sig":"x"});
@@ -180,7 +180,7 @@ fn verify_returns_error_on_401() {
     assert_eq!(err.status_code(), Some(401));
 }
 
-// ─── ACPError tests ───────────────────────────────────────────────────────────
+// ─── tests de ACPError ────────────────────────────────────────────────────────
 
 #[test]
 fn acp_error_http_has_status_code() {

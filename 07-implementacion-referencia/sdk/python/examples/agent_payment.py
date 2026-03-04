@@ -1,29 +1,29 @@
 """
-Example: AI Agent executing a payment using ACP (ACP-HP-1.0).
+Ejemplo: Agente de IA ejecutando un pago usando ACP (ACP-HP-1.0).
 
-Full end-to-end demonstration:
-  1. Generate institution key pair (or load from ACP_INSTITUTION_SEED)
-  2. Generate agent identity
-  3. Build + sign capability token (institution signs, agent is subject)
-  4. Register agent with ACP server
-  5. Run full PoP handshake: challenge → sign → verify via HTTP headers
+Demostración completa de extremo a extremo:
+  1. Generar par de claves institucional (o cargar desde ACP_INSTITUTION_SEED)
+  2. Generar identidad del agente
+  3. Construir + firmar token de capacidad (institución firma, agente es sujeto)
+  4. Registrar agente con el servidor ACP
+  5. Ejecutar handshake PoP completo: desafío → firma → verificación via headers HTTP
 
-To test with the Go reference server:
+Para probar con el servidor de referencia Go:
     cd acp-go && go build -o acp-server.exe ./cmd/acp-server
 
-    # Run this script ONCE with --print-pubkey to get the institution pubkey:
+    # Ejecutar este script UNA VEZ con --print-pubkey para obtener la clave pública institucional:
     python examples/agent_payment.py --print-pubkey
 
-    # Start server with that pubkey:
-    ACP_INSTITUTION_PUBLIC_KEY=<output_above> ./acp-server.exe
+    # Iniciar servidor con esa clave pública:
+    ACP_INSTITUTION_PUBLIC_KEY=<salida_anterior> ./acp-server.exe
 
-    # Run the full demo:
+    # Ejecutar la demo completa:
     python examples/agent_payment.py
 
-Environment variables:
+Variables de entorno:
     ACP_SERVER_URL        default: http://localhost:8080
-    ACP_AGENT_SEED        hex(32 bytes) — deterministic agent identity
-    ACP_INSTITUTION_SEED  hex(32 bytes) — deterministic institution key
+    ACP_AGENT_SEED        hex(32 bytes) — identidad de agente determinística
+    ACP_INSTITUTION_SEED  hex(32 bytes) — clave institucional determinística
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ from acp.client import ACPClient, ACPError
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _load_identity(env_var: str) -> AgentIdentity:
-    """Load identity from <env_var> hex seed, or generate a new ephemeral one."""
+    """Carga identidad desde seed hex en <env_var>, o genera una nueva efímera."""
     seed_hex = os.getenv(env_var, "")
     if seed_hex:
         return AgentIdentity.from_private_bytes(bytes.fromhex(seed_hex))
@@ -55,19 +55,19 @@ def _build_payment_token(
     subject: AgentIdentity,
 ) -> dict:
     """
-    Build and sign a financial.payment capability token.
+    Construye y firma un token de capacidad financial.payment.
 
-    Token fields follow ACP-CT-1.0 CapabilityToken schema exactly:
+    Los campos del token siguen exactamente el esquema ACP-CT-1.0 CapabilityToken:
       ver, iss, sub, cap, resource, iat, exp, nonce, sig
 
-    In production: the institutional issuer creates and signs tokens.
-    This demo uses a local issuer key — match it to ACP_INSTITUTION_PUBLIC_KEY.
+    En producción: el emisor institucional crea y firma los tokens.
+    Esta demo usa una clave emisora local — debe coincidir con ACP_INSTITUTION_PUBLIC_KEY.
     """
     now = int(time.time())
     capability = {
         "ver": "1.0",
         "iss": issuer.did,
-        "sub": subject.agent_id,           # must match X-ACP-Agent-ID header
+        "sub": subject.agent_id,           # debe coincidir con el header X-ACP-Agent-ID
         "cap": ["acp:cap:financial.payment"],
         "resource": "org.banco-soberano/accounts/ACC-001",
         "iat": now,
@@ -81,7 +81,7 @@ def _build_payment_token(
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    # --print-pubkey mode: just print the institution public key and exit
+    # Modo --print-pubkey: solo imprimir la clave pública institucional y salir
     if "--print-pubkey" in sys.argv:
         institution = _load_identity("ACP_INSTITUTION_SEED")
         pubkey_b64 = base64.urlsafe_b64encode(
@@ -90,17 +90,17 @@ def main() -> None:
         print(pubkey_b64)
         return
 
-    print("=== ACP Python SDK — Agent Payment Example (ACP-HP-1.0) ===\n")
+    print("=== ACP Python SDK — Ejemplo de Pago con Agente (ACP-HP-1.0) ===\n")
 
-    # Step 1 — Identities
+    # Paso 1 — Identidades
     institution = _load_identity("ACP_INSTITUTION_SEED")
     if not os.getenv("ACP_INSTITUTION_SEED"):
-        print("[INFO] ACP_INSTITUTION_SEED not set — generating ephemeral institution key")
-        print("[INFO] To test against Go server, run with --print-pubkey first\n")
+        print("[INFO] ACP_INSTITUTION_SEED no configurado — generando clave institucional efímera")
+        print("[INFO] Para probar con el servidor Go, ejecutar con --print-pubkey primero\n")
 
     agent = _load_identity("ACP_AGENT_SEED")
     if not os.getenv("ACP_AGENT_SEED"):
-        print("[INFO] ACP_AGENT_SEED not set — generating ephemeral agent identity\n")
+        print("[INFO] ACP_AGENT_SEED no configurado — generando identidad de agente efímera\n")
 
     agent_signer = ACPSigner(agent)
 
@@ -108,58 +108,58 @@ def main() -> None:
         institution.public_key_bytes
     ).rstrip(b"=").decode()
 
-    print(f"Institution pubkey : {pubkey_b64[:32]}...")
-    print(f"Agent ID           : {agent.agent_id}")
-    print(f"Agent DID          : {agent.did}")
-    print(f"Agent pubkey       : {agent.public_key_bytes.hex()[:24]}...\n")
+    print(f"Clave pública institución : {pubkey_b64[:32]}...")
+    print(f"Agent ID                  : {agent.agent_id}")
+    print(f"Agent DID                 : {agent.did}")
+    print(f"Clave pública agente      : {agent.public_key_bytes.hex()[:24]}...\n")
 
-    # Step 2 — Issue + sign capability token (institution signs)
+    # Paso 2 — Emitir + firmar token de capacidad (institución firma)
     token = _build_payment_token(institution, agent)
-    print("Capability token:")
+    print("Token de capacidad:")
     print(f"  sub      : {token['sub']}")
     print(f"  cap      : {token['cap']}")
     print(f"  resource : {token['resource']}")
-    print(f"  exp      : {token['exp']} (now+1h)")
+    print(f"  exp      : {token['exp']} (ahora+1h)")
     print(f"  sig      : {token['sig'][:32]}...\n")
 
-    # Step 3 — Verify signature locally (no server needed)
+    # Paso 3 — Verificar firma localmente (sin servidor)
     is_valid = ACPSigner.verify_capability(token, institution.public_key_bytes)
-    print(f"Local signature valid: {is_valid}\n")
+    print(f"Firma local válida: {is_valid}\n")
 
-    # Step 4 — Connect to ACP server
+    # Paso 4 — Conectar al servidor ACP
     server_url = os.getenv("ACP_SERVER_URL", "http://localhost:8080")
     client = ACPClient(server_url=server_url, identity=agent, signer=agent_signer)
 
-    print(f"Connecting to ACP server: {server_url}")
+    print(f"Conectando al servidor ACP: {server_url}")
     try:
         health = client.health()
-        print(f"Server health: {health}\n")
+        print(f"Estado del servidor: {health}\n")
     except ACPError as e:
-        print(f"[Server not reachable — {e}]")
-        print("Continuing with offline PoP demo.\n")
+        print(f"[Servidor no disponible — {e}]")
+        print("Continuando con demo PoP sin conexión.\n")
         _show_offline_demo(agent, agent_signer)
         return
 
-    # Step 5 — Register agent
-    print("Registering agent...")
+    # Paso 5 — Registrar agente
+    print("Registrando agente...")
     try:
         reg = client.register()
-        print(f"Registration: {reg}\n")
+        print(f"Registro: {reg}\n")
     except ACPError as e:
-        print(f"Registration failed (status={e.status_code}): {e}\n")
+        print(f"Registro fallido (status={e.status_code}): {e}\n")
         return
 
-    # Step 6 — Full ACP-HP-1.0 verification (challenge → PoP headers → verify)
-    print("Running full ACP-HP-1.0 verification flow...")
+    # Paso 6 — Verificación completa ACP-HP-1.0 (desafío → headers PoP → verify)
+    print("Ejecutando flujo completo de verificación ACP-HP-1.0...")
     try:
         result = client.verify(capability_token=token)
-        print(f"Full response: {json.dumps(result, indent=2)}")
+        print(f"Respuesta completa: {json.dumps(result, indent=2)}")
     except ACPError as e:
-        print(f"ACP error (status={e.status_code}): {e}")
+        print(f"Error ACP (status={e.status_code}): {e}")
 
 
 def _show_offline_demo(agent: AgentIdentity, signer: ACPSigner) -> None:
-    """Show what the PoP payload would look like without a live server."""
+    """Muestra cómo se vería el payload PoP sin un servidor activo."""
     fake_challenge = base64.urlsafe_b64encode(b"demo-challenge-nonce").rstrip(b"=").decode()
     method, path = "POST", "/acp/v1/verify"
     body = b""
@@ -170,15 +170,15 @@ def _show_offline_demo(agent: AgentIdentity, signer: ACPSigner) -> None:
     sig_bytes = signer.sign_bytes(payload_hash)
     sig_b64 = base64.urlsafe_b64encode(sig_bytes).rstrip(b"=").decode()
 
-    print("--- Offline PoP demo (ACP-HP-1.0 channel binding) ---")
+    print("--- Demo PoP sin conexión (channel binding ACP-HP-1.0) ---")
     print(f"  signed_payload : {signed_payload}")
     print(f"  X-ACP-Signature: {sig_b64[:40]}...")
-    print("\nTo run the full flow:")
-    print("  1. Get institution pubkey:")
+    print("\nPara ejecutar el flujo completo:")
+    print("  1. Obtener clave pública institucional:")
     print("       python examples/agent_payment.py --print-pubkey")
-    print("  2. Start Go server:")
+    print("  2. Iniciar servidor Go:")
     print("       ACP_INSTITUTION_PUBLIC_KEY=<pubkey> ./acp-server.exe")
-    print("  3. Run demo:")
+    print("  3. Ejecutar demo:")
     print("       python examples/agent_payment.py")
 
 

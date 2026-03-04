@@ -1,19 +1,19 @@
 /**
- * acp/identity — Ed25519 Agent Identity + AgentID derivation (ACP-SIGN-1.0)
+ * acp/identity — Identidad Ed25519 del agente + derivación de AgentID (ACP-SIGN-1.0)
  *
- * An agent's cryptographic identity consists of:
- *   - An Ed25519 private/public key pair
- *   - An AgentID derived as base58(SHA-256(raw 32-byte public key))
- *   - A DID (did:key) representation
+ * La identidad criptográfica de un agente consiste en:
+ *   - Un par de claves Ed25519 (privada/pública)
+ *   - Un AgentID derivado como base58(SHA-256(clave pública raw de 32 bytes))
+ *   - Una representación DID (did:key)
  *
- * Zero runtime dependencies — uses only Node.js built-in `node:crypto`.
+ * Sin dependencias externas en runtime — usa solo el módulo `node:crypto` de Node.js.
  *
  * @example
  * ```typescript
  * import { AgentIdentity } from '@acp/sdk';
  *
  * const agent = AgentIdentity.generate();
- * console.log(agent.agentId);         // base58 string
+ * console.log(agent.agentId);         // string base58
  * console.log(agent.did);             // "did:key:z..."
  * console.log(agent.publicKeyBytes);  // Buffer(32)
  *
@@ -33,12 +33,12 @@ import {
 } from 'node:crypto';
 import type { KeyObject } from 'node:crypto';
 
-// ─── DER headers ──────────────────────────────────────────────────────────────
-// Ed25519 PKCS8 DER prefix (16 bytes): 302e020100300506032b657004220420
+// ─── Cabeceras DER ────────────────────────────────────────────────────────────
+// Prefijo PKCS8 DER de Ed25519 (16 bytes): 302e020100300506032b657004220420
 const PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
-// Ed25519 SPKI DER prefix (12 bytes): 302a300506032b6570032100
+// Prefijo SPKI DER de Ed25519 (12 bytes): 302a300506032b6570032100
 const SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
-// Multicodec prefix for Ed25519 public key (for did:key): 0xed 0x01
+// Prefijo multicodec para clave pública Ed25519 (para did:key): 0xed 0x01
 const ED25519_MULTICODEC = Buffer.from([0xed, 0x01]);
 
 // ─── Base58btc ────────────────────────────────────────────────────────────────
@@ -46,22 +46,22 @@ const ED25519_MULTICODEC = Buffer.from([0xed, 0x01]);
 const BASE58_ALPHABET =
   '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
-/** Base58btc encoding (Bitcoin alphabet, same as Python's _base58_encode). */
+/** Codificación Base58btc (alfabeto Bitcoin, igual que Python's _base58_encode). */
 function base58Encode(data: Buffer): string {
-  // Count leading zero bytes
+  // Contar bytes cero al inicio
   let leadingZeros = 0;
   for (const byte of data) {
     if (byte === 0) leadingZeros++;
     else break;
   }
 
-  // Convert bytes → big integer
+  // Convertir bytes → entero grande
   let n = 0n;
   for (const byte of data) {
     n = n * 256n + BigInt(byte);
   }
 
-  // Convert big integer → base58 digits (reversed)
+  // Convertir entero grande → dígitos base58 (invertidos)
   const digits: number[] = [];
   while (n > 0n) {
     const rem = Number(n % 58n);
@@ -81,13 +81,13 @@ function base58Encode(data: Buffer): string {
 // ─── AgentIdentity ────────────────────────────────────────────────────────────
 
 /**
- * Ed25519 Agent Identity (ACP-SIGN-1.0).
+ * Identidad Ed25519 del agente (ACP-SIGN-1.0).
  *
- * Attributes:
- *   agentId        — base58(SHA-256(raw 32-byte public key))  [ACP-CT-1.0 §3]
+ * Atributos:
+ *   agentId        — base58(SHA-256(clave pública raw de 32 bytes))  [ACP-CT-1.0 §3]
  *   did            — did:key:z<base58(0xed01 || pubkey)>
- *   publicKeyBytes — 32-byte raw Ed25519 public key
- *   privateKeyBytes— 32-byte raw Ed25519 private key (store securely!)
+ *   publicKeyBytes — clave pública Ed25519 raw de 32 bytes
+ *   privateKeyBytes— clave privada Ed25519 raw de 32 bytes (¡guardar de forma segura!)
  */
 export class AgentIdentity {
   private readonly _privateKey: KeyObject;
@@ -97,27 +97,27 @@ export class AgentIdentity {
   private constructor(privateKey: KeyObject, publicKey: KeyObject) {
     this._privateKey = privateKey;
     this._publicKey = publicKey;
-    // Strip the 12-byte SPKI DER header to get the raw 32-byte key
+    // Eliminar la cabecera SPKI DER de 12 bytes para obtener la clave raw de 32 bytes
     const spkiDer = this._publicKey.export({ type: 'spki', format: 'der' }) as Buffer;
     this._pubkeyRaw = Buffer.from(spkiDer.subarray(12));
   }
 
-  // ─── Constructors ───────────────────────────────────────────────────────────
+  // ─── Constructores ──────────────────────────────────────────────────────────
 
-  /** Generate a new random Ed25519 agent identity. */
+  /** Genera una nueva identidad de agente Ed25519 aleatoria. */
   static generate(): AgentIdentity {
     const { privateKey, publicKey } = generateKeyPairSync('ed25519');
     return new AgentIdentity(privateKey, publicKey);
   }
 
   /**
-   * Restore an identity from 32 raw private key bytes.
-   * @param data 32-byte raw Ed25519 private key seed
+   * Restaura una identidad desde 32 bytes raw de clave privada.
+   * @param data Seed de clave privada Ed25519 raw de 32 bytes
    */
   static fromPrivateBytes(data: Buffer): AgentIdentity {
     if (data.length !== 32) {
       throw new Error(
-        `AgentIdentity.fromPrivateBytes: expected 32 bytes, got ${data.length}`
+        `AgentIdentity.fromPrivateBytes: se esperaban 32 bytes, se recibieron ${data.length}`
       );
     }
     const pkcs8 = Buffer.concat([PKCS8_PREFIX, data]);
@@ -126,11 +126,11 @@ export class AgentIdentity {
     return new AgentIdentity(privateKey, publicKey);
   }
 
-  // ─── Properties ─────────────────────────────────────────────────────────────
+  // ─── Propiedades ─────────────────────────────────────────────────────────────
 
   /**
-   * ACP AgentID: base58(SHA-256(raw 32-byte public key)).
-   * Implements ACP-SIGN-1.0 §3.1.
+   * AgentID ACP: base58(SHA-256(clave pública raw de 32 bytes)).
+   * Implementa ACP-SIGN-1.0 §3.1.
    */
   get agentId(): string {
     const digest = createHash('sha256').update(this._pubkeyRaw).digest();
@@ -138,38 +138,38 @@ export class AgentIdentity {
   }
 
   /**
-   * did:key representation (multicodec Ed25519 + base58btc).
-   * Format: did:key:z<base58(0xed01 || pubkey)>
+   * Representación did:key (multicodec Ed25519 + base58btc).
+   * Formato: did:key:z<base58(0xed01 || pubkey)>
    */
   get did(): string {
     const multicodec = Buffer.concat([ED25519_MULTICODEC, this._pubkeyRaw]);
     return `did:key:z${base58Encode(multicodec)}`;
   }
 
-  /** Raw 32-byte Ed25519 public key. */
+  /** Clave pública Ed25519 raw de 32 bytes. */
   get publicKeyBytes(): Buffer {
     return Buffer.from(this._pubkeyRaw);
   }
 
-  /** Raw 32-byte Ed25519 private key (store securely!). */
+  /** Clave privada Ed25519 raw de 32 bytes (¡guardar de forma segura!). */
   get privateKeyBytes(): Buffer {
     const pkcs8 = this._privateKey.export({ type: 'pkcs8', format: 'der' }) as Buffer;
-    return Buffer.from(pkcs8.subarray(16)); // strip 16-byte PKCS8 header
+    return Buffer.from(pkcs8.subarray(16)); // eliminar cabecera PKCS8 de 16 bytes
   }
 
-  // ─── Signing ────────────────────────────────────────────────────────────────
+  // ─── Firma ───────────────────────────────────────────────────────────────────
 
   /**
-   * Sign arbitrary bytes with Ed25519. Returns 64-byte raw signature.
-   * The caller is responsible for any pre-hashing (e.g. SHA-256 for ACP-SIGN-1.0).
+   * Firma bytes arbitrarios con Ed25519. Retorna firma raw de 64 bytes.
+   * El llamador es responsable de cualquier pre-hash (ej. SHA-256 para ACP-SIGN-1.0).
    */
   sign(message: Buffer): Buffer {
     return cryptoSign(null, message, this._privateKey) as Buffer;
   }
 
   /**
-   * Verify a 64-byte Ed25519 signature against a message.
-   * Returns true if valid, false otherwise.
+   * Verifica una firma Ed25519 de 64 bytes contra un mensaje.
+   * Retorna true si es válida, false en caso contrario.
    */
   verify(signature: Buffer, message: Buffer): boolean {
     try {
@@ -187,7 +187,7 @@ export class AgentIdentity {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Derive an AgentID from raw 32-byte Ed25519 public key bytes.
+ * Deriva un AgentID a partir de bytes raw de clave pública Ed25519 de 32 bytes.
  * AgentID = base58(SHA-256(publicKeyBytes))
  */
 export function deriveAgentId(publicKeyBytes: Buffer): string {
