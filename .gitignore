@@ -6,6 +6,3 @@
 
 # Certification outputs
 ACP-CERT-*.json
-
-# Instrucciones internas para agentes (no commitear)
-AGENTS.md
