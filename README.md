@@ -12,7 +12,7 @@ Define un framework unificado que integra:
 
 ACP no es únicamente un protocolo de mensajería o firma. Es una arquitectura constitucional que establece las reglas formales bajo las cuales un agente autónomo puede actuar.
 
-**Versión:** 1.4 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
+**Versión:** 1.5 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
 
 ---
 
@@ -319,7 +319,7 @@ console.log(result); // { decision: 'PERMIT', ... }
 | **v1.2** | ✅ Completo | CONF-1.1 (5 niveles), cadena de cumplimiento completa, 12 vectores de prueba |
 | **v1.3** | ✅ Completo | Binario IUT (acp-evaluate, 12/12 PASS), compliance runner (ACR-1.0), Python SDK (78 tests) |
 | **v1.4** | ✅ Completo | TypeScript SDK (68 tests), Rust SDK (43 tests), Docker CI/CD |
-| **v1.5** | 🔄 En progreso | Go SDK (cliente) + acp-cli + ejemplos de integración completos |
+| **v1.5** | ✅ Completo | Go Reference Server — ACP-API-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.0 (9 specs implementadas) |
 | **v2.0** | 📋 Especificado | ACP-D completo (BFT, ZK-proofs, DIDs) |
 | **Paper** | ✍️ En preparación | Objetivo IEEE S&P / NDSS |
 
