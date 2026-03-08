@@ -11,3 +11,6 @@ ACP-CERT-*.json
 **/.pytest_cache/
 **/__pycache__/
 *.pyc
+
+# Agent workflow rules (local only)
+AGENTS.md
