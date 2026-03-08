@@ -11,6 +11,30 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.6.0] — 2026-03-06
+
+### Corregido — Go Reference Server
+
+- **`handleTokensIssue`**: reemplaza STUB 501 con implementación completa de delegación de Capability Token (firma Ed25519, ledger `TOKEN_ISSUED`, HTTP 201) — per ACP-CT-1.0
+- **`handleAuditQuery`**: agrega filtros completos `event_type`, `agent_id`, `time_range`, `from_sequence`, `to_sequence`, `limit`, `offset` con filtrado in-memory y paginación — per ACP-LEDGER-1.0 §6
+- **`handleRevRevoke`**: agrega campos `revoke_descendants` (bool) y `sig` (string) al request — per ACP-REV-1.0
+- **`handleRepState`**: renombra campo `state` → `new_state` en request body — per ACP-REP-1.1 §7
+
+### Corregido/Agregado — Python SDK v1.6.0
+
+- **`client.py`**: reescritura completa — 18 métodos alineados a spec (era 13 con nombres incorrectos)
+  - Nuevos métodos: `tokens_issue()`, `agent_register()`, `agent_get()`, `agent_state()`, `escalation_resolve()`
+  - Corregidos: `reputation_state()` usa `new_state`, `revoke()` agrega `revoke_descendants` + `sig`, `audit_query()` todos los filtros spec
+- **`tests/test_client.py`**: cobertura completa — 62 tests cubriendo los 18 métodos (era 5 clases de test)
+- **`pyproject.toml`**: versión `1.3.0` → `1.6.0`
+
+### Verificado
+
+- `go build ./cmd/acp-server/...` — sin errores
+- `pytest` — 123/123 tests pasando
+
+---
+
 ## [1.4.0] — 2026-03-04
 
 ### Agregado — TypeScript SDK
