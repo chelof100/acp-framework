@@ -6,3 +6,8 @@
 
 # Certification outputs
 ACP-CERT-*.json
+
+# Python cache
+**/.pytest_cache/
+**/__pycache__/
+*.pyc
