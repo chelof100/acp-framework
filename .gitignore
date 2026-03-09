@@ -14,3 +14,6 @@ ACP-CERT-*.json
 
 # Agent workflow rules (local only)
 AGENTS.md
+
+# Node modules
+node_modules/
