@@ -9,6 +9,37 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.0] — 2026-03-09
+
+### Added
+
+#### ACP-HIST-1.0 — History Query API
+- `GET /acp/v1/audit/query` — consulta filtrada y paginada del ledger (event_type, agent_id, institution_id, capability, resource, decision, from_ts, to_ts, from_seq, to_seq, cursor, limit, verify_chain)
+- `GET /acp/v1/audit/events/{event_id}` — lookup de evento individual con verificación hash + sig
+- `GET /acp/v1/audit/agents/{agent_id}/history` — historial consolidado de agente con summary calculado
+- `POST /acp/v1/audit/export` — ExportBundle firmado y auto-verificable para compartir audit trail cross-institucional
+- Cursor-based pagination con expiración de 24h
+- Modelo de autorización por rol: SYSTEM / SUPERVISOR / AGENT / EXTERNAL_AUDITOR
+- Soporte de `verify_chain` on-demand; campo `chain_valid` en todas las respuestas
+- Cobertura de eventos archivados (cold storage 90d–7y) con header `X-ACP-Archive-Latency-Seconds`
+- Errores HIST-E001..HIST-E032
+
+#### ACP-ITA-1.1 — Inter-Authority Federation
+- FederationRecord: acuerdo bilateral firmado con doble sig (ARK_A + ARK_B)
+- Protocolo de establecimiento de 3 fases (propuesta OOB → firma bilateral → activación)
+- `GET /ita/v1/federation` — lista de federaciones activas de la autoridad
+- `GET /ita/v1/federation/{federation_id}` — FederationRecord completo con ambas firmas
+- `GET /ita/v1/federation/resolve/{institution_id}` — resolución cross-authority de institución
+- `POST /ita/v1/revocation-notify` — propagación de revocaciones a peers federados
+- Algoritmo de resolución cross-authority (9 pasos, sin confiar en ITA remota directamente)
+- Federación no transitiva (max 1 hop directo)
+- Terminación de federación: mutua e unilateral con período de gracia de 7 días
+- Integración con ACP-REP-1.2: eventos cross-institutional requieren verificación via §8 para peso 1.0 en ERS
+- Errores ITA-F001..ITA-F016
+
+---
+
+
 ---
 
 ## [1.8.0] — 2026-03-09

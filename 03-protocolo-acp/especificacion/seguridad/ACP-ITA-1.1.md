@@ -1,123 +1,330 @@
-Adaptive Capability Protocol — Identity Trust Anchor
-Internet-Draft
+# ACP-ITA-1.1
+## Inter-Authority Federation Specification
+**Status:** Draft
+**Version:** 1.1
+**Depends-on:** ACP-ITA-1.0, ACP-SIGN-1.0
+**Required-by:** ACP-LEDGER-1.1 (verificación cross-institucional), ACP-REP-1.2 (ERS cross-institutional)
+**Changelog:** v1.1 — Añade protocolo de reconocimiento mutuo entre autoridades ITA independientes (Modelo B Federado definido en ACP-ITA-1.0 §11). Supersede el borrador BFT anterior.
 
-Status: Standards Track
+---
 
-Abstract
+## 1. Alcance
 
-Este documento define ACP-ITA-1.1, la extensión de anclaje de confianza para el ecosistema ACP. Especifica el modelo de admisión, rotación y remoción de autoridades en entornos tolerantes a fallos bizantinos.
+ACP-ITA-1.0 define el modelo centralizado (Modelo A): una única autoridad ITA registra instituciones. Este documento define el Modelo B Federado: múltiples autoridades ITA operadas independientemente que se reconocen mutuamente, permitiendo verificación cross-authority sin punto único de confianza.
 
-1. Introduction
+ACP-ITA-1.1 especifica:
+- Estructura del FederationRecord: acuerdo firmado de reconocimiento mutuo
+- Protocolo de establecimiento de federación
+- Algoritmo de resolución cross-authority para artefactos ACP
+- Propagación de revocaciones entre autoridades federadas
+- Descubrimiento de autoridad para un `institution_id` dado
 
-ACP-D asume un conjunto de autoridades confiables que firman capacidades bajo un modelo bizantino. Sin un mecanismo formal de gobernanza, el sistema carece de raíz de confianza verificable.
+---
 
-ACP-ITA define:
+## 2. Definiciones
 
-Registro de autoridades
+**Authority (ITA Authority):** Entidad que opera un ITA Registry según ACP-ITA-1.0. Identificada por `authority_id` (formato: `ita.<domain>`).
 
-Proceso de admisión
+**FederationRecord:** Documento firmado bilateralmente que expresa que dos autoridades se reconocen mutuamente como confiables para los propósitos de verificación ACP.
 
-Proceso de expulsión
+**FederationRegistry:** Endpoint público de una autoridad que lista todas sus relaciones de federación activas.
 
-Rotación de claves
+**Cross-Authority Resolution:** Proceso por el que institución B (bajo ITA_B) verifica artefactos emitidos por institución A (bajo ITA_A) usando la federación ITA_A ↔ ITA_B.
 
-Protección contra captura de quorum
+**Authority Root Key (ARK):** Par de claves Ed25519 de la autoridad ITA. Análogo a la RIK institucional pero para la autoridad misma. Usada para firmar FederationRecords y registros institucionales.
 
-2. Terminology
+---
 
-Las palabras MUST, MUST NOT, REQUIRED, SHALL, SHOULD, SHOULD NOT y MAY se interpretan conforme a IETF RFC 2119.
+## 3. Modelo de Confianza Federado
 
-3. System Model
+```
+        ITA_A                        ITA_B
+    (authority_a)               (authority_b)
+         │                            │
+         │    FederationRecord        │
+         │◄──────────────────────────►│
+         │    (bilateral, firmado)    │
+         │                            │
+    ┌────┴────┐                  ┌────┴────┐
+    │  Inst A │                  │  Inst B │
+    │ (org.a) │                  │ (org.b) │
+    └─────────┘                  └─────────┘
+         │                            │
+         └──── Artefactos ACP ────────►│
+              (verificables vía
+               resolución cross-auth)
+```
 
-Sea:
+La federación es bilateral: ITA_A reconoce a ITA_B y viceversa en el mismo FederationRecord. No existe federación unidireccional.
 
-n = número total de autoridades
+La profundidad de federación es 1 hop: ITA_A puede federar con ITA_B y con ITA_C, pero ITA_B y ITA_C no son transitivamente reconocidas entre sí por ello. Cada par requiere su propio FederationRecord.
 
-f = número máximo de nodos bizantinos tolerables
+---
 
-Debe cumplirse:
+## 4. Estructura del FederationRecord
 
-n ≥ 3f + 1
-
-4. Trust Registry
-
-Toda autoridad MUST estar registrada en el Trust Registry:
-
-TrustRegistryEntry = {
-    authority_id,
-    public_key,
-    admission_signatures,
-    activation_epoch,
-    status
+```json
+{
+  "ver": "1.1",
+  "federation_id": "<uuid_v4>",
+  "authority_a": {
+    "authority_id": "ita.example-a.com",
+    "display_name": "Authority A",
+    "registry_endpoint": "https://ita.example-a.com",
+    "public_key": "<base64url_ed25519_pk_32_bytes>",
+    "key_id": "<SHA-256_base64url_de_public_key>"
+  },
+  "authority_b": {
+    "authority_id": "ita.example-b.com",
+    "display_name": "Authority B",
+    "registry_endpoint": "https://ita.example-b.com",
+    "public_key": "<base64url_ed25519_pk_32_bytes>",
+    "key_id": "<SHA-256_base64url_de_public_key>"
+  },
+  "established_at": 1718900000,
+  "valid_until": null,
+  "scope": {
+    "capabilities": ["*"],
+    "event_types": ["*"],
+    "restrictions": null
+  },
+  "sig_a": "<firma_de_authority_a_sobre_el_record_sin_sig_b>",
+  "sig_b": "<firma_de_authority_b_sobre_el_record_sin_sig_a>"
 }
+```
 
-El registro MUST ser:
+`valid_until` es null para federaciones indefinidas. Cuando presente, la federación expira automáticamente y todos los artefactos emitidos antes de la expiración siguen siendo verificables hasta su propio `exp`.
 
-Verificable
+`scope.capabilities` limita qué capabilities ACP son reconocidas cross-authority. `["*"]` significa sin restricción.
 
-Firmado por quorum
+`sig_a` cubre todos los campos excepto `sig_a` y `sig_b`. Ídem para `sig_b`. Ambas firmas deben estar presentes para que el record sea válido.
 
-Público o audit-able
+---
 
-5. Admission Protocol
+## 5. Protocolo de Establecimiento de Federación
 
-Una nueva autoridad es válida si:
+### Fase 1 — Propuesta (fuera de banda)
 
-Presenta clave pública
+Las autoridades se contactan por canal fuera de banda (correo, contrato legal, portal de administración) y acuerdan federar. El mecanismo fuera de banda no es especificado por ACP.
 
-Obtiene ≥ 2f+1 firmas de autoridades activas
+### Fase 2 — Firma bilateral
 
-Espera activation_delay
+```
+1. ITA_A construye FederationRecord con todos los campos excepto sig_a y sig_b
+2. ITA_A firma: sig_a = Sign(ark_a, SHA-256(JCS(record_sin_ambas_sigs)))
+3. ITA_A envía el record con sig_a a ITA_B
+4. ITA_B verifica sig_a con pk_a conocida fuera de banda
+5. ITA_B firma: sig_b = Sign(ark_b, SHA-256(JCS(record_sin_ambas_sigs)))
+6. ITA_B publica el record completo (con sig_a y sig_b) en su FederationRegistry
+7. ITA_A hace lo mismo
+```
 
-Formalmente:
+Ambas autoridades MUST publicar el mismo FederationRecord. Un verificador que obtiene el record de cualquiera de las dos puede verificar ambas firmas.
 
-Authority_Valid(a) ⇔
-    Cardinality(signatures(a)) ≥ 2f + 1
+### Fase 3 — Activación
 
-Una autoridad MUST NOT activarse inmediatamente tras firmarse.
+La federación está activa cuando el FederationRecord es publicado por ambas partes. No hay período de transición.
 
-6. Removal Protocol
+---
 
-Una autoridad MAY ser removida si:
+## 6. API del FederationRegistry
 
-Evidencia criptográfica de mal comportamiento
+### `GET /ita/v1/federation`
 
-Votación ≥ 2f+1
+Lista todas las federaciones activas de esta autoridad. **No requiere autenticación.**
 
-La remoción MUST registrarse en el Trust Registry con prueba verificable.
+**Response 200:**
+```json
+{
+  "ver": "1.1",
+  "authority_id": "ita.example-a.com",
+  "federations": [
+    {
+      "federation_id": "<uuid>",
+      "peer_authority_id": "ita.example-b.com",
+      "peer_display_name": "Authority B",
+      "peer_registry_endpoint": "https://ita.example-b.com",
+      "established_at": 1718900000,
+      "valid_until": null,
+      "status": "active"
+    }
+  ]
+}
+```
 
-7. Key Rotation
+### `GET /ita/v1/federation/{federation_id}`
 
-Una autoridad que rota clave MUST:
+Retorna el FederationRecord completo con ambas firmas.
 
-Firmar nueva clave con la clave anterior
+**Response 200:** FederationRecord completo según §4.
 
-Obtener confirmación ≥ 2f+1
+### `GET /ita/v1/federation/resolve/{institution_id}`
 
-Publicar transición verificable
+Dado un `institution_id`, retorna bajo qué autoridad está registrada esa institución, buscando en el propio registry y en los peers federados.
 
-El sistema MUST rechazar claves no registradas.
+**Response 200:**
+```json
+{
+  "institution_id": "org.example.banking",
+  "governing_authority": "ita.example-a.com",
+  "resolution_path": "direct | federated",
+  "federation_id": "<uuid_o_null_si_direct>",
+  "institution_record": {},
+  "verified_at": 1718920000
+}
+```
 
-8. Security Considerations
+`resolution_path: "direct"` — la institución está en el registry propio.
+`resolution_path: "federated"` — la institución fue encontrada en un peer federado.
 
-ACP-ITA protege contra:
+El servidor MUST verificar la firma del registro institucional retornado antes de incluirlo en la respuesta.
 
-Inserción unilateral de autoridad
+**Errores:**
 
-Sustitución de clave silenciosa
+| Código | HTTP | Condición |
+|--------|------|-----------|
+| ITA-F001 | 404 | institution_id no encontrado en ningún registry federado |
+| ITA-F002 | 502 | Peer federation registry no responde (timeout) |
 
-Captura progresiva del quorum
+Cuando ITA-F002, la respuesta SHOULD incluir qué peers fueron intentados y cuáles fallaron:
+```json
+{
+  "error": "ITA-F002",
+  "peers_attempted": ["ita.example-b.com"],
+  "peers_failed": ["ita.example-b.com"]
+}
+```
 
-Si ≥ 2f+1 autoridades coluden, el modelo falla por definición del sistema bizantino.
+---
 
-9. IANA Considerations
+## 7. Notificación de Revocaciones — `POST /ita/v1/revocation-notify`
 
-No se requieren asignaciones IANA.
+Cuando una institución bajo ITA_A es revocada, ITA_A MUST notificar a todos sus peers federados.
 
-10. Normative References
+### Request body (enviado por ITA_A a ITA_B)
 
-RFC 2119
+```json
+{
+  "ver": "1.1",
+  "notification_id": "<uuid>",
+  "federation_id": "<uuid>",
+  "notifying_authority": "ita.example-a.com",
+  "event": "institution_revoked | institution_key_revoked",
+  "institution_id": "org.example.banking",
+  "key_id": "<key_id_afectado_o_null_si_institution_revoked>",
+  "revoked_at": 1718920000,
+  "reason_code": "ITA-F010",
+  "sig": "<firma_de_authority_a>"
+}
+```
 
-Byzantine Fault Tolerance literature
+`sig` cubre todos los campos excepto `sig`.
 
-Threshold Signature research
+ITA_B MUST verificar `sig` con la pk de ITA_A del FederationRecord antes de procesar la notificación.
+
+### Response 200
+
+```json
+{
+  "notification_id": "<uuid>",
+  "accepted": true,
+  "invalidated_cache_entries": 3
+}
+```
+
+ITA_B MUST invalidar inmediatamente su caché local de la institución o clave revocada. Los artefactos firmados con la clave revocada son inválidos desde `revoked_at`.
+
+---
+
+## 8. Algoritmo de Resolución Cross-Authority
+
+Cuando institución B (bajo ITA_B) verifica un artefacto ACP emitido por institución A (bajo ITA_A):
+
+```
+1. Extraer institution_id del artefacto → "org.example.banking"
+2. GET /ita/v1/institutions/org.example.banking en ITA_B → 404 (no está en ITA_B)
+3. GET /ita/v1/federation/resolve/org.example.banking en ITA_B
+   → governing_authority: "ita.example-a.com", resolution_path: "federated"
+4. Obtener FederationRecord ITA_A ↔ ITA_B:
+   GET /ita/v1/federation/{federation_id} en ITA_B o ITA_A
+5. Verificar ambas firmas del FederationRecord con pk de ITA_A y ITA_B
+   (pk de ITA_B conocida localmente; pk de ITA_A en FederationRecord)
+6. Verificar que FederationRecord.status == "active"
+7. Obtener registro institucional de ITA_A:
+   GET /ita/v1/institutions/org.example.banking en ITA_A
+8. Verificar firma del registro institucional con pk de ITA_A (del FederationRecord)
+9. Extraer public_key institucional y verificar firma del artefacto
+```
+
+Un verificador puede hacer este proceso sin confiar en ITA_A directamente — confía en la firma de ITA_B sobre el FederationRecord, que a su vez incluye la pk de ITA_A.
+
+**Caching:** Los FederationRecords pueden cachearse hasta 3600s. Los registros institucionales obtenidos via federación tienen TTL máximo 300s (igual que durante rotación en ITA-1.0).
+
+---
+
+## 9. Impacto en ACP-REP-1.2
+
+Los eventos `REPUTATION_UPDATED` emitidos por institución A (bajo ITA_A) y usados por institución B (bajo ITA_B) para calcular ERS cross-institutional MUST ser verificados mediante el algoritmo de §8 antes de ser considerados como `context: "cross_institutional"` (peso 1.0 en ERS).
+
+Eventos no verificables via resolución cross-authority (federation no disponible, firma inválida) MUST ser descartados del cálculo ERS.
+
+---
+
+## 10. Terminación de Federación
+
+Una federación puede terminarse por acuerdo mutuo o unilateralmente.
+
+### Terminación por acuerdo mutuo
+
+Ambas autoridades eliminan el FederationRecord de sus FederationRegistries simultáneamente.
+
+### Terminación unilateral
+
+Una autoridad puede marcar la federación como `status: "terminating"` en su propio registry, estableciendo un período de gracia de 7 días. Durante ese período:
+- No se aceptan nuevos artefactos cross-authority
+- Los artefactos emitidos antes de `terminating_at` siguen siendo verificables hasta su propio `exp`
+
+Al vencer el período de gracia, el status pasa a `"terminated"`. Artefactos posteriores a `terminating_at` son inválidos.
+
+La otra autoridad MUST ser notificada via `POST /ita/v1/revocation-notify` con `event: "federation_terminating"`.
+
+---
+
+## 11. Errores Generales de Federación
+
+| Código | HTTP | Condición |
+|--------|------|-----------|
+| ITA-F010 | — | Institución revocada por su autoridad gobernante |
+| ITA-F011 | 400 | FederationRecord con firma inválida |
+| ITA-F012 | 400 | FederationRecord expirado |
+| ITA-F013 | 403 | Federación terminada — resolución cross-authority no disponible |
+| ITA-F014 | 400 | Notificación de revocación con firma inválida |
+| ITA-F015 | 409 | Federation ya existe entre estas dos autoridades |
+| ITA-F016 | 400 | Profundidad de federación excedida (max 1 hop directo) |
+
+---
+
+## 12. Consideraciones de Seguridad
+
+**Captura de FederationRecord:** Un atacante que compromete la ARK de ITA_A puede establecer federaciones fraudulentas. La ARK MUST ser custodiada en HSM con acceso estrictamente limitado.
+
+**Resolución de institution_id ambigua:** Si el mismo `institution_id` aparece bajo dos autoridades diferentes, el verificador MUST rechazar ambos y reportar ITA-F001. Los `institution_id` deben ser globalmente únicos.
+
+**Bootstrap de pk de autoridad:** La pk de una autoridad ITA (su ARK pública) MUST ser obtenida fuera de banda la primera vez. Mecanismos recomendados: DNS con DNSSEC, certificado TLS del endpoint ITA, documentación oficial firmada. Una vez obtenida, todas las verificaciones posteriores son autónomas.
+
+**Revocación tardía:** Entre que ITA_A revoca una institución y la notificación llega a ITA_B, existe una ventana de tiempo en que ITA_B aún acepta artefactos de la institución revocada. Esta ventana es aceptable dado el modelo de threat y se mitiga con TTL bajo (300s) para registros institucionales federados.
+
+---
+
+## 13. Conformidad
+
+Una implementación es ACP-ITA-1.1 conforme si:
+
+- Implementa FederationRecord según §4 con doble firma
+- Implementa protocolo de establecimiento de §5
+- Expone `GET /ita/v1/federation`, `GET /ita/v1/federation/{id}`, `GET /ita/v1/federation/resolve/{institution_id}`
+- Expone `POST /ita/v1/revocation-notify` y propaga revocaciones a peers
+- Implementa algoritmo de resolución cross-authority de §8
+- Limita federación a 1 hop (no transitiva)
+- Invalida caché local ante notificación de revocación
+- Custodia ARK en HSM y nunca la expone en API
