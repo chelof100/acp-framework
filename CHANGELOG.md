@@ -11,6 +11,25 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.8.0] — 2026-03-09
+
+### Agregado — ACP-REP-1.2 (Reputation & Trust Layer)
+
+- **`03-protocolo-acp/especificacion/seguridad/ACP-REP-1.2.md`** — Especificación completa que supersede ACP-REP-1.1. Cierra L7 del Agent Governance Stack (ACP-AGS-1.0)
+  - **ExternalReputationScore (ERS):** score formal calculado desde eventos `REPUTATION_UPDATED` del ACP-LEDGER-1.1 via weighted moving average ponderado por contexto e inactividad
+  - **Dual Trust Model:** formalización ITS (InternalTrustScore, institucional privado) vs ERS (ExternalReputationScore, ecosistema externo portable)
+  - **Dual Trust Bootstrap:** TrustAttestation firmada por institución; `bootstrap_value = internal_score · discount_factor`; techo efectivo 0.195 para prevenir inflación artificial
+  - **Reputation Decay:** degradación exponencial del ERS ante inactividad; grace period 90d, half-life 180d, floor 0.10; no aplica al ITS
+  - **Nuevo endpoint `GET /acp/v1/rep/{agent_id}/score`:** consulta rápida para hot path; devuelve `composite_score = 0.6·ITS + 0.4·ERS`; rate limit 120 rpm
+  - **Nuevo endpoint `POST /acp/v1/rep/{agent_id}/bootstrap`:** emisión de TrustAttestation institucional con validaciones completas
+  - **Interface `ReputationStore` extendida:** 6 nuevos métodos para gestión ERS y attestations
+  - **`ReputationConfig` extendida:** 10 nuevos parámetros (ERS, decay, composite weights, bootstrap)
+  - **Errores REP-E008 a REP-E015** — 8 nuevos códigos de error
+  - **Integración ACP-RISK-1.0:** mapping composite_score → reputational_risk_modifier
+  - **Integración ACP-LEDGER-1.1:** consumo por `evaluation_context`; eventos de decay auditables
+
+---
+
 ## [1.6.0] — 2026-03-06
 
 ### Corregido — Go Reference Server
