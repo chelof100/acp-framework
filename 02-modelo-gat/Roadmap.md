@@ -60,6 +60,35 @@ El documento legacy ACP-HP fue reescrito para:
 
 ---
 
+## v1.7.0 — Agent Governance Stack: Liability & Policy Traceability
+**Released:** 2026-03-09
+
+### Nuevos documentos
+
+| Spec | Tipo | Descripción |
+|---|---|---|
+| ACP-LIA-1.0 | Operaciones | Liability Traceability — materializa responsabilidad por ejecución |
+| ACP-PSN-1.0 | Operaciones | Policy Snapshot — registro inmutable de política de riesgo |
+| ACP-AGS-1.0 | Arquitectura | Agent Governance Stack — marco de referencia de 8 capas |
+
+### Documentos actualizados
+
+| Spec | Cambio |
+|---|---|
+| ACP-LEDGER-1.0 → 1.1 | Añade event types `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; añade `policy_snapshot_ref` y `policy_version` en AUTHORIZATION y RISK_EVALUATION |
+
+### Concepto incorporado: Bankability (ARAF)
+v1.7.0 completa las cuatro propiedades de bankability definidas por el marco ARAF:
+- ✅ **Risk-modelable** — ACP-RISK-1.0 + ACP-PSN-1.0
+- ✅ **Auditable** — ACP-LEDGER-1.1
+- ✅ **Predictable** — ACP-EXEC-1.0 + ACP-CT-1.0
+- ✅ **Accountable** — ACP-LIA-1.0
+
+### Forward reference: v1.8.0
+- ACP-REP-1.2: Reputation Layer formal (L7 del AGS). REPUTATION_UPDATED ya definido en ACP-LEDGER-1.1 §5.14.
+
+---
+
 ## Trabajo Pendiente v1.1
 
 Los siguientes ítems fueron identificados durante el desarrollo de v1.0 y se reservan para la siguiente versión menor:

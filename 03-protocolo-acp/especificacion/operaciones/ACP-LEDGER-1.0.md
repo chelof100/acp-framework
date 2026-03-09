@@ -1,9 +1,10 @@
-# ACP-LEDGER-1.0
+# ACP-LEDGER-1.1
 ## Audit Ledger Specification
 **Status:** Draft
-**Version:** 1.0
-**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0
-**Required-by:** ACP-CONF-1.0
+**Version:** 1.1
+**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0, ACP-LIA-1.0, ACP-PSN-1.0
+**Required-by:** ACP-CONF-1.0, ACP-REP-1.2
+**Changelog:** v1.1 — Añade event types `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; añade `policy_snapshot_ref` y `policy_version` en payloads AUTHORIZATION y RISK_EVALUATION; define compatibilidad backwards con v1.0.
 
 ---
 
@@ -24,6 +25,8 @@ Este documento define la estructura del Audit Ledger ACP, el formato unificado d
 **Genesis event:** Primer evento del ledger. Su `prev_hash` es el valor constante de genesis.
 
 **Ledger segment:** Subconjunto contiguo de eventos, verificable independientemente si se conoce el hash del evento inicial.
+
+**policy_snapshot_ref:** UUID del Policy Snapshot (ACP-PSN-1.0) vigente en el momento del evento. Permite reconstruir las reglas exactas que gobernaron una decisión.
 
 ---
 
@@ -98,12 +101,16 @@ Generado por POST /acp/v1/authorize al completar evaluación.
     "risk_eval_id": "<uuid>",
     "risk_score": 28,
     "token_nonce": "<nonce_del_CT>",
-    "context_fingerprint": "<SHA-256_base64url_de_JCS(context)>"
+    "context_fingerprint": "<SHA-256_base64url_de_JCS(context)>",
+    "policy_snapshot_ref": "<uuid>",
+    "policy_version": "2.1.0"
   }
 }
 ```
 
 Decisiones DENIED y ESCALATED MUST ser registradas — el ledger no es solo registro de éxitos.
+
+`policy_snapshot_ref` y `policy_version` son REQUIRED en v1.1. Eventos sin estos campos son tratados como legacy v1.0.
 
 ### 5.3 `RISK_EVALUATION`
 Generado por el motor de riesgo ACP-RISK-1.0.
@@ -127,7 +134,8 @@ Generado por el motor de riesgo ACP-RISK-1.0.
       "escalated_max": 69,
       "autonomy_level": 2
     },
-    "factors_applied": ["f_ctx_ip_non_corporate", "f_res_sensitive"]
+    "factors_applied": ["f_ctx_ip_non_corporate", "f_res_sensitive"],
+    "policy_snapshot_ref": "<uuid>"
   }
 }
 ```
@@ -269,6 +277,89 @@ Generado por POST /acp/v1/agents/{agent_id}/state.
 }
 ```
 
+### 5.12 `LIABILITY_RECORD`
+Generado por ACP-LIA-1.0 inmediatamente después de registrar `EXECUTION_TOKEN_CONSUMED`. Captura la cadena de delegación completa y el responsable asignado por cada ejecución. Emitido siempre — tanto en `success` como en `failure` o `unknown`.
+
+```json
+{
+  "event_type": "LIABILITY_RECORD",
+  "payload": {
+    "liability_id": "<uuid>",
+    "et_id": "<uuid>",
+    "authorization_id": "<uuid>",
+    "agent_id": "<AgentID>",
+    "capability": "acp:cap:financial.payment",
+    "resource": "org.example/accounts/ACC-001",
+    "delegation_chain": [
+      {
+        "depth": 0,
+        "token_nonce": "<nonce_root>",
+        "agent_id": "<AgentID_institucion>",
+        "issued_at": 1718900000
+      },
+      {
+        "depth": 1,
+        "token_nonce": "<nonce_1>",
+        "agent_id": "<AgentID_supervisor>",
+        "issued_at": 1718910000
+      },
+      {
+        "depth": 2,
+        "token_nonce": "<nonce_2>",
+        "agent_id": "<AgentID_ejecutor>",
+        "issued_at": 1718920000
+      }
+    ],
+    "delegation_depth": 2,
+    "liability_assignee": "<AgentID>",
+    "policy_snapshot_ref": "<uuid>",
+    "execution_result": "success | failure | unknown",
+    "executed_at": 1718920150,
+    "consumed_by_system": "org.example/systems/payment-processor",
+    "chain_incomplete": false
+  }
+}
+```
+
+`chain_incomplete: true` se emite cuando algún token de la cadena no está disponible para reconstrucción (token histórico expirado o de institución externa). No invalida el registro — lo marca como parcialmente verificable.
+
+### 5.13 `POLICY_SNAPSHOT_CREATED`
+Generado por ACP-PSN-1.0 al crear un nuevo policy snapshot activo. Registra cada transición de política en el ledger para trazabilidad histórica.
+
+```json
+{
+  "event_type": "POLICY_SNAPSHOT_CREATED",
+  "payload": {
+    "snapshot_id": "<uuid>",
+    "policy_version": "2.1.0",
+    "effective_from": 1718900000,
+    "previous_snapshot_id": "<uuid_o_null>",
+    "created_by": "<AgentID>",
+    "change_summary": "Threshold financial.payment ajustado de 35 a 39"
+  }
+}
+```
+
+`previous_snapshot_id` es `null` en el primer snapshot de la institución.
+
+### 5.14 `REPUTATION_UPDATED`
+Generado por ACP-REP-1.2 tras procesar eventos de ejecución. Hace el scoring de reputación auditable — cada actualización de score queda registrada en el ledger con su evento disparador.
+
+```json
+{
+  "event_type": "REPUTATION_UPDATED",
+  "payload": {
+    "update_id": "<uuid>",
+    "agent_id": "<AgentID>",
+    "previous_score": 78,
+    "new_score": 82,
+    "trigger_event_id": "<uuid_del_LIABILITY_RECORD_o_EXECUTION_TOKEN_CONSUMED>",
+    "trigger_event_type": "LIABILITY_RECORD",
+    "delta_reason": "successful_execution"
+  }
+}
+```
+
 ---
 
 ## 6. Cálculo de Hash
@@ -378,18 +469,33 @@ El resultado es verificable sin confiar en institución A.
 | LEDGER-007 | Genesis event faltante o inválido |
 | LEDGER-008 | Tipo de evento no reconocido |
 | LEDGER-009 | Payload incompleto para tipo declarado |
+| LEDGER-010 | `policy_snapshot_ref` ausente en AUTHORIZATION (requerido en v1.1) |
+| LEDGER-011 | `policy_snapshot_ref` ausente en RISK_EVALUATION (requerido en v1.1) |
 
 ---
 
 ## 13. Conformidad
 
-Una implementación es ACP-LEDGER-1.0 conforme si:
+Una implementación es ACP-LEDGER-1.1 conforme si:
 
 - Genera eventos con estructura base completa de §3
-- Implementa todos los tipos de eventos de §5
+- Implementa todos los tipos de eventos de §5 (incluyendo §5.12–5.14)
 - Calcula hash con JCS obligatorio según §6
 - Implementa verificación de cadena de §7
 - Reporta corrupción según §8 sin silenciar
 - No expone operaciones de modificación
 - Retiene eventos mínimo 7 años
 - Incluye `chain_valid` en responses de consulta
+- Incluye `policy_snapshot_ref` en eventos AUTHORIZATION y RISK_EVALUATION
+- Implementa event types LIABILITY_RECORD, POLICY_SNAPSHOT_CREATED, REPUTATION_UPDATED
+
+---
+
+## 14. Compatibilidad con v1.0
+
+ACP-LEDGER-1.1 es backwards-compatible con v1.0:
+
+- Eventos existentes sin `policy_snapshot_ref` son válidos y procesados como **legacy v1.0**. No se rechazan — se marcan como `policy_context: "legacy"` en responses de consulta.
+- Los event types nuevos (§5.12, §5.13, §5.14) son ignorados gracefully por verificadores v1.0 sin romper la integridad de la cadena — el hash-chain es agnóstico al `event_type`.
+- Una implementación v1.1 MUST aceptar ledgers con mezcla de eventos v1.0 y v1.1.
+- Una implementación v1.0 que encuentre event types desconocidos MUST reportar LEDGER-008 pero MUST continuar verificando la cadena.
