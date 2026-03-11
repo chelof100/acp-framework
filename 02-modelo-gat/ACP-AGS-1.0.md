@@ -3,7 +3,7 @@
 **Status:** Draft
 **Version:** 1.0
 **Type:** Architecture Reference Document
-**Depends-on:** ACP-CT-1.0, ACP-SIGN-1.0, ACP-RISK-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.1, ACP-LIA-1.0, ACP-PSN-1.0, ACP-REV-1.0, ACP-ITA-1.0, ACP-CONF-1.0
+**Depends-on:** ACP-CT-1.0, ACP-SIGN-1.0, ACP-RISK-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.2, ACP-LIA-1.0, ACP-PSN-1.0, ACP-REV-1.0, ACP-ITA-1.0, ACP-CONF-1.0
 **Related:** ACP-REP-1.2 (forward reference)
 
 ---
@@ -41,7 +41,7 @@ El AGS es la arquitectura que hace posible las cuatro propiedades en un desplieg
 │       Un LIABILITY_RECORD por ET consumido                   │
 ├─────────────────────────────────────────────────────────────┤
 │  L5 — Verifiable History                                     │
-│       Audit Ledger hash-chained (ACP-LEDGER-1.1)            │
+│       Audit Ledger hash-chained (ACP-LEDGER-1.2)            │
 │       Registro append-only de todos los eventos ACP          │
 ├─────────────────────────────────────────────────────────────┤
 │  L4 — Execution Governance       ◄── ACP Core               │
@@ -136,7 +136,7 @@ Las capas son dependientes hacia abajo: L6 requiere L5, L5 requiere L4, etc. Una
 
 **Propósito:** Registrar de forma permanente, ordenada e inmutable todos los eventos ACP.
 
-**Specs ACP:** ACP-LEDGER-1.1
+**Specs ACP:** ACP-LEDGER-1.2
 
 **Componentes clave:**
 - Hash-chained append-only ledger: `prev_hash` vincula eventos criptográficamente.
@@ -173,7 +173,7 @@ Las capas son dependientes hacia abajo: L6 requiere L5, L5 requiere L4, etc. Una
 **Componentes clave (proyectados):**
 - `trust_score`: Score continuo derivado de LIABILITY_RECORDs históricos.
 - Alimentado por `execution_result` en LIABILITY_RECORDs.
-- Evento `REPUTATION_UPDATED` en ledger (ACP-LEDGER-1.1 §5.14).
+- Evento `REPUTATION_UPDATED` en ledger (ACP-LEDGER-1.2 §5.14).
 - Input para calibración de `capability_baselines` en ACP-PSN-1.0.
 
 **Garantía (proyectada):** El riesgo de autorizar a un agente específico es informado por su historial real de ejecuciones, no solo por sus atributos estáticos.
@@ -213,7 +213,7 @@ Ejemplo: Agente ejecutor (`autonomy_level = 2`) solicita ejecutar `acp:cap:finan
         Decisión: ESCALATED (score 65 ≤ 69).
 
 4. [L4] Sistema emite Execution Token con status ESCALATED (ACP-EXEC-1.0).
-        Registra evento AUTHORIZATION en ledger (ACP-LEDGER-1.1).
+        Registra evento AUTHORIZATION en ledger (ACP-LEDGER-1.2).
         AUTHORIZATION incluye policy_snapshot_ref.
 
 5. [L5] Ledger append-only registra AUTHORIZATION con prev_hash y sig institucional.
@@ -252,7 +252,7 @@ Ejemplo: Agente ejecutor (`autonomy_level = 2`) solicita ejecutar `acp:cap:finan
 | ACP-EXEC-1.0 | L4 | Auditable (ET one-time-use) |
 | ACP-API-1.0 | L4 | Auditable (interfaces formales) |
 | ACP-PSN-1.0 | L8 | Risk-modelable (política inmutable) |
-| ACP-LEDGER-1.1 | L5 | Auditable (historial verificable) |
+| ACP-LEDGER-1.2 | L5 | Auditable (historial verificable) |
 | ACP-LIA-1.0 | L6 | Accountable (responsable asignable) |
 | ACP-REP-1.2 | L7 | Risk-modelable (historial de comportamiento) |
 | ACP-CONF-1.0 | Todas | Auditable (certificación formal) |
@@ -279,7 +279,7 @@ Las instituciones pueden adoptar el AGS incrementalmente. Cada fase produce valo
 **Bankability:** Risk-modelable + Predictable. Sistema operable en producción.
 
 ### Fase 4 — Verifiable History (L5)
-**Specs:** ACP-LEDGER-1.1, ACP-PSN-1.0
+**Specs:** ACP-LEDGER-1.2, ACP-PSN-1.0
 **Resultado:** Registro inmutable de toda la historia del sistema. Policy Snapshots para reconstrucción histórica.
 **Bankability:** + Auditable. Sistema auditado por terceros.
 
@@ -314,12 +314,12 @@ Las instituciones pueden adoptar el AGS incrementalmente. Cada fase produce valo
 
 | Marco | Requisito | Capa AGS | Spec ACP |
 |---|---|---|---|
-| Basel III / IV | Trazabilidad de riesgo | L8, L5 | ACP-RISK-1.0, ACP-LEDGER-1.1 |
-| DORA (EU) | Resiliencia operacional y registros | L5, L4 | ACP-LEDGER-1.1, ACP-EXEC-1.0 |
+| Basel III / IV | Trazabilidad de riesgo | L8, L5 | ACP-RISK-1.0, ACP-LEDGER-1.2 |
+| DORA (EU) | Resiliencia operacional y registros | L5, L4 | ACP-LEDGER-1.2, ACP-EXEC-1.0 |
 | MiCA | Responsabilidad en servicios de activos digitales | L6 | ACP-LIA-1.0 |
 | SR 11-7 (Fed) | Validación y gobernanza de modelos de IA | L8, L6 | ACP-PSN-1.0, ACP-LIA-1.0 |
 | ARAF (Carly Martin) | Bankability de sistemas agénticos | L6, L8 | ACP-LIA-1.0, ACP-PSN-1.0 |
-| MIR (Richard Whitney) | Auditabilidad de agentes en mercados | L5, L6 | ACP-LEDGER-1.1, ACP-LIA-1.0 |
+| MIR (Richard Whitney) | Auditabilidad de agentes en mercados | L5, L6 | ACP-LEDGER-1.2, ACP-LIA-1.0 |
 | GDPR Art. 22 | Decisiones automatizadas significativas | L4, L6 | ACP-EXEC-1.0, ACP-LIA-1.0 |
 
 ---
@@ -341,7 +341,7 @@ Las instituciones pueden adoptar el AGS incrementalmente. Cada fase produce valo
 
 **v1.8.0 (próxima):**
 - ACP-REP-1.2: Especificación completa de L7 (Reputation Layer).
-- Consumo formal de REPUTATION_UPDATED desde ACP-LEDGER-1.1.
+- Consumo formal de REPUTATION_UPDATED desde ACP-LEDGER-1.2.
 - Calibración de `capability_baselines` en PSN basada en scores de reputación.
 
 **v2.0.0 (roadmap):**

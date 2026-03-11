@@ -1,4 +1,17 @@
-1. Extensión del Espacio Formal
+# ACP-DCMA-1.0
+## Delegation Chain Model & Attestation — Modelo Formal de Delegación Encadenada
+
+**Status:** Normative
+**Version:** 1.0
+**Type:** Core Protocol Specification
+**Depends-on:** ACP-CT-1.0, ACP-SIGN-1.0, ACP-LEDGER-1.2
+**Required-by:** ACP-CONF-1.1 (L1 — Core Conformance)
+
+> Esta especificación es **normativa**. Define el modelo formal de delegación encadenada, no-escalación y revocación transitiva. Toda implementación ACP v1.x que soporte delegación MUST cumplir las propiedades formales aquí definidas.
+
+---
+
+## 1. Extensión del Espacio Formal
 
 Añadimos:
 

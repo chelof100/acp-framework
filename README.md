@@ -12,7 +12,7 @@ Define un framework unificado que integra:
 
 ACP no es únicamente un protocolo de mensajería o firma. Es una arquitectura constitucional que establece las reglas formales bajo las cuales un agente autónomo puede actuar.
 
-**Versión:** 1.5 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
+**Versión:** 1.9 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
 
 ---
 
@@ -61,7 +61,7 @@ Ninguna acción se ejecuta sin que estas cuatro condiciones sean criptográficam
 │                                                               │
 │  → 02-modelo-gat/                                             │
 ├──────────────────────────────────────────────────────────────┤
-│  NIVEL 3 — ACP Protocol v1.0                                  │
+│  NIVEL 3 — ACP Protocol v1.9                                  │
 │  (Agent Control Protocol)                                     │
 │                                                               │
 │  El CÓMO.                                                     │
@@ -129,7 +129,8 @@ La implementación técnica. Especificación normativa, cumplimiento y vectores 
 | [ACP-REV-1.0.md](03-protocolo-acp/especificacion/seguridad/ACP-REV-1.0.md) | Protocolo de revocación (endpoint + CRL) |
 | [ACP-ITA-1.0.md](03-protocolo-acp/especificacion/seguridad/ACP-ITA-1.0.md) | Institutional Trust Anchor — modelo centralizado |
 | [ACP-ITA-1.1.md](03-protocolo-acp/especificacion/seguridad/ACP-ITA-1.1.md) | Gobernanza del Trust Anchor — modelo BFT distribuido |
-| [ACP-REP-1.1.md](03-protocolo-acp/especificacion/seguridad/ACP-REP-1.1.md) | Extensión de Reputación — score adaptativo [0,1] |
+| [ACP-REP-1.1.md](03-protocolo-acp/especificacion/seguridad/ACP-REP-1.1.md) | ⚠️ Supersedido por REP-1.2 |
+| [ACP-REP-1.2.md](03-protocolo-acp/especificacion/seguridad/ACP-REP-1.2.md) | Extensión de Reputación — modelo dual ITS+ERS, score compuesto 0.6·ITS + 0.4·ERS |
 
 **Operaciones L3 — sistema completo**
 
@@ -137,8 +138,20 @@ La implementación técnica. Especificación normativa, cumplimiento y vectores 
 |---|---|
 | [ACP-API-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-API-1.0.md) | API HTTP formal con todos los endpoints |
 | [ACP-EXEC-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-EXEC-1.0.md) | Execution Tokens — single-use, 300s |
-| [ACP-LEDGER-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-LEDGER-1.0.md) | Audit Ledger append-only con cadena de hashes |
+| [ACP-LEDGER-1.2.md](03-protocolo-acp/especificacion/operaciones/ACP-LEDGER-1.2.md) | Audit Ledger append-only con cadena de hashes — tipos de evento extendidos |
 | [ACP-PAY-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-PAY-1.0.md) | Extensión de Pago — capacidad con liquidación verificable |
+
+**Bankabilidad L4 — sistema extendido**
+
+| Documento | Función |
+|---|---|
+| [ACP-LIA-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-LIA-1.0.md) | Liability Traceability — cadena de responsabilidad auditada |
+| [ACP-PSN-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-PSN-1.0.md) | Policy Snapshot — snapshot firmado del estado de política |
+| [ACP-AGS-1.0.md](02-modelo-gat/ACP-AGS-1.0.md) | Agent Governance Spec — ontología de gobernanza del agente |
+| [ACP-HIST-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-HIST-1.0.md) | History Query API — consulta auditada de historial de ejecución |
+| [ACP-NOTIFY-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-NOTIFY-1.0.md) | Notification Extension — eventos y webhooks |
+| [ACP-DISC-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-DISC-1.0.md) | Discovery Extension — registro y resolución de agentes |
+| [ACP-BULK-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-BULK-1.0.md) | Bulk Operations — ejecución de capacidades en lote |
 
 **Gobernanza — niveles de conformidad**
 
@@ -243,7 +256,7 @@ Documentación académica y técnica para audiencias externas.
 | **L1** | CORE | SIGN + CT + CAP-REG + HP | Todo implementador |
 | **L2** | SECURITY | L1 + RISK + REV + ITA-1.0 | Emisores de tokens centralizados |
 | **L3** | FULL | L2 + API + EXEC + LEDGER | Sistema centralizado completo |
-| **L4** | EXTENDED | L3 + PAY + REP + ITA-1.1 | Con extensiones económicas y reputacionales |
+| **L4** | EXTENDED | L3 + PAY + REP-1.2 + ITA-1.1 + LIA + PSN + AGS + HIST | Con extensiones económicas, reputacionales y bankability |
 | **L5** | DECENTRALIZED | L4 + ACP-D + BFT quórum | Tolerante a fallas bizantinas |
 
 ---
@@ -320,6 +333,10 @@ console.log(result); // { decision: 'PERMIT', ... }
 | **v1.3** | ✅ Completo | Binario IUT (acp-evaluate, 12/12 PASS), compliance runner (ACR-1.0), Python SDK (78 tests) |
 | **v1.4** | ✅ Completo | TypeScript SDK (68 tests), Rust SDK (43 tests), Docker CI/CD |
 | **v1.5** | ✅ Completo | Go Reference Server — ACP-API-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.0 (9 specs implementadas) |
+| **v1.6** | ✅ Completo | AGENT-1.0 (ontología formal), docker-compose sync, AGENTS.md |
+| **v1.7** | ✅ Completo | LIA-1.0, PSN-1.0, AGS-1.0, LEDGER-1.1 — capa de bankability |
+| **v1.8** | ✅ Completo | REP-1.2 (modelo dual ITS+ERS), LEDGER-1.2 (tipos de evento extendidos) |
+| **v1.9** | ✅ Completo | HIST-1.0, ITA-1.1 actualizado, NOTIFY-1.0, DISC-1.0, BULK-1.0 |
 | **v2.0** | 📋 Especificado | ACP-D completo (BFT, ZK-proofs, DIDs) |
 | **Paper** | ✍️ En preparación | Objetivo IEEE S&P / NDSS |
 

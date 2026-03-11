@@ -1,10 +1,14 @@
 # ACP-REP-1.1
 ## Reputation Extension — Especificación Completa
 
-**Status:** Draft
+**Status:** DEPRECATED — Supersedido por **ACP-REP-1.2**
 **Version:** 1.1
 **Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-REV-1.0, ACP-HP-1.0
 **Required-by:** ACP-CONF-1.1 (Nivel 2 — Security Conformance)
+
+> ⚠️ **DEPRECATED** — Este documento ha sido supersedido por **ACP-REP-1.2**.
+> Nuevas implementaciones MUST usar ACP-REP-1.2.
+> Este documento se mantiene por referencia histórica.
 
 ---
 

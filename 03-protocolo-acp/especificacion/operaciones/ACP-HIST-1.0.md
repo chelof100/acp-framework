@@ -2,7 +2,7 @@
 ## History Query API Specification
 **Status:** Draft
 **Version:** 1.0
-**Depends-on:** ACP-LEDGER-1.1, ACP-ITA-1.0, ACP-SIGN-1.0
+**Depends-on:** ACP-LEDGER-1.2, ACP-ITA-1.0, ACP-SIGN-1.0
 **Required-by:** ACP-REP-1.2 (consulta de eventos históricos para ERS)
 
 ---
@@ -11,7 +11,7 @@
 
 Este documento define la capa de consulta sobre el Audit Ledger ACP. Especifica endpoints de filtrado y paginación para acceso programático al historial de eventos, el formato de exportación portátil para compartir segmentos de audit trail entre instituciones, y el contrato de integridad que toda respuesta debe incluir.
 
-ACP-LEDGER-1.1 define la estructura y almacenamiento. ACP-HIST-1.0 define el acceso.
+ACP-LEDGER-1.2 define la estructura y almacenamiento. ACP-HIST-1.0 define el acceso.
 
 ---
 
@@ -286,7 +286,7 @@ Genera un ExportBundle firmado: un segmento del ledger encapsulado y auto-verifi
 3. Verificar que bundle.expires_at > now()
 4. Verificar chain desde anchor_event:
    a. primer evento: E.prev_hash MUST coincidir con anchor_event.hash
-   b. verificar cadena interna según ACP-LEDGER-1.1 §7
+   b. verificar cadena interna según ACP-LEDGER-1.2 §7
 5. Verificar sig individual de cada evento con pk del issuer
 ```
 
@@ -314,7 +314,7 @@ Para reputación cross-institucional, la institución destino puede solicitar un
 
 ## 9. Retención y Cobertura
 
-Las consultas cubren todos los eventos dentro del período de retención activa de ACP-LEDGER-1.1 (90 días en almacenamiento caliente). Eventos archivados en almacenamiento frío (entre 90 días y 7 años) SHOULD estar disponibles con latencia adicional declarada en el header `X-ACP-Archive-Latency-Seconds`.
+Las consultas cubren todos los eventos dentro del período de retención activa de ACP-LEDGER-1.2 (90 días en almacenamiento caliente). Eventos archivados en almacenamiento frío (entre 90 días y 7 años) SHOULD estar disponibles con latencia adicional declarada en el header `X-ACP-Archive-Latency-Seconds`.
 
 Si un segmento consultado incluye eventos archivados, la respuesta incluye:
 

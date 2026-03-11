@@ -3,7 +3,7 @@
 **Status:** Draft
 **Version:** 1.1
 **Depends-on:** ACP-ITA-1.0, ACP-SIGN-1.0
-**Required-by:** ACP-LEDGER-1.1 (verificación cross-institucional), ACP-REP-1.2 (ERS cross-institutional)
+**Required-by:** ACP-LEDGER-1.2 (verificación cross-institucional), ACP-REP-1.2 (ERS cross-institutional)
 **Changelog:** v1.1 — Añade protocolo de reconocimiento mutuo entre autoridades ITA independientes (Modelo B Federado definido en ACP-ITA-1.0 §11). Supersede el borrador BFT anterior.
 
 ---

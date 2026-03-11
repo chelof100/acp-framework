@@ -1,9 +1,9 @@
 # ACP-LIA-1.0
 ## Liability Traceability Specification
-**Status:** Draft
+**Status:** Stable
 **Version:** 1.0
-**Depends-on:** ACP-EXEC-1.0, ACP-LEDGER-1.0, ACP-CT-1.0, ACP-PSN-1.0
-**Required-by:** ACP-LEDGER-1.1, ACP-REP-1.2
+**Depends-on:** ACP-EXEC-1.0, ACP-LEDGER-1.2, ACP-CT-1.0, ACP-PSN-1.0
+**Required-by:** ACP-LEDGER-1.2, ACP-REP-1.2
 
 ---
 
@@ -164,7 +164,7 @@ ELSE liability_assignee = agent_id  (el agente ejecutor)
 
 ## 7. Reglas de Construcción de delegation_chain
 
-**7.1 Fuente de datos** — La cadena se construye exclusivamente desde eventos en el Audit Ledger (ACP-LEDGER-1.0). No se acepta input externo para la construcción.
+**7.1 Fuente de datos** — La cadena se construye exclusivamente desde eventos en el Audit Ledger (ACP-LEDGER-1.2). No se acepta input externo para la construcción.
 
 **7.2 Orden de construcción** — Se recorre el árbol de delegación desde el ET hacia atrás, siguiendo referencias `parent_token_nonce` hasta alcanzar el token raíz (`depth 0`).
 
@@ -267,7 +267,7 @@ Lista LIABILITY_RECORDs donde `agent_id` o `liability_assignee` coinciden con el
 
 1. Obtener LIABILITY_RECORD via `GET /acp/v1/liability/{liability_id}`.
 2. Verificar que `ledger_event_id` existe en el ledger y corresponde al LIABILITY_RECORD.
-3. Verificar integridad del ledger desde el genesis hasta el evento (ACP-LEDGER-1.0 §8).
+3. Verificar integridad del ledger desde el genesis hasta el evento (ACP-LEDGER-1.2 §8).
 4. Verificar firma institucional `sig` sobre el evento.
 5. Verificar que `policy_snapshot_ref` corresponde a un Policy Snapshot válido y vigente en `executed_at` (ACP-PSN-1.0 §10).
 6. Verificar que `delegation_chain` es consistente con los tokens en el ledger.
@@ -312,7 +312,7 @@ Una implementación es conforme con ACP-LIA-1.0 si:
 2. Construye `delegation_chain` exclusivamente desde datos del Audit Ledger.
 3. Aplica las reglas de asignación de §6 en el orden especificado.
 4. Incluye `policy_snapshot_ref` válido en todo LIABILITY_RECORD.
-5. Persiste el evento como entrada append-only en el Audit Ledger (ACP-LEDGER-1.0).
+5. Persiste el evento como entrada append-only en el Audit Ledger (ACP-LEDGER-1.2).
 6. Expone los tres endpoints de §9 con los schemas especificados.
 7. Emite el evento con `chain_incomplete: true` ante cadena no reconstruible (no omite el registro).
 8. Garantiza idempotencia por `liability_id` en la emisión.

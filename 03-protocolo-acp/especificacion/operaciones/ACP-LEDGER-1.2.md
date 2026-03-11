@@ -1,10 +1,12 @@
-# ACP-LEDGER-1.1
+# ACP-LEDGER-1.2
 ## Audit Ledger Specification
-**Status:** Draft
-**Version:** 1.1
+**Status:** Stable
+**Version:** 1.2
 **Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0, ACP-LIA-1.0, ACP-PSN-1.0
 **Required-by:** ACP-CONF-1.0, ACP-REP-1.2
-**Changelog:** v1.1 — Añade event types `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; añade `policy_snapshot_ref` y `policy_version` en payloads AUTHORIZATION y RISK_EVALUATION; define compatibilidad backwards con v1.0.
+**Changelog:**
+- v1.2 — Correcciones de schema: añade campo `resolver_type` en `ESCALATION_RESOLVED` §5.11 (requerido por ACP-LIA-1.0 §6 Rule 1); corrige tipo de `score` a `float` (escala 0.0–1.0) en `REPUTATION_UPDATED` §5.14 para alinear con ACP-REP-1.2.
+- v1.1 — Añade event types `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; añade `policy_snapshot_ref` y `policy_version` en payloads AUTHORIZATION y RISK_EVALUATION; define compatibilidad backwards con v1.0.
 
 ---
 
@@ -223,6 +225,7 @@ Generado por POST /acp/v1/agents.
     "institution_id": "org.example.banking",
     "autonomy_level": 2,
     "authority_domain": "financial",
+    "capabilities": ["acp:cap:financial.payment"],
     "registered_by": "<AgentID>"
   }
 }
@@ -271,6 +274,7 @@ Generado por POST /acp/v1/agents/{agent_id}/state.
     "escalation_id": "<uuid>",
     "original_request_id": "<uuid>",
     "resolution": "APPROVED | DENIED",
+    "resolver_type": "human | agent | system",
     "resolved_by": "<AgentID>",
     "resolved_at": 1718921000
   }
@@ -351,8 +355,8 @@ Generado por ACP-REP-1.2 tras procesar eventos de ejecución. Hace el scoring de
   "payload": {
     "update_id": "<uuid>",
     "agent_id": "<AgentID>",
-    "previous_score": 78,
-    "new_score": 82,
+    "previous_score": 0.780,
+    "new_score": 0.820,
     "trigger_event_id": "<uuid_del_LIABILITY_RECORD_o_EXECUTION_TOKEN_CONSUMED>",
     "trigger_event_type": "LIABILITY_RECORD",
     "delta_reason": "successful_execution"
@@ -476,7 +480,7 @@ El resultado es verificable sin confiar en institución A.
 
 ## 13. Conformidad
 
-Una implementación es ACP-LEDGER-1.1 conforme si:
+Una implementación es ACP-LEDGER-1.2 conforme si:
 
 - Genera eventos con estructura base completa de §3
 - Implementa todos los tipos de eventos de §5 (incluyendo §5.12–5.14)
@@ -488,12 +492,14 @@ Una implementación es ACP-LEDGER-1.1 conforme si:
 - Incluye `chain_valid` en responses de consulta
 - Incluye `policy_snapshot_ref` en eventos AUTHORIZATION y RISK_EVALUATION
 - Implementa event types LIABILITY_RECORD, POLICY_SNAPSHOT_CREATED, REPUTATION_UPDATED
+- Incluye `resolver_type` en eventos ESCALATION_RESOLVED
+- Usa tipo `float` (0.0–1.0) para campos `previous_score` y `new_score` en REPUTATION_UPDATED
 
 ---
 
 ## 14. Compatibilidad con v1.0
 
-ACP-LEDGER-1.1 es backwards-compatible con v1.0:
+ACP-LEDGER-1.2 es backwards-compatible con v1.0 y v1.1:
 
 - Eventos existentes sin `policy_snapshot_ref` son válidos y procesados como **legacy v1.0**. No se rechazan — se marcan como `policy_context: "legacy"` en responses de consulta.
 - Los event types nuevos (§5.12, §5.13, §5.14) son ignorados gracefully por verificadores v1.0 sin romper la integridad de la cadena — el hash-chain es agnóstico al `event_type`.
