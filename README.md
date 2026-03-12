@@ -2,324 +2,222 @@
 
 **Arquitectura Constitucional para Gobernanza de Agentes Autónomos**
 
-ACP (Agent Control Protocol) es un framework integral de gobernanza y ejecución verificable para agentes de IA autónomos.
+ACP (Agent Control Protocol) es un protocolo formal de gobernanza y ejecución verificable para agentes de IA autónomos que operan en entornos institucionales.
 
-Define un framework unificado que integra:
-- Bases arquitectónicas de soberanía institucional
-- Modelo formal de gobernanza (GAT)
-- Protocolo criptográfico de control y delegación
-- Infraestructura de cumplimiento y certificación pública
+No es un formato de mensajería ni una librería de firma. Es una **arquitectura constitucional**: un conjunto de reglas formales que determina bajo qué condiciones un agente autónomo puede actuar, por autoridad de quién, con qué responsabilidad y con qué prueba retroactiva.
 
-ACP no es únicamente un protocolo de mensajería o firma. Es una arquitectura constitucional que establece las reglas formales bajo las cuales un agente autónomo puede actuar.
+**Versión:** 1.10 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
 
-**Versión:** 1.9 | **Licencia:** Apache 2.0 | **Autor:** Marcelo Fernandez — TraslaIA | info@traslaia.com
+→ Modelo arquitectónico completo: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 ---
 
 ## El problema que resuelve
 
-Las organizaciones están desplegando agentes de IA autónomos sin respuestas a preguntas críticas:
+Las organizaciones que despliegan agentes de IA autónomos enfrentan cuatro preguntas sin respuesta en la industria actual:
 
-- ¿Quién autorizó a este agente a ejecutar esta acción?
-- ¿Puedo probarlo criptográficamente, a posteriori?
-- ¿Puedo revocar o restringir esa autorización dinámicamente?
-- ¿Funciona con cualquier proveedor de IA?
+- **¿Quién autorizó** a este agente a ejecutar esta acción?
+- **¿Puedo probarlo criptográficamente**, a posteriori?
+- **¿Puedo revocar o restringir** esa autorización dinámicamente?
+- **¿Funciona** con cualquier proveedor de IA o entorno de ejecución?
 
-**ACP Framework** es la respuesta completa a las cuatro preguntas.
+ACP es la respuesta completa a las cuatro.
 
 ---
 
-## Invariante Fundamental
+## Invariante Constitucional
 
 ```
 Execute(request) ⟹ ValidIdentity ∧ ValidCapability ∧ ValidDelegationChain ∧ AcceptableRisk
 ```
 
-Ninguna acción se ejecuta sin que estas cuatro condiciones sean criptográficamente verificables.
+Ninguna acción de agente se ejecuta a menos que las cuatro condiciones se cumplan simultáneamente y sean verificables a posteriori desde el registro de auditoría. Esta es la restricción arquitectónica de la que se deriva toda spec.
 
 ---
 
-## Los tres niveles del framework
+## Arquitectura: Stack de Gobernanza de 8 Capas
+
+ACP está organizado en ocho capas acumulativas. Cada capa depende de todas las capas inferiores.
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  NIVEL 1 — Arquitectura de IA Soberana                        │
-│                                                               │
-│  El POR QUÉ.                                                  │
-│  Las organizaciones necesitan independencia real de los       │
-│  proveedores de IA. La soberanía no es una opción — es un    │
-│  requisito arquitectónico.                                    │
-│                                                               │
-│  → 01-arquitectura-soberana/                                  │
-├──────────────────────────────────────────────────────────────┤
-│  NIVEL 2 — Modelo GAT                                         │
-│  (Gobernanza Arquitectónica de Agentes)                       │
-│                                                               │
-│  El QUÉ.                                                      │
-│  Separación formal entre decisión y ejecución.                │
-│  Trazabilidad estructural. Madurez medible.                   │
-│                                                               │
-│  → 02-modelo-gat/                                             │
-├──────────────────────────────────────────────────────────────┤
-│  NIVEL 3 — ACP Protocol v1.9                                  │
-│  (Agent Control Protocol)                                     │
-│                                                               │
-│  El CÓMO.                                                     │
-│  Implementación criptográfica de los principios anteriores.   │
-│  5 capas técnicas. 5 niveles de conformidad. Certificable.    │
-│                                                               │
-│  → 03-protocolo-acp/                                          │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  CAPA 8 — ARQUITECTURA DE RIESGO                                 │
+│  RISK-1.0 · PSN-1.0 · CROSS-ORG-1.0 · BULK-1.0                 │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 7 — REPUTACIÓN                                             │
+│  REP-1.2 (ITS + ERS compuesto) · REP-PORTABILITY                │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 6 — RESPONSABILIDAD Y CONFIANZA                            │
+│  LIA-1.0 · ITA-1.0 · ITA-1.1 (BFT) · GOV-EVENTS-1.0           │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 5 — HISTORIA VERIFICABLE                                   │
+│  LEDGER-1.2 · HIST-1.0                                          │
+├═════════════════════════════════════════════════════════════════╡
+│  CAPA 4 — GOBERNANZA DE EJECUCIÓN    ← núcleo constitucional    │
+│  EXEC-1.0 · POLICY-CTX-1.0 · PROVENANCE-1.0 · API-1.0          │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 3 — DELEGACIÓN                                             │
+│  HP-1.0 · DCMA-1.0 · MESSAGES-1.0                               │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 2 — CAPACIDAD                                              │
+│  CT-1.0 · CAP-REG-1.0                                           │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA 1 — IDENTIDAD                                              │
+│  SIGN-1.0 · AGENT-1.0                                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## Estructura del Repositorio
-
-### [`01-arquitectura-soberana/`](01-arquitectura-soberana/) — Nivel 1
-
-Las bases filosóficas y estratégicas. Por qué la soberanía institucional sobre agentes de IA no es opcional.
-
-| Documento | Contenido |
-|---|---|
-| [Arquitectura-Soberana-de-IA.md](01-arquitectura-soberana/Arquitectura-Soberana-de-IA.md) | Framework completo de soberanía |
-| [Sovereign-AI-Architecture-Framework.md](01-arquitectura-soberana/Sovereign-AI-Architecture-Framework.md) | Especificación completa del framework de soberanía |
-| [Doctrina-Fundacional-ACP.md](01-arquitectura-soberana/Doctrina-Fundacional-ACP.md) | Los tres pilares criptográficos del protocolo |
-| [Riesgo-sin-Arquitectura-Soberana.csv](01-arquitectura-soberana/Riesgo-sin-Arquitectura-Soberana.csv) | Matriz de riesgos sin arquitectura soberana |
+Capas 1–3: *quién puede hacer qué, por qué autoridad*
+Capa 4: *aplicación del invariante constitucional*
+Capas 5–8: *profundidad evidencial — qué se hizo, con qué consecuencia, por quién*
 
 ---
 
-### [`02-modelo-gat/`](02-modelo-gat/) — Nivel 2
+## Cómo se Conectan las Specs
 
-El modelo de Gobernanza Arquitectónica de Agentes. Cómo estructurar organizaciones que operan agentes autónomos.
+Las cadenas de dependencia críticas que todo implementador debe entender:
 
-| Documento | Contenido |
+| Cadena | Rol |
 |---|---|
-| [GAT-Maturity-Model.md](02-modelo-gat/GAT-Maturity-Model.md) | Modelo GAT v1.1 — Matriz de madurez niveles 0-5 |
-| [Arquitectura-Tres-Capas.md](02-modelo-gat/Arquitectura-Tres-Capas.md) | Síntesis de los 3 niveles del framework |
-| [ACP-Architecture-Specification.md](02-modelo-gat/ACP-Architecture-Specification.md) | Arquitectura técnica unificada — 5 capas |
-| [Roadmap.md](02-modelo-gat/Roadmap.md) | Estado del protocolo y hoja de ruta v1.x / v2.0 |
-| [matrices/](02-modelo-gat/matrices/) | Matrices de madurez GAT (CSV) |
+| `SIGN → CT → HP → EXEC` | Autoridad de ejecución — camino mínimo para cualquier acción autorizada |
+| `EXEC → LEDGER → HIST` | Registro de auditoría — de la ejecución al historial consultable e inmutable |
+| `EXEC → POLICY-CTX + PROVENANCE` | Capa de evidencia — prueba retroactiva: *bajo qué política, a través de qué cadena* |
+| `ITA → REP → REP-PORTABILITY` | Cadena de confianza — del aval institucional a la puntuación conductual portable |
+| `LEDGER → LIA` | Cadena de responsabilidad — del log de auditoría a la trazabilidad de responsabilidad |
+| `GOV-EVENTS → HIST` | Cadena de gobernanza — eventos institucionales visibles en el historial del agente |
 
----
-
-### [`03-protocolo-acp/`](03-protocolo-acp/) — Nivel 3
-
-La implementación técnica. Especificación normativa, cumplimiento y vectores de prueba.
-
-#### Especificación Técnica
-
-**Núcleo L1 — obligatorio para cualquier implementador**
-
-| Documento | Función |
-|---|---|
-| [ACP-SIGN-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-SIGN-1.0.md) | Serialización JCS + firma Ed25519 |
-| [ACP-CT-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-CT-1.0.md) | Estructura y verificación del Capability Token |
-| [ACP-CAP-REG-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-CAP-REG-1.0.md) | Registro canónico de capacidades |
-| [ACP-HP-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-HP-1.0.md) | Handshake Protocol — prueba de posesión |
-| [ACP-DCMA-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-DCMA-1.0.md) | Delegación encadenada multi-agente — no-escalada + revocación transitiva |
-| [ACP-AGENT-SPEC-0.3.md](03-protocolo-acp/especificacion/nucleo/ACP-AGENT-SPEC-0.3.md) | Ontología formal del agente — `A=(ID,C,P,D,L,S)` |
-| [ACP-MESSAGES-1.0.md](03-protocolo-acp/especificacion/nucleo/ACP-MESSAGES-1.0.md) | Formato wire del protocolo — 5 tipos de mensaje normalizados |
-
-**Seguridad L2 — emisores de tokens**
-
-| Documento | Función |
-|---|---|
-| [ACP-RISK-1.0.md](03-protocolo-acp/especificacion/seguridad/ACP-RISK-1.0.md) | Motor de riesgo determinístico (RS 0-100) |
-| [ACP-REV-1.0.md](03-protocolo-acp/especificacion/seguridad/ACP-REV-1.0.md) | Protocolo de revocación (endpoint + CRL) |
-| [ACP-ITA-1.0.md](03-protocolo-acp/especificacion/seguridad/ACP-ITA-1.0.md) | Institutional Trust Anchor — modelo centralizado |
-| [ACP-ITA-1.1.md](03-protocolo-acp/especificacion/seguridad/ACP-ITA-1.1.md) | Gobernanza del Trust Anchor — modelo BFT distribuido |
-| [ACP-REP-1.1.md](03-protocolo-acp/especificacion/seguridad/ACP-REP-1.1.md) | ⚠️ Supersedido por REP-1.2 |
-| [ACP-REP-1.2.md](03-protocolo-acp/especificacion/seguridad/ACP-REP-1.2.md) | Extensión de Reputación — modelo dual ITS+ERS, score compuesto 0.6·ITS + 0.4·ERS |
-
-**Operaciones L3 — sistema completo**
-
-| Documento | Función |
-|---|---|
-| [ACP-API-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-API-1.0.md) | API HTTP formal con todos los endpoints |
-| [ACP-EXEC-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-EXEC-1.0.md) | Execution Tokens — single-use, 300s |
-| [ACP-LEDGER-1.2.md](03-protocolo-acp/especificacion/operaciones/ACP-LEDGER-1.2.md) | Audit Ledger append-only con cadena de hashes — tipos de evento extendidos |
-| [ACP-PAY-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-PAY-1.0.md) | Extensión de Pago — capacidad con liquidación verificable |
-
-**Bankabilidad L4 — sistema extendido**
-
-| Documento | Función |
-|---|---|
-| [ACP-LIA-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-LIA-1.0.md) | Liability Traceability — cadena de responsabilidad auditada |
-| [ACP-PSN-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-PSN-1.0.md) | Policy Snapshot — snapshot firmado del estado de política |
-| [ACP-AGS-1.0.md](02-modelo-gat/ACP-AGS-1.0.md) | Agent Governance Spec — ontología de gobernanza del agente |
-| [ACP-HIST-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-HIST-1.0.md) | History Query API — consulta auditada de historial de ejecución |
-| [ACP-NOTIFY-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-NOTIFY-1.0.md) | Notification Extension — eventos y webhooks |
-| [ACP-DISC-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-DISC-1.0.md) | Discovery Extension — registro y resolución de agentes |
-| [ACP-BULK-1.0.md](03-protocolo-acp/especificacion/operaciones/ACP-BULK-1.0.md) | Bulk Operations — ejecución de capacidades en lote |
-
-**Gobernanza — niveles de conformidad**
-
-| Documento | Función |
-|---|---|
-| [ACP-CONF-1.1.md](03-protocolo-acp/especificacion/gobernanza/ACP-CONF-1.1.md) | **Conformidad 5 niveles acumulativos L1-L5** (normativo) |
-| [ACP-CONF-1.0.md](03-protocolo-acp/especificacion/gobernanza/ACP-CONF-1.0.md) | ⚠️ Deprecado — reemplazado por CONF-1.1 |
-
-**Descentralizado L5 — ACP-D**
-
-| Documento | Función |
-|---|---|
-| [ACP-D-Especificacion.md](03-protocolo-acp/especificacion/descentralizado/ACP-D-Especificacion.md) | Especificación técnica completa de ACP-D |
-| [Arquitectura-Sin-Issuer-Central.md](03-protocolo-acp/especificacion/descentralizado/Arquitectura-Sin-Issuer-Central.md) | DID + VC + modelo Self-Sovereign Capability |
-| [README-ACP-D.md](03-protocolo-acp/especificacion/descentralizado/README-ACP-D.md) | Contexto y diferencias con ACP v1.0 |
-
-#### Cumplimiento y Certificación
-
-Cadena completa: especificación → suite de pruebas → runner → certificación pública.
-
-```
-CONF-1.1 → TS-SCHEMA (forma) → TS-1.0 (qué pasar) → TS-1.1 (formato JSON)
-         → IUT-PROTOCOL (contrato runner↔impl) → ACR-1.0 (ejecuta)
-         → CERT-1.0 (badge público verificable)
-```
-
-| Documento | Función |
-|---|---|
-| [ACP-TS-SCHEMA-1.0.md](03-protocolo-acp/cumplimiento/ACP-TS-SCHEMA-1.0.md) | JSON Schema formal para vectores de prueba (Draft 2020-12) |
-| [ACP-TS-1.0.md](03-protocolo-acp/cumplimiento/ACP-TS-1.0.md) | Suite de pruebas — casos requeridos por nivel L1-L5 |
-| [ACP-TS-1.1.md](03-protocolo-acp/cumplimiento/ACP-TS-1.1.md) | Formato normativo de vectores — determinístico, independiente del lenguaje |
-| [ACP-IUT-PROTOCOL-1.0.md](03-protocolo-acp/cumplimiento/ACP-IUT-PROTOCOL-1.0.md) | Contrato runner ↔ IUT — STDIN/STDOUT, timeouts, manifest |
-| [ACR-1.0.md](03-protocolo-acp/cumplimiento/ACR-1.0.md) | Compliance Runner oficial — ejecuta pruebas y emite certificaciones |
-| [ACP-CERT-1.0.md](03-protocolo-acp/cumplimiento/ACP-CERT-1.0.md) | Sistema de Certificación Pública — badge ACP-CERT-YYYY-NNNN |
-
-#### Vectores de Prueba Normativos
-
-12 vectores JSON determinísticos para validar implementaciones contra ACP-TS-1.1.
-
-| Archivo | Capa | Tipo | Resultado Esperado |
-|---|---|---|---|
-| [TS-CORE-POS-001](03-protocolo-acp/test-vectors/TS-CORE-POS-001-valid-canonical-capability.json) | CORE | ✅ | `VALID` — capability canónica |
-| [TS-CORE-POS-002](03-protocolo-acp/test-vectors/TS-CORE-POS-002-valid-multiple-actions.json) | CORE | ✅ | `VALID` — múltiples acciones |
-| [TS-CORE-NEG-001](03-protocolo-acp/test-vectors/TS-CORE-NEG-001-expired-token.json) | CORE | ❌ | `REJECT / EXPIRED` |
-| [TS-CORE-NEG-002](03-protocolo-acp/test-vectors/TS-CORE-NEG-002-missing-expiry.json) | CORE | ❌ | `REJECT / MALFORMED_INPUT` |
-| [TS-CORE-NEG-003](03-protocolo-acp/test-vectors/TS-CORE-NEG-003-missing-nonce.json) | CORE | ❌ | `REJECT / MALFORMED_INPUT` |
-| [TS-CORE-NEG-004](03-protocolo-acp/test-vectors/TS-CORE-NEG-004-invalid-signature.json) | CORE | ❌ | `REJECT / INVALID_SIGNATURE` |
-| [TS-CORE-NEG-005](03-protocolo-acp/test-vectors/TS-CORE-NEG-005-revoked-token.json) | CORE | ❌ | `REJECT / REVOKED` |
-| [TS-CORE-NEG-006](03-protocolo-acp/test-vectors/TS-CORE-NEG-006-untrusted-issuer.json) | CORE | ❌ | `REJECT / UNTRUSTED_ISSUER` |
-| [TS-DCMA-POS-001](03-protocolo-acp/test-vectors/TS-DCMA-POS-001-valid-delegation-chain.json) | DCMA | ✅ | `VALID` — delegación single-hop |
-| [TS-DCMA-NEG-001](03-protocolo-acp/test-vectors/TS-DCMA-NEG-001-privilege-escalation.json) | DCMA | ❌ | `REJECT / ACCESS_DENIED` |
-| [TS-DCMA-NEG-002](03-protocolo-acp/test-vectors/TS-DCMA-NEG-002-revoked-delegator.json) | DCMA | ❌ | `REJECT / REVOKED` |
-| [TS-DCMA-NEG-003](03-protocolo-acp/test-vectors/TS-DCMA-NEG-003-delegation-depth-exceeded.json) | DCMA | ❌ | `REJECT / DELEGATION_DEPTH` |
-
----
-
-### [`04-analisis-formal/`](04-analisis-formal/)
-
-Análisis formal de seguridad, modelado de amenazas y hardening sistémico.
-
-| Documento | Contenido |
-|---|---|
-| [Formal-Security-Model.md](04-analisis-formal/Formal-Security-Model.md) | Modelo formal con teoremas de no-falsificabilidad y resistencia a replay |
-| [Formal-Security-Model-v2.md](04-analisis-formal/Formal-Security-Model-v2.md) | Versión actualizada — límites probabilísticos de seguridad |
-| [Threat-Model.md](04-analisis-formal/Threat-Model.md) | Análisis STRIDE completo |
-| [Adversarial-Analysis.md](04-analisis-formal/Adversarial-Analysis.md) | 10 vectores de ataque con mitigaciones |
-| [Hardening-Sistemico.md](04-analisis-formal/Hardening-Sistemico.md) | 10 áreas de hardening operacional |
-| [Modelo-Matematico-Seguridad.md](04-analisis-formal/Modelo-Matematico-Seguridad.md) | Formalización S = (A, K, T, R, V) |
-| [Security-Reduction-EUF-CMA.md](04-analisis-formal/Security-Reduction-EUF-CMA.md) | Reducción a seguridad EUF-CMA de Ed25519 |
-| [Motor-Decision-Formal-MFMD.md](04-analisis-formal/Motor-Decision-Formal-MFMD.md) | Motor de Decisión Formal — MFMD-ACP, estados y transiciones |
-
----
-
-### [`05-implementacion/`](05-implementacion/)
-
-Guías de implementación: del concepto al código.
-
-| Documento | Contenido |
-|---|---|
-| [Arquitectura-Minima-Obligatoria.md](05-implementacion/Arquitectura-Minima-Obligatoria.md) | Los 5 componentes mínimos (MRA) para L1 |
-| [MVP-Criptografico.md](05-implementacion/MVP-Criptografico.md) | Implementación funcional mínima |
-| [Prototipo-Python.md](05-implementacion/Prototipo-Python.md) | PME v0.1 — prototipo Python con 6 casos de prueba |
-
----
-
-### [`06-publicaciones/`](06-publicaciones/)
-
-Documentación académica y técnica para audiencias externas.
-
-| Documento | Audiencia |
-|---|---|
-| [ACP-Whitepaper-v1.0.md](06-publicaciones/ACP-Whitepaper-v1.0.md) | CTOs, arquitectos, tomadores de decisiones técnicas |
-| [ACP-Technical-Academic.md](06-publicaciones/ACP-Technical-Academic.md) | Investigadores, revisores técnicos formales |
-| [IEEE-NDSS-Paper-Structure.md](06-publicaciones/IEEE-NDSS-Paper-Structure.md) | Borrador de paper — objetivo IEEE S&P / NDSS |
+→ Grafo de dependencias completo con propiedades formales: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 ---
 
 ## Niveles de Conformidad
 
-| Nivel | Nombre | Requiere | Para quién |
+| Nivel | Nombre | Capas | Specs requeridas |
 |---|---|---|---|
-| **L1** | CORE | SIGN + CT + CAP-REG + HP | Todo implementador |
-| **L2** | SECURITY | L1 + RISK + REV + ITA-1.0 | Emisores de tokens centralizados |
-| **L3** | FULL | L2 + API + EXEC + LEDGER | Sistema centralizado completo |
-| **L4** | EXTENDED | L3 + PAY + REP-1.2 + ITA-1.1 + LIA + PSN + AGS + HIST | Con extensiones económicas, reputacionales y bankability |
-| **L5** | DECENTRALIZED | L4 + ACP-D + BFT quórum | Tolerante a fallas bizantinas |
+| **L1** | CORE | 1–3 | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
+| **L2** | SECURITY | 1–3 + parcial 6 | L1 + RISK · REV · ITA-1.0 |
+| **L3** | FULL | 1–5 | L2 + API · EXEC · LEDGER · **PROVENANCE · POLICY-CTX** |
+| **L4** | EXTENDED | 1–7 | L3 + **GOV-EVENTS** · PAY · REP-1.2 · ITA-1.1 · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
+| **L5** | DECENTRALIZED | 1–8 | L4 + ACP-D · quórum BFT ITA-1.1 |
+
+→ Definición normativa de conformidad: [`spec/gobernanza/ACP-CONF-1.1.md`](spec/gobernanza/ACP-CONF-1.1.md)
 
 ---
 
-## Comenzar (5 minutos)
+## Índice de Especificaciones
+
+### [`spec/nucleo/`](spec/nucleo/) — Identidad, Capacidad, Delegación (L1)
+
+| Spec | Función |
+|---|---|
+| [ACP-SIGN-1.0](spec/nucleo/ACP-SIGN-1.0.md) | Serialización JCS + firma Ed25519 — fundamento de todos los objetos del protocolo |
+| [ACP-AGENT-1.0](spec/nucleo/ACP-AGENT-1.0.md) | Ontología formal del agente — `A=(ID,C,P,D,L,S)` |
+| [ACP-CT-1.0](spec/nucleo/ACP-CT-1.0.md) | Capability Token — estructura, emisión, verificación |
+| [ACP-CAP-REG-1.0](spec/nucleo/ACP-CAP-REG-1.0.md) | Registro canónico de capacidades — espacio de nombres `acp:cap:*` |
+| [ACP-HP-1.0](spec/nucleo/ACP-HP-1.0.md) | Handshake Protocol — prueba criptográfica de posesión de capacidad |
+| [ACP-DCMA-1.0](spec/nucleo/ACP-DCMA-1.0.md) | Delegación multi-salto — no-escalada + revocación transitiva |
+| [ACP-MESSAGES-1.0](spec/nucleo/ACP-MESSAGES-1.0.md) | Formato wire — 5 tipos de mensaje normalizados |
+| [ACP-PROVENANCE-1.0](spec/nucleo/ACP-PROVENANCE-1.0.md) | Procedencia de Autoridad — prueba retroactiva de la cadena de delegación en ejecución |
+
+### [`spec/seguridad/`](spec/seguridad/) — Confianza, Riesgo, Revocación (L2)
+
+| Spec | Función |
+|---|---|
+| [ACP-RISK-1.0](spec/seguridad/ACP-RISK-1.0.md) | Motor de riesgo determinístico — Risk Score RS (0–100) |
+| [ACP-REV-1.0](spec/seguridad/ACP-REV-1.0.md) | Protocolo de revocación — endpoint + CRL |
+| [ACP-ITA-1.0](spec/seguridad/ACP-ITA-1.0.md) | Institutional Trust Anchor — modelo centralizado |
+| [ACP-ITA-1.1](spec/seguridad/ACP-ITA-1.1.md) | Gobernanza del Trust Anchor — modelo BFT distribuido |
+| [ACP-REP-1.2](spec/seguridad/ACP-REP-1.2.md) | Extensión de Reputación — modelo dual ITS+ERS, score compuesto `0.6·ITS + 0.4·ERS` |
+
+### [`spec/operaciones/`](spec/operaciones/) — Gobernanza de Ejecución, Historia (L3–L4)
+
+| Spec | Función |
+|---|---|
+| [ACP-API-1.0](spec/operaciones/ACP-API-1.0.md) | API HTTP — todos los endpoints institucionales |
+| [ACP-EXEC-1.0](spec/operaciones/ACP-EXEC-1.0.md) | Execution Tokens — uso único, validez de 300s |
+| [ACP-LEDGER-1.2](spec/operaciones/ACP-LEDGER-1.2.md) | Audit Ledger — append-only, encadenado por hash |
+| [ACP-POLICY-CTX-1.0](spec/operaciones/ACP-POLICY-CTX-1.0.md) | Instantánea de Contexto de Política — estado de política firmado en el momento de ejecución |
+| [ACP-HIST-1.0](spec/operaciones/ACP-HIST-1.0.md) | History Query API — historial de ejecución auditado |
+| [ACP-LIA-1.0](spec/operaciones/ACP-LIA-1.0.md) | Liability Traceability — cadena de responsabilidad atribuida |
+| [ACP-PAY-1.0](spec/operaciones/ACP-PAY-1.0.md) | Extensión de Pago — capacidad financiera verificable |
+| [ACP-PSN-1.0](spec/operaciones/ACP-PSN-1.0.md) | Policy Snapshot — estado de política en punto de tiempo firmado |
+| [ACP-NOTIFY-1.0](spec/operaciones/ACP-NOTIFY-1.0.md) | Notification Extension — eventos y webhooks |
+| [ACP-DISC-1.0](spec/operaciones/ACP-DISC-1.0.md) | Discovery Extension — registro y resolución de agentes |
+| [ACP-BULK-1.0](spec/operaciones/ACP-BULK-1.0.md) | Bulk Operations — ejecución de capacidades en lote |
+| [ACP-CROSS-ORG-1.0](spec/operaciones/ACP-CROSS-ORG-1.0.md) | Protocolo Cross-Org — interacciones entre agentes de distintas instituciones |
+
+### [`spec/gobernanza/`](spec/gobernanza/) — Conformidad, Proceso, Eventos (L1–L4)
+
+| Spec | Función |
+|---|---|
+| [ACP-CONF-1.1](spec/gobernanza/ACP-CONF-1.1.md) | **Conformidad** — 5 niveles acumulativos L1-L5 (normativo) |
+| [ACP-TS-1.1](spec/gobernanza/ACP-TS-1.1.md) | Test Suite 1.1 — formato normativo de vectores |
+| [RFC-PROCESS](spec/gobernanza/RFC-PROCESS.md) | Proceso de especificación — cómo evoluciona ACP |
+| [RFC-REGISTRY](spec/gobernanza/RFC-REGISTRY.md) | Registro de RFCs — todas las propuestas de cambio activas |
+| [ACR-1.0](spec/gobernanza/ACR-1.0.md) | Compliance Runner — ejecuta pruebas y emite certificaciones |
+| [ACP-GOV-EVENTS-1.0](spec/gobernanza/ACP-GOV-EVENTS-1.0.md) | Flujo de Eventos de Gobernanza — taxonomía formal de 10 tipos de eventos institucionales |
+
+### [`spec/descentralizado/`](spec/descentralizado/) — ACP-D (L5)
+
+| Spec | Función |
+|---|---|
+| ACP-D-Especificacion | Especificación completa de ACP-D — DID + VC + Self-Sovereign Capability |
+| Arquitectura-Sin-Issuer-Central | Modelo tolerante a fallas bizantinas sin emisor central |
+
+---
+
+## Cumplimiento y Certificación
+
+Cadena completa: especificación → vectores de prueba → runner → badge de certificación público.
+
+```
+CONF-1.1 → TS-SCHEMA (forma) → TS-1.0 (casos) → TS-1.1 (formato JSON)
+         → IUT-PROTOCOL (contrato runner↔impl) → ACR-1.0 (ejecuta)
+         → CERT-1.0 (badge público verificable ACP-CERT-YYYY-NNNN)
+```
+
+| Documento | Función |
+|---|---|
+| [ACP-TS-SCHEMA-1.0](compliance/ACP-TS-SCHEMA-1.0.md) | JSON Schema para vectores de prueba (Draft 2020-12) |
+| [ACP-TS-1.0](compliance/ACP-TS-1.0.md) | Suite de pruebas — casos requeridos por nivel L1-L5 |
+| [ACP-TS-1.1](compliance/ACP-TS-1.1.md) | Formato normativo de vectores — determinístico, independiente del lenguaje |
+| [ACP-IUT-PROTOCOL-1.0](compliance/ACP-IUT-PROTOCOL-1.0.md) | Contrato runner ↔ IUT — STDIN/STDOUT, timeouts, manifest |
+| [ACR-1.0](compliance/ACR-1.0.md) | Compliance Runner oficial |
+| [ACP-CERT-1.0](compliance/ACP-CERT-1.0.md) | Sistema de Certificación Pública |
+
+**Vectores de prueba normativos:** [`compliance/test-vectors/`](compliance/test-vectors/) — 12 vectores JSON determinísticos (8 CORE + 4 DCMA).
+
+---
+
+## Inicio Rápido
 
 ```bash
-# 1. Iniciar el servidor ACP (implementación de referencia en Go)
-cd 07-implementacion-referencia
-export ACP_INSTITUTION_PUBLIC_KEY=cA4s58S2dEJ-qye6ggvPbw-uvmjgn-hWQpIRTkHcakE  # clave de prueba RFC 8037
+# Iniciar el servidor ACP de referencia (Go)
+cd impl/go
+export ACP_INSTITUTION_PUBLIC_KEY=cA4s58S2dEJ-qye6ggvPbw-uvmjgn-hWQpIRTkHcakE
 docker compose up -d
 
-# 2. Verificar que el servidor está corriendo
 curl http://localhost:8080/acp/v1/health
 # {"status":"ok","version":"1.0.0"}
 ```
 
-**Python SDK** (lado del agente/IA):
 ```python
 from acp import AgentIdentity, ACPSigner, ACPClient
 
-# Generar identidad del agente
 agent = AgentIdentity.generate()
-signer = ACPSigner(agent)
-client = ACPClient("http://localhost:8080", agent, signer)
-
-# Registrar con la institución
+client = ACPClient("http://localhost:8080", agent, ACPSigner(agent))
 client.register()
 
-# Construir y firmar un capability token
 token = {
-    "ver": "1.0", "iss": "did:key:z<clave-institución>",
-    "sub": agent.agent_id, "cap": "acp:cap:financial.read",
+    "ver": "1.0", "iss": "did:key:z<institución>",
+    "sub": agent.agent_id, "cap": ["acp:cap:financial.read"],
     "resource": "account:12345", "iat": 1700000000, "exp": 1700003600, "nonce": "abc123"
 }
-signed = signer.sign_capability(token)
-
-# Verificar con la institución (handshake completo Challenge/PoP)
-result = client.verify(signed)
+result = client.verify(ACPSigner(agent).sign_capability(token))
 print(result)  # {"decision": "PERMIT", ...}
 ```
 
-**TypeScript SDK** (Node.js):
-```typescript
-import { AgentIdentity, ACPSigner, ACPClient } from './src';
-
-const agent = AgentIdentity.generate();
-const signer = new ACPSigner(agent);
-const client = new ACPClient('http://localhost:8080', agent, signer);
-
-await client.register();
-
-const token = {
-  ver: '1.0', iss: 'did:key:z<clave-institución>',
-  sub: agent.agentId, cap: 'acp:cap:financial.read',
-  resource: 'account:12345', iat: 1700000000, exp: 1700003600, nonce: 'abc123'
-};
-const signed = signer.signCapability(token);
-const result = await client.verify(signed);
-console.log(result); // { decision: 'PERMIT', ... }
-```
-
-→ Documentación completa: [`QUICKSTART.md`](QUICKSTART.md) | [`07-implementacion-referencia/`](07-implementacion-referencia/)
+→ Guía completa: [`QUICKSTART.md`](QUICKSTART.md) | Implementaciones de referencia: [`impl/`](impl/)
 
 ---
 
@@ -327,18 +225,19 @@ console.log(result); // { decision: 'PERMIT', ... }
 
 | Versión | Estado | Hito |
 |---|---|---|
-| **v1.0** | ✅ Completo | 10 documentos normativos — sistema centralizado |
-| **v1.1** | ✅ Completo | PAY-1.0, REP-1.1, ITA-1.1 BFT + Architecture Spec |
-| **v1.2** | ✅ Completo | CONF-1.1 (5 niveles), cadena de cumplimiento completa, 12 vectores de prueba |
-| **v1.3** | ✅ Completo | Binario IUT (acp-evaluate, 12/12 PASS), compliance runner (ACR-1.0), Python SDK (78 tests) |
-| **v1.4** | ✅ Completo | TypeScript SDK (68 tests), Rust SDK (43 tests), Docker CI/CD |
-| **v1.5** | ✅ Completo | Go Reference Server — ACP-API-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.0 (9 specs implementadas) |
-| **v1.6** | ✅ Completo | AGENT-1.0 (ontología formal), docker-compose sync, AGENTS.md |
-| **v1.7** | ✅ Completo | LIA-1.0, PSN-1.0, AGS-1.0, LEDGER-1.1 — capa de bankability |
-| **v1.8** | ✅ Completo | REP-1.2 (modelo dual ITS+ERS), LEDGER-1.2 (tipos de evento extendidos) |
-| **v1.9** | ✅ Completo | HIST-1.0, ITA-1.1 actualizado, NOTIFY-1.0, DISC-1.0, BULK-1.0 |
-| **v2.0** | 📋 Especificado | ACP-D completo (BFT, ZK-proofs, DIDs) |
-| **Paper** | ✍️ En preparación | Objetivo IEEE S&P / NDSS |
+| **v1.0** | ✅ | 10 specs normativas — sistema centralizado |
+| **v1.1** | ✅ | PAY-1.0 · REP-1.1 · ITA-1.1 BFT |
+| **v1.2** | ✅ | CONF-1.1 (5 niveles) · cadena de cumplimiento · 12 vectores de prueba |
+| **v1.3** | ✅ | Binario IUT (12/12 PASS) · ACR-1.0 · Python SDK |
+| **v1.4** | ✅ | TypeScript SDK · Rust SDK · Docker CI/CD |
+| **v1.5** | ✅ | Go Reference Server — 9 specs implementadas |
+| **v1.6** | ✅ | AGENT-1.0 (ontología formal) · MESSAGES-1.0 · DCMA-1.0 |
+| **v1.7** | ✅ | LIA-1.0 · PSN-1.0 · LEDGER-1.1 — capa de bankability |
+| **v1.8** | ✅ | REP-1.2 (ITS+ERS) · LEDGER-1.2 (tipos de evento extendidos) |
+| **v1.9** | ✅ | HIST-1.0 · NOTIFY-1.0 · DISC-1.0 · BULK-1.0 · CROSS-ORG-1.0 |
+| **v1.10** | ✅ | PROVENANCE-1.0 · POLICY-CTX-1.0 · GOV-EVENTS-1.0 — capa de evidencia |
+| **Paper** | ✍️ | Objetivo IEEE S&P / NDSS |
+| **v2.0** | 📋 | ACP-D completo (BFT · ZK-proofs · DIDs) |
 
 ---
 
