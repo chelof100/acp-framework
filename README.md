@@ -35,6 +35,34 @@ Ninguna acción de agente se ejecuta a menos que las cuatro condiciones se cumpl
 
 ---
 
+## Visión General del Sistema
+
+```mermaid
+flowchart TD
+    INST(["🏛️ Institution — Root of Trust"])
+    AGENT(["🤖 Agent — A = (ID, C, P, D, L, S)"])
+
+    INST -->|"emite Capability Token (CT)"| AGENT
+    AGENT -->|"HP handshake · cadena DCMA"| GATE
+
+    GATE{"EXEC Validation\n① ValidIdentity\n② ValidCapability\n③ ValidDelegationChain\n④ AcceptableRisk"}
+
+    GATE -->|"DENY"| REJECT(["❌ Rechazado"])
+    GATE -->|"PERMIT"| ET[/"Execution Token\nuso único · 300s"/]
+
+    ET --> ACTION(["⚡ Acción Ejecutada"])
+
+    ACTION --> PROV[/"PROVENANCE\nPrueba de cadena de delegación"/]
+    ACTION --> PCTX[/"POLICY-CTX\nInstantánea de política"/]
+    ACTION --> LEDGER[("LEDGER\nEncadenado por hash · Append-only")]
+
+    LEDGER --> HIST["HIST · History API"]
+    LEDGER --> REP["REP · 0.6·ITS + 0.4·ERS"]
+    LEDGER --> LIA["LIA · Cadena de Responsabilidad"]
+```
+
+---
+
 ## Arquitectura: Stack de Gobernanza de 8 Capas
 
 ACP está organizado en ocho capas acumulativas. Cada capa depende de todas las capas inferiores.
@@ -101,6 +129,34 @@ Las cadenas de dependencia críticas que todo implementador debe entender:
 | **L5** | DECENTRALIZED | 1–8 | L4 + ACP-D · quórum BFT ITA-1.1 |
 
 → Definición normativa de conformidad: [`spec/gobernanza/ACP-CONF-1.1.md`](spec/gobernanza/ACP-CONF-1.1.md)
+
+---
+
+## Cómo Implementar ACP de Forma Incremental
+
+ACP está diseñado para adopción por capas. Toda implementación comienza en L1 y se extiende hacia arriba.
+
+```
+L1 · Núcleo de Ejecución   → Identidad de agente · Capability Tokens · Delegación · Firma
+          ↓ agrega
+L2 · Capa de Confianza     → Puntuación de riesgo · Revocación · Trust Anchors institucionales
+          ↓ agrega
+L3 · Ejecución Verificable → Execution Tokens · Audit Ledger · Prueba retroactiva
+          ↓ agrega
+L4 · Gobernanza            → Reputación · History API · Trazabilidad de responsabilidad · Gov events
+          ↓ agrega
+L5 · Federación            → BFT descentralizado · DIDs · Capacidades auto-soberanas
+```
+
+| Nivel | Enfoque | Qué se obtiene |
+|---|---|---|
+| **L1** | Núcleo de Ejecución | Identidad verificable, Capability Tokens firmados, delegación multi-salto — mínimo para ejecutar ACP |
+| **L2** | Capa de Confianza | Puntuación de riesgo determinística, revocación, trust anchors institucionales |
+| **L3** | Ejecución Verificable | Execution Tokens de uso único, audit ledger encadenado por hash, prueba retroactiva (PROVENANCE + POLICY-CTX) |
+| **L4** | Gobernanza | Puntuación de reputación, historial consultable, trazabilidad de responsabilidad, flujo de eventos de gobernanza |
+| **L5** | Federación | Quórum BFT descentralizado, identidad basada en DID, capacidades auto-soberanas |
+
+**ACP Mínimo Viable (L1):** Un agente con identidad verificada, un Capability Token firmado por una institución de confianza y un handshake HP funcional puede ejecutar acciones autorizadas bajo ACP. Las capas 2–5 agregan profundidad probatoria, controles de riesgo y alcance de gobernanza.
 
 ---
 
