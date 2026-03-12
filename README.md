@@ -335,6 +335,44 @@ Interoperabilidad entre instituciones independientes.
 
 ---
 
+## Versiones de Especificación Activas
+
+Versión activa actual por especificación. Esta tabla es la referencia autoritativa para "¿qué versión debo implementar?".
+
+| Spec | Versión activa | Nivel |
+|---|---|---|
+| ACP-SIGN | 1.0 | L1 |
+| ACP-AGENT | 1.0 | L1 |
+| ACP-CT | 1.0 | L1 |
+| ACP-CAP-REG | 1.0 | L1 |
+| ACP-HP | 1.0 | L1 |
+| ACP-DCMA | 1.0 | L1 |
+| ACP-MESSAGES | 1.0 | L1 |
+| ACP-RISK | 1.0 | L2 |
+| ACP-REV | 1.0 | L2 |
+| ACP-ITA | 1.1 | L2/L4 |
+| ACP-API | 1.0 | L3 |
+| ACP-EXEC | 1.0 | L3 |
+| ACP-LEDGER | **1.3** | L3 |
+| ACP-PROVENANCE | 1.0 | L3 |
+| ACP-POLICY-CTX | 1.0 | L3 |
+| ACP-PSN | 1.0 | L3 |
+| ACP-PAY | 1.0 | L4 |
+| ACP-REP | **1.2** | L4 |
+| ACP-GOV-EVENTS | 1.0 | L4 |
+| ACP-LIA | 1.0 | L4 |
+| ACP-HIST | 1.0 | L4 |
+| ACP-NOTIFY | 1.0 | L4 |
+| ACP-DISC | 1.0 | L4 |
+| ACP-BULK | 1.0 | L4 |
+| ACP-CROSS-ORG | 1.0 | L4 |
+| ACP-REP-PORTABILITY | 1.0 | L4 |
+| **ACP-CONF** | **1.2** | — |
+
+Las versiones supersedidas están archivadas en [`archivo/specs/`](archivo/specs/README.md).
+
+---
+
 ## Niveles de Conformidad
 
 Las implementaciones pueden adoptar ACP incrementalmente, comenzando desde L1.
@@ -353,11 +391,11 @@ Requisitos normativos completos por nivel:
 |---|---|
 | **L1** | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
 | **L2** | L1 + RISK · REV · ITA-1.0 |
-| **L3** | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX |
-| **L4** | L3 + GOV-EVENTS · REP · LIA · HIST · ITA-1.1 · PAY · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
+| **L3** | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX · PSN |
+| **L4** | L3 + PAY · REP-1.2 · ITA-1.1 · GOV-EVENTS · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
 | **L5** | L4 + ACP-D · quórum BFT ITA-1.1 |
 
-→ Definición normativa de conformidad: [`spec/gobernanza/ACP-CONF-1.1.md`](spec/gobernanza/ACP-CONF-1.1.md)
+→ Definición normativa de conformidad: [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md)
 
 ---
 
@@ -382,7 +420,8 @@ Requisitos normativos completos por nivel:
 - [ACP-EXEC-1.0](spec/operaciones/ACP-EXEC-1.0.md) — Tokens de Ejecución, uso único, validez de 300s
 - [ACP-POLICY-CTX-1.0](spec/operaciones/ACP-POLICY-CTX-1.0.md) — estado de política firmado al momento de ejecución
 - [ACP-PROVENANCE-1.0](spec/nucleo/ACP-PROVENANCE-1.0.md) — prueba retrospectiva de cadena de delegación en ejecución
-- [ACP-LEDGER-1.2](spec/operaciones/ACP-LEDGER-1.2.md) — ledger de auditoría, append-only, encadenado por hash
+- [ACP-LEDGER-1.3](spec/operaciones/ACP-LEDGER-1.3.md) — ledger de auditoría, append-only, encadenado por hash, sig institucional obligatoria
+- [ACP-PSN-1.0](spec/operaciones/ACP-PSN-1.0.md) — Nodo de Proceso-Sesión, seguimiento de sesiones de ejecución
 - [ACP-API-1.0](spec/operaciones/ACP-API-1.0.md) — API HTTP, todos los endpoints institucionales
 
 ### L4 · Gobernanza
@@ -400,7 +439,7 @@ Requisitos normativos completos por nivel:
 - [ACP-D-1.0](spec/descentralizado/ACP-D-1.0.md) — ACP descentralizado, federación entre instituciones, quórum BFT
 
 ### Gobernanza
-- [ACP-CONF-1.1](spec/gobernanza/ACP-CONF-1.1.md) — definición normativa de conformidad
+- [ACP-CONF-1.2](spec/gobernanza/ACP-CONF-1.2.md) — definición normativa de conformidad (actual)
 - [ACP-CHANGELOG](CHANGELOG.md) — historial de versiones
 
 ---
@@ -415,6 +454,8 @@ acp-framework/
 │   ├── operaciones/    ← L3–L4: ejecución, ledger, gobernanza
 │   ├── gobernanza/     ← conformidad, eventos, proceso
 │   └── descentralizado/ ← L5: ACP-D
+├── archivo/
+│   └── specs/          ← versiones de especificación supersedidas (referencia histórica)
 ├── impl/
 │   └── go/             ← implementación de referencia
 ├── ARCHITECTURE.md     ← modelo de dominio formal, grafo de dependencias
@@ -445,8 +486,10 @@ curl http://localhost:8080/acp/v1/health
 
 ## Hoja de Ruta
 
-| Versión | Estado |
+| Ítem | Estado |
 |---|---|
+| ACP-CONF-1.2 | ✅ Completo — restaura CONF como única fuente normativa |
+| ACP-LEDGER-1.3 | ✅ Completo — sig normativa obligatoria |
 | v1.x | Protocolo núcleo e implementación de referencia — activo |
 | v2.0 | ACP Descentralizado (ACP-D) — en diseño |
 | futuro | Verificación ZK, gobernanza descentralizada |

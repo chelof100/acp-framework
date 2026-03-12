@@ -1,6 +1,7 @@
 # ACP-LEDGER-1.2
 ## Audit Ledger Specification
-**Status:** Stable
+**Status:** Superseded
+**Superseded-by:** ACP-LEDGER-1.3
 **Version:** 1.2
 **Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0, ACP-LIA-1.0, ACP-PSN-1.0
 **Required-by:** ACP-CONF-1.0, ACP-REP-1.2
