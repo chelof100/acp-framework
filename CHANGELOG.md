@@ -9,6 +9,18 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Agregado
+- `openapi/acp-api-1.0.yaml` — especificación OpenAPI 3.1.0 para todos los endpoints de ACP-API-1.0 (agentes, autorización, tokens, auditoría, tokens de ejecución, health, handshake)
+- `compliance/test-vectors/` — 22 vectores de conformidad ACP-TS-1.1: 8 CORE (L1), 4 DCMA (L2), 10 HP (L1)
+- Cobertura de vectores HP: TS-HP-POS-001/002 (PoP válido), TS-HP-NEG-001 al 008 (HP-004, HP-006, HP-007, HP-008, HP-009, HP-010, HP-011, HP-014)
+- `impl/go/cmd/acp-sign-vectors` — herramienta para generar firmas Ed25519 reales en vectores de prueba positivos
+
+### Modificado
+- `QUICKSTART.md` — reescrito para reflejar la estructura actual del repositorio (spec/, openapi/, compliance/, impl/go/)
+- `README.md` — estructura del repositorio actualizada con openapi/ y compliance/; formato de respuesta health corregido; hoja de ruta actualizada
+
+---
+
 ## [1.9.0] — 2026-03-09
 
 ### Added

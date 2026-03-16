@@ -1,156 +1,115 @@
-# ACP Framework — Quickstart (15 minutos)
-
-Este framework tiene tres niveles. Comenzá por el que coincide con tu rol.
+# ACP Framework — Inicio Rápido
 
 ---
 
-## El framework en 5 minutos
+## Elegí tu camino
 
-ACP no es solo un protocolo. Es un framework completo de tres niveles:
+### Camino A — Entender el diseño del protocolo
 
-| Nivel | Qué define | Dónde |
-|---|---|---|
-| **1 — Arquitectura de IA Soberana** | Por qué la independencia del proveedor de IA es un requisito arquitectónico | [`01-arquitectura-soberana/`](01-arquitectura-soberana/) |
-| **2 — Modelo GAT** | Cómo estructurar organizaciones que operan agentes autónomos | [`02-modelo-gat/`](02-modelo-gat/) |
-| **3 — ACP Protocol** | La implementación criptográficamente verificable de los principios anteriores | [`03-protocolo-acp/`](03-protocolo-acp/) |
+Comenzá aquí para entender qué resuelve ACP y cómo está estructurado.
 
-**Invariante central:**
-```
-Execute(request) ⟹ ValidIdentity ∧ ValidCapability ∧ ValidDelegationChain ∧ AcceptableRisk
-```
+1. [`README.md`](README.md) — Qué es ACP y por qué existe
+2. [`ARCHITECTURE.md`](ARCHITECTURE.md) — Modelo de dominio formal y grafo de dependencias
+3. [`spec/nucleo/ACP-SIGN-1.0.md`](spec/nucleo/ACP-SIGN-1.0.md) — Capa criptográfica base
+4. [`spec/nucleo/ACP-CT-1.0.md`](spec/nucleo/ACP-CT-1.0.md) — Formato del Capability Token
+5. [`spec/nucleo/ACP-HP-1.0.md`](spec/nucleo/ACP-HP-1.0.md) — Protocolo de Handshake
 
----
+### Camino B — Implementar ACP
 
-## Elegí tu camino (10 minutos)
+Comenzá aquí si querés construir una implementación conforme a ACP.
 
-### Camino A — Quiero entender el framework estratégico
+1. [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md) — Definición normativa de conformidad (L1–L5)
+2. [`openapi/acp-api-1.0.yaml`](openapi/acp-api-1.0.yaml) — Spec OpenAPI 3.1.0 para todos los endpoints HTTP
+3. [`compliance/ACP-TS-1.1.md`](compliance/ACP-TS-1.1.md) — Formato de vectores de prueba
+4. [`compliance/test-vectors/`](compliance/test-vectors/) — 22 vectores de prueba normativos (CORE · DCMA · HP)
+5. [`compliance/ACR-1.0.md`](compliance/ACR-1.0.md) — Protocolo del compliance runner
 
-1. [`01-arquitectura-soberana/Arquitectura-Soberana-de-IA.md`](01-arquitectura-soberana/Arquitectura-Soberana-de-IA.md) — Por qué la soberanía
-2. [`02-modelo-gat/GAT-Maturity-Model.md`](02-modelo-gat/GAT-Maturity-Model.md) — Modelo de madurez 0-5
-3. [`02-modelo-gat/Arquitectura-Tres-Capas.md`](02-modelo-gat/Arquitectura-Tres-Capas.md) — Síntesis de los 3 niveles
+### Camino C — Ejecutar la implementación de referencia
 
-### Camino B — Quiero entender el diseño del protocolo
+**Requisitos:** Go 1.22+, Docker (opcional)
 
-1. [`02-modelo-gat/ACP-Architecture-Specification.md`](02-modelo-gat/ACP-Architecture-Specification.md) — Arquitectura técnica unificada
-2. [`03-protocolo-acp/especificacion/nucleo/ACP-SIGN-1.0.md`](03-protocolo-acp/especificacion/nucleo/ACP-SIGN-1.0.md) — Capa criptográfica base
-3. [`03-protocolo-acp/especificacion/nucleo/ACP-CT-1.0.md`](03-protocolo-acp/especificacion/nucleo/ACP-CT-1.0.md) — Formato del Capability Token
+**Paso 1 — Compilar e iniciar el servidor**
 
-### Camino C — Quiero implementar ACP
-
-1. [`03-protocolo-acp/especificacion/gobernanza/ACP-CONF-1.1.md`](03-protocolo-acp/especificacion/gobernanza/ACP-CONF-1.1.md) — Qué requiere cada nivel L1-L5
-2. [`03-protocolo-acp/cumplimiento/ACP-TS-1.1.md`](03-protocolo-acp/cumplimiento/ACP-TS-1.1.md) — Formato de vectores de prueba
-3. [`03-protocolo-acp/cumplimiento/ACP-IUT-PROTOCOL-1.0.md`](03-protocolo-acp/cumplimiento/ACP-IUT-PROTOCOL-1.0.md) — Contrato runner ↔ implementación
-4. [`03-protocolo-acp/cumplimiento/ACR-1.0.md`](03-protocolo-acp/cumplimiento/ACR-1.0.md) — Ejecutar el compliance runner
-5. [`03-protocolo-acp/test-vectors/`](03-protocolo-acp/test-vectors/) — 12 vectores normativos listos para usar
-
-### Camino E — Quiero correr la implementación de referencia
-
-**Prerrequisitos:** Docker, Git, Go 1.21+ (o solo Docker)
-
-**Paso 1 — Clonar e iniciar el servidor**
 ```bash
 git clone https://github.com/chelof100/acp-framework
-cd acp-framework/07-implementacion-referencia
+cd acp-framework/impl/go
 
-# Iniciar el servidor Go (usa clave de prueba RFC 8037 para desarrollo)
-export ACP_INSTITUTION_PUBLIC_KEY=cA4s58S2dEJ-qye6ggvPbw-uvmjgn-hWQpIRTkHcakE
-docker compose up -d
+# Generar una clave de desarrollo
+go run ./cmd/keygen
 
-# Verificar
+# Iniciar el servidor (configurar la clave institucional)
+export ACP_INSTITUTION_PUBLIC_KEY=<base64url_ed25519_public_key>
+go run ./cmd/acp-server
+```
+
+**Paso 2 — Verificación de estado**
+
+```bash
 curl http://localhost:8080/acp/v1/health
-# {"status":"ok","version":"1.0.0"}
 ```
 
-**Paso 2 — Elegí tu SDK**
+```json
+{
+  "acp_version": "1.0",
+  "status": "operational",
+  "timestamp": 1718920000,
+  "components": {
+    "policy_engine": "operational",
+    "audit_ledger": "operational",
+    "agent_registry": "operational",
+    "rev_endpoint": "operational"
+  }
+}
+```
 
-*Python:*
+**Paso 3 — Ejecutar los vectores de prueba de conformidad**
+
 ```bash
-cd sdk/python
-pip install -e ".[dev]"
-ACP_SERVER_URL=http://localhost:8080 python examples/agent_payment.py
+cd impl/go
+
+# Compilar el evaluador IUT
+go build ./cmd/acp-evaluate
+
+# Ejecutar la suite de conformidad contra todos los vectores
+go run ./cmd/acp-runner \
+  --impl ./acp-evaluate \
+  --suite ../../compliance/test-vectors
+
+# Esperado: 22/22 PASS → CONFORME L1 (CORE + DCMA + HP)
 ```
 
-*TypeScript (Node.js 18+):*
-```bash
-cd sdk/typescript
-npm install
-```
-```typescript
-import { AgentIdentity, ACPSigner, ACPClient } from './src';
-
-const agent = AgentIdentity.generate();
-const signer = new ACPSigner(agent);
-const client = new ACPClient('http://localhost:8080', agent, signer);
-
-// Registrar agente con la institución
-await client.register();
-console.log('Agent ID:', agent.agentId);
-console.log('DID:', agent.did);
-
-// Health check
-const health = await client.health();
-console.log('Servidor:', health);
-```
-
-*Rust:*
-```bash
-cd sdk/rust
-cargo test  # 43 tests
-```
-```rust
-use acp_sdk::{AgentIdentity, ACPSigner, ACPClient};
-
-let agent = AgentIdentity::generate();
-let signer = ACPSigner::new(&agent);
-let client = ACPClient::new("http://localhost:8080", agent, signer);
-
-client.register().await?;
-println!("Agent ID: {}", client.agent_id());
-```
-
-**Paso 3 — Ejecutar la suite de cumplimiento**
-```bash
-cd 07-implementacion-referencia/acp-go
-
-# Ejecutar IUT contra los 12 vectores ACP-TS-1.1
-go test ./pkg/iut/... -v
-# 12/12 PASS → CONFORMANT L1+L2
-
-# O ejecutar el compliance runner completo
-go run ./cmd/acp-runner --impl ./acp-evaluate.exe --suite ../../../03-protocolo-acp/test-vectors
-```
-
-→ Documentación completa: [`07-implementacion-referencia/README.md`](07-implementacion-referencia/README.md)
-
-### Camino D — Quiero contribuir al framework
+### Camino D — Contribuir al framework
 
 1. [`CONTRIBUTING.md`](CONTRIBUTING.md) — Proceso RFC para cambios normativos
 2. [`SECURITY.md`](SECURITY.md) — Divulgación responsable de vulnerabilidades
-3. [`02-modelo-gat/Roadmap.md`](02-modelo-gat/Roadmap.md) — Estado actual y próximos pasos
 
 ---
 
 ## Niveles de Conformidad
 
-| Nivel | Nombre | Requiere |
+| Nivel | Nombre | Specs requeridas |
 |---|---|---|
-| **L1** | CORE | SIGN + CT + CAP-REG + HP |
-| **L2** | SECURITY | L1 + RISK + REV + ITA-1.0 |
-| **L3** | FULL | L2 + API + EXEC + LEDGER |
-| **L4** | EXTENDED | L3 + PAY + REP + ITA-1.1 |
-| **L5** | DECENTRALIZED | L4 + ACP-D + quórum BFT |
+| **L1** | Núcleo | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
+| **L2** | Seguridad | L1 + RISK · REV · ITA-1.0 |
+| **L3** | Ejecución Verificable | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX · PSN |
+| **L4** | Gobernanza | L3 + PAY · REP-1.2 · ITA-1.1 · GOV-EVENTS · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
+| **L5** | Federación | L4 + ACP-D · quórum BFT ITA-1.1 |
 
 La mayoría de los despliegues en producción apuntan a **L3** o **L4**.
+
+Requisitos normativos completos: [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md)
 
 ---
 
 ## Conceptos Clave
 
-**Capability Token (CT):** Objeto JSON firmado que otorga a un agente permiso para ejecutar una acción específica. Contiene: DID del agente, permisos, expiración, firma del emisor.
+**Capability Token (CT):** Objeto JSON firmado que otorga a un agente permiso para ejecutar una acción específica. Contiene: DID del agente, capacidades, expiración, firma del emisor.
 
-**ITA (Institutional Trust Anchor):** Entidad autorizada para emitir Capability Tokens. Puede ser centralizada (clave única) o distribuida (quórum BFT).
+**ITA (Institutional Trust Anchor):** Entidad autorizada a emitir Capability Tokens. Centralizada (clave única) o distribuida (quórum BFT).
 
-**DCMA (Delegation Chain):** Mecanismo para que agentes deleguen sub-capacidades, con garantías de no-escalada y revocación transitiva.
+**DCMA (Delegation Chain):** Delegación multi-salto con garantías de no-escalación y revocación transitiva.
+
+**HP (Handshake Protocol):** Protocolo de desafío/respuesta en dos fases que prueba la posesión de un CT antes de acceder a cualquier endpoint protegido.
 
 **DID (Decentralized Identifier):** Identidad criptográfica del agente, independiente del proveedor o plataforma.
 
@@ -158,7 +117,6 @@ La mayoría de los despliegues en producción apuntan a **L3** o **L4**.
 
 ## Preguntas y Contribuciones
 
-- Preguntas generales: GitHub Discussions
+- Preguntas generales: [GitHub Discussions](https://github.com/chelof100/acp-framework/discussions)
 - Vulnerabilidades de seguridad: [`SECURITY.md`](SECURITY.md)
 - Cambios normativos: proceso RFC en [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Contacto: info@traslaia.com

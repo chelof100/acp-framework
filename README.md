@@ -454,6 +454,11 @@ acp-framework/
 │   ├── operaciones/    ← L3–L4: ejecución, ledger, gobernanza
 │   ├── gobernanza/     ← conformidad, eventos, proceso
 │   └── descentralizado/ ← L5: ACP-D
+├── openapi/
+│   └── acp-api-1.0.yaml  ← especificación OpenAPI 3.1.0 para todos los endpoints de ACP-API-1.0
+├── compliance/
+│   ├── ACP-TS-1.1.md   ← formato de vectores de prueba
+│   └── test-vectors/   ← vectores de conformidad oficiales (CORE, DCMA, HP)
 ├── archivo/
 │   └── specs/          ← versiones de especificación supersedidas (referencia histórica)
 ├── impl/
@@ -479,7 +484,17 @@ curl http://localhost:8080/acp/v1/health
 ```
 
 ```json
-{"status":"ok","version":"1.0.0"}
+{
+  "acp_version": "1.0",
+  "status": "operational",
+  "timestamp": 1718920000,
+  "components": {
+    "policy_engine": "operational",
+    "audit_ledger": "operational",
+    "agent_registry": "operational",
+    "rev_endpoint": "operational"
+  }
+}
 ```
 
 ---
@@ -490,6 +505,8 @@ curl http://localhost:8080/acp/v1/health
 |---|---|
 | ACP-CONF-1.2 | ✅ Completo — restaura CONF como única fuente normativa |
 | ACP-LEDGER-1.3 | ✅ Completo — sig normativa obligatoria |
+| Spec OpenAPI (`openapi/acp-api-1.0.yaml`) | ✅ Completo — OpenAPI 3.1.0, todos los endpoints de ACP-API-1.0 |
+| Vectores de prueba de conformidad (CORE · DCMA · HP) | ✅ Completo — 22 vectores firmados, formato ACP-TS-1.1 |
 | v1.x | Protocolo núcleo e implementación de referencia — activo |
 | v2.0 | ACP Descentralizado (ACP-D) — en diseño |
 | futuro | Verificación ZK, gobernanza descentralizada |
