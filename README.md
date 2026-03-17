@@ -519,10 +519,20 @@ acp-framework/
 cd impl/go
 docker compose up
 
-# Opción 2: demo Python SDK (sin servidor requerido)
+# Opción 2: Python SDK — patrón de control de admisión (sin servidor)
 cd impl/python
 pip install -e .
 python examples/admission_control_demo.py
+
+# Opción 3: Python SDK — integración LangChain (decorador @acp_tool)
+cd impl/python
+pip install -e .
+python examples/langchain_agent_demo.py
+
+# Opción 4: LangChain + agente con LLM real
+pip install langchain langchain-openai
+export OPENAI_API_KEY=sk-...
+python examples/langchain_agent_demo.py --with-llm
 ```
 
 Verificación de estado:
@@ -557,7 +567,8 @@ curl http://localhost:8080/acp/v1/health
 | Vectores de prueba de conformidad (CORE · DCMA · HP · LEDGER · EXEC) | ✅ Completo — 42 vectores firmados, Ed25519 real + SHA-256 |
 | Implementación de referencia — 22 paquetes Go (L1–L4) | ✅ Completo — `impl/go/pkg/` cubre todos los niveles de conformidad |
 | `pkg/psn` policy snapshot | ✅ Completo — transiciones atómicas, único snapshot ACTIVO |
-| SDKs Python / TypeScript / Rust | 🔜 En roadmap |
+| Python SDK — `ACPAdmissionGuard` + `@acp_tool` (LangChain) | ✅ Completo — `impl/python/` |
+| SDKs TypeScript / Rust | 🔜 En roadmap |
 | v1.x | Protocolo núcleo e implementación de referencia — activo |
 | v2.0 | ACP Descentralizado (ACP-D) — en diseño |
 | futuro | Verificación ZK, gobernanza descentralizada |
