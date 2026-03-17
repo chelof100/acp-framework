@@ -240,6 +240,8 @@ Cada capa construye sobre la anterior y agrega una capacidad de gobernanza disti
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+→ **¿Nuevo en ACP? Empieza aquí:** [docs/admission-flow.md](docs/admission-flow.md) — guía completa paso a paso del admission check
+
 → Modelo de dominio formal y grafo de dependencias: [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
@@ -513,8 +515,14 @@ acp-framework/
 ## Inicio Rápido
 
 ```bash
+# Opción 1: servidor de referencia Go
 cd impl/go
 docker compose up
+
+# Opción 2: demo Python SDK (sin servidor requerido)
+cd impl/python
+pip install -e .
+python examples/admission_control_demo.py
 ```
 
 Verificación de estado:
