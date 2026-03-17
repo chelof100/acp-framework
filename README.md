@@ -1,10 +1,10 @@
 # ACP — Agent Control Protocol
 
-Gobernanza verificable para agentes autónomos.
+**Control de admisión para acciones de agentes.**
 
-ACP define quién autorizó a un agente, qué ejecutó y quién es responsable — entre sistemas e instituciones.
+Antes de que cualquier agente mute el estado del sistema, ACP responde cuatro preguntas: *¿Quién es este agente? ¿Qué está autorizado a hacer? ¿Cumple la acción con las políticas vigentes? ¿Puede el resultado trazarse a una institución responsable?*
 
-`Verificación de autoridad · Trazabilidad de ejecución · Trazabilidad institucional`
+`Identidad criptográfica · Tokens de capacidad con alcance · Cadenas de delegación verificables · Prueba de ejecución`
 
 ---
 
@@ -43,24 +43,64 @@ ACP se enfoca en **autoridad, verificación de ejecución y responsabilidad inst
 
 ACP aborda una capa diferente: **quién autorizó la acción, bajo qué política y quién es responsable del resultado**.
 
+### ACP vs Sistemas de Política y Autenticación
+
+Los ingenieros que evalúan ACP frecuentemente preguntan: "¿por qué no usar OPA?" Estos sistemas son complementarios, no competidores.
+
+| Sistema | Qué hace | Qué añade ACP |
+|---|---|---|
+| **OPA** (Open Policy Agent) | Evalúa políticas sobre datos y reglas | Identidad criptográfica del agente + cadena de delegación + prueba de ejecución |
+| **AWS IAM / Azure RBAC** | Modelo de permisos estático para recursos cloud | Delegación dinámica agente-a-agente con cadena verificable + ledger |
+| **OAuth 2.0 + OIDC** | Autorización de usuarios y servicios mediante tokens | Delegación multi-salto con no-escalación + responsabilidad institucional |
+| **SPIFFE / SPIRE** | Identidad criptográfica de workloads | ACP parte de la identidad para añadir alcance de capacidades + gobernanza |
+| **ACP** | Control de admisión para acciones de agentes | — |
+
+OPA puede usarse como motor de evaluación de políticas *dentro* de un sistema compatible con ACP. ACP no reemplaza a OPA — añade la capa de identidad del agente, cadena de delegación y prueba de ejecución que OPA no proporciona.
+
 ---
 
 ¹ ACP (Agent Control Protocol) no está relacionado con otras iniciativas que compartan el mismo acrónimo.
 
 ---
 
+## ACP como Control de Admisión
+
+Kubernetes usa un Admission Controller para interceptar solicitudes a la API antes de que lleguen al clúster — evaluando políticas, aplicando cuotas y rechazando operaciones no conformes. ACP aplica el mismo patrón a las acciones de agentes.
+
+```
+intención del agente
+    ↓
+[1] Verificación de identidad   →  pkg/agent + pkg/hp       (ACP-AGENT-1.0, ACP-HP-1.0)
+    ↓
+[2] Verificación de capacidad   →  pkg/ct + pkg/dcma         (ACP-CT-1.0, ACP-DCMA-1.0)
+    ↓
+[3] Verificación de política    →  pkg/risk + pkg/psn        (ACP-RISK-1.0, ACP-PSN-1.0)
+    ↓
+[4] ADMITIR / DENEGAR / ESCALAR
+    ↓  (si ADMITIR)
+[5] Token de ejecución          →  pkg/exec                  (ACP-EXEC-1.0)
+    ↓
+[6] Registro en ledger          →  pkg/ledger                (ACP-LEDGER-1.3)
+    ↓
+mutación del estado del sistema
+```
+
+La diferencia con Kubernetes: ACP opera entre fronteras institucionales. Un agente del Banco A puede ser admitido por el Banco B sin que el Banco B confíe en la infraestructura interna del Banco A — solo importa la prueba criptográfica.
+
+---
+
 ## Cómo Funciona ACP
 
-ACP trata las interacciones de agentes como **operaciones gobernables**, no simples solicitudes.
+ACP trata las interacciones de agentes como **operaciones gobernadas**, no simples solicitudes.
 
 Cada interacción pasa por seis etapas estructuradas:
 
-1. **Verificación de identidad** — confirmar quién es el agente
-2. **Validación de capacidades** — confirmar qué está autorizado a hacer el agente
-3. **Autorización por política** — confirmar que la acción está permitida bajo la política vigente
-4. **Ejecución determinista** — ejecutar exactamente lo que fue autorizado, nada más
-5. **Registro verificable** — producir prueba criptográfica de lo ocurrido
-6. **Actualización de confianza** — actualizar reputación y estado de atestación según la interacción
+1. **Verificación de identidad** — confirmar quién es el agente (`ACP-AGENT-1.0`, `ACP-HP-1.0`)
+2. **Validación de capacidades** — confirmar qué está autorizado a hacer el agente (`ACP-CT-1.0`, `ACP-DCMA-1.0`)
+3. **Autorización por política** — confirmar que la acción está permitida bajo la política vigente (`ACP-RISK-1.0`, `ACP-PSN-1.0`)
+4. **Ejecución determinista** — ejecutar exactamente lo que fue autorizado, nada más (`ACP-EXEC-1.0`)
+5. **Registro verificable** — producir prueba criptográfica de lo ocurrido (`ACP-LEDGER-1.3`, `ACP-PROVENANCE-1.0`)
+6. **Actualización de confianza** — actualizar reputación y estado de atestación según la interacción (`ACP-REP-1.2`, `ACP-LIA-1.0`)
 
 Esto permite que las interacciones sean trazables, auditables y atribuibles entre organizaciones.
 
@@ -503,10 +543,13 @@ curl http://localhost:8080/acp/v1/health
 
 | Ítem | Estado |
 |---|---|
-| ACP-CONF-1.2 | ✅ Completo — restaura CONF como única fuente normativa |
+| ACP-CONF-1.2 | ✅ Completo — única fuente normativa de conformidad |
 | ACP-LEDGER-1.3 | ✅ Completo — sig normativa obligatoria |
 | Spec OpenAPI (`openapi/acp-api-1.0.yaml`) | ✅ Completo — OpenAPI 3.1.0, todos los endpoints de ACP-API-1.0 |
-| Vectores de prueba de conformidad (CORE · DCMA · HP) | ✅ Completo — 22 vectores firmados, formato ACP-TS-1.1 |
+| Vectores de prueba de conformidad (CORE · DCMA · HP · LEDGER · EXEC) | ✅ Completo — 42 vectores firmados, Ed25519 real + SHA-256 |
+| Implementación de referencia — 22 paquetes Go (L1–L4) | ✅ Completo — `impl/go/pkg/` cubre todos los niveles de conformidad |
+| `pkg/psn` policy snapshot | ✅ Completo — transiciones atómicas, único snapshot ACTIVO |
+| SDKs Python / TypeScript / Rust | 🔜 En roadmap |
 | v1.x | Protocolo núcleo e implementación de referencia — activo |
 | v2.0 | ACP Descentralizado (ACP-D) — en diseño |
 | futuro | Verificación ZK, gobernanza descentralizada |
