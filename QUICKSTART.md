@@ -1,48 +1,78 @@
-# ACP Framework — Inicio Rápido
+# ACP Framework — Quickstart
+
+## One-liner (Docker)
+
+```bash
+# Start ACP server with the RFC 8037 dev key
+docker run -p 8080:8080 \
+  -e ACP_INSTITUTION_PUBLIC_KEY=cA4s58S2dEJ-qye6EpJaJKKaVfvPT8mAQf97Vo8TInk \
+  ghcr.io/chelof100/acp-server:latest
+```
+
+```bash
+# Health check
+curl http://localhost:8080/acp/v1/health
+```
+
+> For production: replace `ACP_INSTITUTION_PUBLIC_KEY` with your own Ed25519 public key.
+> See `impl/go/.env.example` for all configuration options.
 
 ---
 
-## Elegí tu camino
-
-### Camino A — Entender el diseño del protocolo
-
-Comenzá aquí para entender qué resuelve ACP y cómo está estructurado.
-
-1. [`README.md`](README.md) — Qué es ACP y por qué existe
-2. [`ARCHITECTURE.md`](ARCHITECTURE.md) — Modelo de dominio formal y grafo de dependencias
-3. [`spec/nucleo/ACP-SIGN-1.0.md`](spec/nucleo/ACP-SIGN-1.0.md) — Capa criptográfica base
-4. [`spec/nucleo/ACP-CT-1.0.md`](spec/nucleo/ACP-CT-1.0.md) — Formato del Capability Token
-5. [`spec/nucleo/ACP-HP-1.0.md`](spec/nucleo/ACP-HP-1.0.md) — Protocolo de Handshake
-
-### Camino B — Implementar ACP
-
-Comenzá aquí si querés construir una implementación conforme a ACP.
-
-1. [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md) — Definición normativa de conformidad (L1–L5)
-2. [`openapi/acp-api-1.0.yaml`](openapi/acp-api-1.0.yaml) — Spec OpenAPI 3.1.0 para todos los endpoints HTTP
-3. [`compliance/ACP-TS-1.1.md`](compliance/ACP-TS-1.1.md) — Formato de vectores de prueba
-4. [`compliance/test-vectors/`](compliance/test-vectors/) — 22 vectores de prueba normativos (CORE · DCMA · HP)
-5. [`compliance/ACR-1.0.md`](compliance/ACR-1.0.md) — Protocolo del compliance runner
-
-### Camino C — Ejecutar la implementación de referencia
-
-**Requisitos:** Go 1.22+, Docker (opcional)
-
-**Paso 1 — Compilar e iniciar el servidor**
+## Make targets
 
 ```bash
-git clone https://github.com/chelof100/acp-framework
-cd acp-framework/impl/go
+make demo          # start server in dev mode + health check
+make test          # run all Go tests
+make vectors       # run 42 conformance test vectors
+make python-demo   # run Python admission control demo (no server needed)
+make build         # build the Go server binary
+```
 
-# Generar una clave de desarrollo
+---
+
+## Choose your path
+
+### Path A — Understand the protocol design
+
+Start here to understand what ACP solves and how it is structured.
+
+1. [`docs/admission-flow.md`](docs/admission-flow.md) — **Start here**: complete 6-step admission check guide
+2. [`README.md`](README.md) — What ACP is and why it exists
+3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — Formal domain model and dependency graph
+4. [`spec/core/ACP-SIGN-1.0.md`](spec/core/ACP-SIGN-1.0.md) — Base cryptographic layer
+5. [`spec/core/ACP-CT-1.0.md`](spec/core/ACP-CT-1.0.md) — Capability Token format
+6. [`spec/core/ACP-HP-1.0.md`](spec/core/ACP-HP-1.0.md) — Handshake Protocol
+
+### Path B — Implement ACP
+
+Start here if you want to build a conformant ACP implementation.
+
+1. [`spec/governance/ACP-CONF-1.2.md`](spec/governance/ACP-CONF-1.2.md) — Normative conformance definition (L1–L5)
+2. [`openapi/acp-api-1.0.yaml`](openapi/acp-api-1.0.yaml) — OpenAPI 3.1.0 spec for all HTTP endpoints
+3. [`compliance/ACP-TS-1.1.md`](compliance/ACP-TS-1.1.md) — Test vector format
+4. [`compliance/test-vectors/`](compliance/test-vectors/) — 22 normative test vectors (CORE · DCMA · HP)
+5. [`compliance/ACR-1.0.md`](compliance/ACR-1.0.md) — Compliance runner protocol
+
+### Path C — Run the reference implementation
+
+**Prerequisites:** Go 1.22+, Docker (optional)
+
+**Step 1 — Build and start the server**
+
+```bash
+git clone https://github.com/chelof100/acp-framework-en
+cd acp-framework-en/impl/go
+
+# Generate a dev key
 go run ./cmd/keygen
 
-# Iniciar el servidor (configurar la clave institucional)
+# Start the server (set your institution key)
 export ACP_INSTITUTION_PUBLIC_KEY=<base64url_ed25519_public_key>
 go run ./cmd/acp-server
 ```
 
-**Paso 2 — Verificación de estado**
+**Step 2 — Health check**
 
 ```bash
 curl http://localhost:8080/acp/v1/health
@@ -62,61 +92,61 @@ curl http://localhost:8080/acp/v1/health
 }
 ```
 
-**Paso 3 — Ejecutar los vectores de prueba de conformidad**
+**Step 3 — Run the conformance test vectors**
 
 ```bash
 cd impl/go
 
-# Compilar el evaluador IUT
+# Build the IUT evaluator
 go build ./cmd/acp-evaluate
 
-# Ejecutar la suite de conformidad contra todos los vectores
+# Run the compliance suite against all test vectors
 go run ./cmd/acp-runner \
   --impl ./acp-evaluate \
   --suite ../../compliance/test-vectors
 
-# Esperado: 22/22 PASS → CONFORME L1 (CORE + DCMA + HP)
+# Expected: 42/42 PASS → CONFORMANT L1 (CORE + DCMA + HP + LEDGER + EXEC)
 ```
 
-### Camino D — Contribuir al framework
+### Path D — Contribute to the framework
 
-1. [`CONTRIBUTING.md`](CONTRIBUTING.md) — Proceso RFC para cambios normativos
-2. [`SECURITY.md`](SECURITY.md) — Divulgación responsable de vulnerabilidades
+1. [`CONTRIBUTING.md`](CONTRIBUTING.md) — RFC process for normative changes
+2. [`SECURITY.md`](SECURITY.md) — Responsible vulnerability disclosure
 
 ---
 
-## Niveles de Conformidad
+## Conformance Levels
 
-| Nivel | Nombre | Specs requeridas |
+| Level | Name | Required specs |
 |---|---|---|
-| **L1** | Núcleo | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
-| **L2** | Seguridad | L1 + RISK · REV · ITA-1.0 |
-| **L3** | Ejecución Verificable | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX · PSN |
-| **L4** | Gobernanza | L3 + PAY · REP-1.2 · ITA-1.1 · GOV-EVENTS · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
-| **L5** | Federación | L4 + ACP-D · quórum BFT ITA-1.1 |
+| **L1** | Core | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
+| **L2** | Security | L1 + RISK · REV · ITA-1.0 |
+| **L3** | Verifiable Execution | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX · PSN |
+| **L4** | Governance | L3 + PAY · REP-1.2 · ITA-1.1 · GOV-EVENTS · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
+| **L5** | Federation | L4 + ACP-D · ITA-1.1 BFT quorum |
 
-La mayoría de los despliegues en producción apuntan a **L3** o **L4**.
+Most production deployments target **L3** or **L4**.
 
-Requisitos normativos completos: [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md)
-
----
-
-## Conceptos Clave
-
-**Capability Token (CT):** Objeto JSON firmado que otorga a un agente permiso para ejecutar una acción específica. Contiene: DID del agente, capacidades, expiración, firma del emisor.
-
-**ITA (Institutional Trust Anchor):** Entidad autorizada a emitir Capability Tokens. Centralizada (clave única) o distribuida (quórum BFT).
-
-**DCMA (Delegation Chain):** Delegación multi-salto con garantías de no-escalación y revocación transitiva.
-
-**HP (Handshake Protocol):** Protocolo de desafío/respuesta en dos fases que prueba la posesión de un CT antes de acceder a cualquier endpoint protegido.
-
-**DID (Decentralized Identifier):** Identidad criptográfica del agente, independiente del proveedor o plataforma.
+Full normative requirements: [`spec/governance/ACP-CONF-1.2.md`](spec/governance/ACP-CONF-1.2.md)
 
 ---
 
-## Preguntas y Contribuciones
+## Key Concepts
 
-- Preguntas generales: [GitHub Discussions](https://github.com/chelof100/acp-framework/discussions)
-- Vulnerabilidades de seguridad: [`SECURITY.md`](SECURITY.md)
-- Cambios normativos: proceso RFC en [`CONTRIBUTING.md`](CONTRIBUTING.md)
+**Capability Token (CT):** Signed JSON object granting an agent permission to execute a specific action. Contains: agent DID, capabilities, expiry, issuer signature.
+
+**ITA (Institutional Trust Anchor):** Entity authorized to issue Capability Tokens. Centralized (single key) or distributed (BFT quorum).
+
+**DCMA (Delegation Chain):** Multi-hop delegation with non-escalation and transitive revocation guarantees.
+
+**HP (Handshake Protocol):** Two-phase challenge/response protocol proving possession of a CT before any protected endpoint is accessed.
+
+**DID (Decentralized Identifier):** Agent cryptographic identity, independent of provider or platform.
+
+---
+
+## Questions and Contributions
+
+- General questions: [GitHub Discussions](https://github.com/chelof100/acp-framework-en/discussions)
+- Security vulnerabilities: [`SECURITY.md`](SECURITY.md)
+- Normative changes: RFC process in [`CONTRIBUTING.md`](CONTRIBUTING.md)
