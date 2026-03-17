@@ -3,7 +3,8 @@
 **Status:** Stable
 **Version:** 1.3
 **Supersedes:** ACP-LEDGER-1.2
-**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0, ACP-LIA-1.0, ACP-PSN-1.0
+**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0
+**Emitters:** ACP-LIA-1.0 emits `LIABILITY_RECORD` events; ACP-PSN-1.0 emits `POLICY_SNAPSHOT_CREATED` events. These specs write to the ledger but the ledger does not depend on them for its own correctness.
 **Required-by:** ACP-CONF-1.2
 **Changelog:**
 - v1.3 — Hace `sig` normativamente obligatorio en todas las implementaciones de producción. Agrega código de error LEDGER-012 para firma ausente o vacía. Elimina la ambigüedad en §4.4 (era solo descriptivo; ahora usa MUST). Actualiza la verificación de cadena en §7 (paso 1 ahora rechaza sig ausente antes del chequeo criptográfico). Actualiza §8 y §12 con LEDGER-012. Actualiza los requisitos de conformidad en §13. Aclara postura de testing: las implementaciones de test MUST usar una clave real (MAY ser una clave de test determinista per ACP-TS-1.1); las claves nil no son conformes ni en modo desarrollo.
