@@ -1,4 +1,4 @@
-# ACP — Agent Control Protocol
+﻿# ACP — Agent Control Protocol
 
 **Control de admisión para acciones de agentes.**
 
