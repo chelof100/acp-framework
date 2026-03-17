@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/chelof100/acp-framework"
+Homepage = "https://agentcontrolprotocol.xyz"
 Repository = "https://github.com/chelof100/acp-framework"
 Documentation = "https://github.com/chelof100/acp-framework/tree/main/sdk/python"
 
