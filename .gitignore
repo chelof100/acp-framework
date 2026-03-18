@@ -7,6 +7,9 @@
 # Certification outputs
 ACP-CERT-*.json
 
+# Paper archives (local only — never push to repo)
+paper/arxiv/*.zip
+
 # Python cache
 **/.pytest_cache/
 **/__pycache__/
