@@ -571,8 +571,8 @@ curl http://localhost:8080/acp/v1/health
 | ACP-CONF-1.2 | ✅ Completo — única fuente normativa de conformidad |
 | ACP-LEDGER-1.3 | ✅ Completo — sig normativa obligatoria |
 | Spec OpenAPI (`openapi/acp-api-1.0.yaml`) | ✅ Completo — OpenAPI 3.1.0, todos los endpoints de ACP-API-1.0 |
-| Vectores de prueba de conformidad (CORE · DCMA · HP · LEDGER · EXEC) | ✅ Completo — 42 vectores firmados, Ed25519 real + SHA-256 |
-| Implementación de referencia — 22 paquetes Go (L1–L4) | ✅ Completo — `impl/go/pkg/` cubre todos los niveles de conformidad |
+| Vectores de prueba de conformidad (CORE · DCMA · HP · LEDGER · EXEC · PROV) | ✅ Completo — 51 vectores firmados, Ed25519 real + SHA-256 |
+| Implementación de referencia — 23 paquetes Go (L1–L4) | ✅ Completo — `impl/go/pkg/` cubre todos los niveles de conformidad |
 | `pkg/psn` policy snapshot | ✅ Completo — transiciones atómicas, único snapshot ACTIVO |
 | Python SDK — `ACPAdmissionGuard` + `@acp_tool` (LangChain) | ✅ Completo — `impl/python/` |
 | SDKs TypeScript / Rust | 🔜 En roadmap |

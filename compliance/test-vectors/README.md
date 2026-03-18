@@ -104,8 +104,17 @@ Negative test vectors with wrong signatures use `aGVsbG8gd29ybGQ` (base64url of 
 | TS-EXEC-NEG-005 | EXEC | L3 | Negative | EXEC-005: agent_id mismatch |
 | TS-EXEC-NEG-006 | EXEC | L3 | Negative | EXEC-006: resource mismatch |
 | TS-EXEC-NEG-007 | EXEC | L3 | Negative | EXEC-007: action_parameters_hash mismatch |
+| TS-PROV-POS-001 | PROV | L3 | Positive | Cadena de delegación 2-hop válida con registro de provenance |
+| TS-PROV-POS-002 | PROV | L3 | Positive | Autorización institucional directa |
+| TS-PROV-NEG-001 | PROV | L3 | Negative | PROV-001: registro de provenance con campos requeridos faltantes |
+| TS-PROV-NEG-002 | PROV | L3 | Negative | PROV-002: verificación de firma fallida |
+| TS-PROV-NEG-003 | PROV | L3 | Negative | PROV-003: cadena de delegación rota |
+| TS-PROV-NEG-004 | PROV | L3 | Negative | PROV-004: escalación de capability en la cadena |
+| TS-PROV-NEG-005 | PROV | L3 | Negative | PROV-005: delegación expirada en la cadena |
+| TS-PROV-NEG-006 | PROV | L3 | Negative | PROV-007: emisor no pertenece al conjunto de trust anchors |
+| TS-PROV-NEG-007 | PROV | L3 | Negative | PROV-009: cadena de provenance no coincide con el contexto de ejecución |
 
-**Total: 42 vectors** — 8 CORE (L1) + 4 DCMA (L2) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3)
+**Total: 51 vectores** — 8 CORE (L1) + 4 DCMA (L1) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3) + 9 PROV (L3)
 
 ---
 
