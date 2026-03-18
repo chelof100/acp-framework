@@ -7,8 +7,8 @@
 # Certification outputs
 ACP-CERT-*.json
 
-# Paper archives (local only — never push to repo)
-paper/arxiv/*.zip
+# Paper folder (local only — publicado en Zenodo DOI 10.5281/zenodo.19077019)
+paper/
 
 # Python cache
 **/.pytest_cache/
