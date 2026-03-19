@@ -113,8 +113,21 @@ Negative test vectors with wrong signatures use `aGVsbG8gd29ybGQ` (base64url of 
 | TS-PROV-NEG-005 | PROV | L3 | Negative | PROV-005: delegación expirada en la cadena |
 | TS-PROV-NEG-006 | PROV | L3 | Negative | PROV-007: emisor no pertenece al conjunto de trust anchors |
 | TS-PROV-NEG-007 | PROV | L3 | Negative | PROV-009: cadena de provenance no coincide con el contexto de ejecución |
+| TS-PCTX-POS-001 | PCTX | L3 | Positive | Instantánea válida: ver 1.1, frescura=30s < delta_max=60s |
+| TS-PCTX-POS-002 | PCTX | L3 | Positive | Límite productor: frescura=60s exactamente igual a snapshot.delta_max=60s |
+| TS-PCTX-POS-003 | PCTX | L3 | Positive | Compatibilidad retroactiva: instantánea ver 1.0 sin campos de frescura DEBE pasar (§12) |
+| TS-PCTX-POS-004 | PCTX | L3 | Positive | Límite verificador: frescura=60s exactamente igual a verifier.delta_max_allowed=60s |
+| TS-PCTX-NEG-001 | PCTX | L3 | Negative | PCTX-001: execution_id no coincide con el ET vinculado |
+| TS-PCTX-NEG-002 | PCTX | L3 | Negative | PCTX-002: snapshot_at fuera de la ventana de validez del ET |
+| TS-PCTX-NEG-003 | PCTX | L3 | Negative | PCTX-004: policy_hash corrompido (último byte modificado) |
+| TS-PCTX-NEG-004 | PCTX | L3 | Negative | PCTX-006: firma institucional con un byte modificado |
+| TS-PCTX-NEG-005 | PCTX | L3 | Negative | PCTX-007: snapshot_id vacío — campo requerido faltante |
+| TS-PCTX-NEG-006 | PCTX | L3 | Negative | PCTX-009: instantánea ver 1.1 sin policy_captured_at |
+| TS-PCTX-NEG-007 | PCTX | L3 | Negative | PCTX-009: frescura=120s supera snapshot.delta_max=60s |
+| TS-PCTX-NEG-008 | PCTX | L3 | Negative | PCTX-009: sesgo de reloj=10s supera tolerancia de 5s |
+| TS-PCTX-NEG-009 | PCTX | L3 | Negative | PCTX-009: snapshot.delta_max=300s > verifier.delta_max_allowed=60s — verificador domina |
 
-**Total: 51 vectores** — 8 CORE (L1) + 4 DCMA (L1) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3) + 9 PROV (L3)
+**Total: 64 vectores** — 8 CORE (L1) + 4 DCMA (L1) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3) + 9 PROV (L3) + 13 PCTX (L3)
 
 ---
 

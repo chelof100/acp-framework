@@ -508,3 +508,12 @@ tabla es informativa y NO DEBE usarse en declaraciones de certificación:
 | Governance         | L2                |
 | Extended           | L4                |
 | Full v1.1          | L4                |
+
+---
+
+## Errata
+
+**Errata (2026-03-19):** ACP-POLICY-CTX-1.0 ha sido superado por ACP-POLICY-CTX-1.1.
+Las implementaciones que apunten a L3-FULL DEBERÍAN adoptar ACP-POLICY-CTX-1.1 para garantizar
+la validez temporal de la evaluación de política. ACP-POLICY-CTX-1.1 es retrocompatible
+con 1.0 — las instantáneas `ver: "1.0"` existentes siguen siendo válidas sin validación de frescura.
