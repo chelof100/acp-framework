@@ -1,7 +1,9 @@
 # ACP-CROSS-ORG-1.0 — Registro de Interacciones Cross-Organizacionales
 
 **Versión:** 1.0
-**Estado:** Activo
+**Estado:** Superseded
+**Supersedido-por:** ACP-CROSS-ORG-1.1
+**Archivado:** 2026-03-18
 **Dependencias:** ACP-LEDGER-1.2, ACP-ITA-1.1, ACP-HIST-1.0, ACP-LIA-1.0, ACP-SIGN-1.0
 **Implementa:** ACP-CONF-1.1 Nivel de Conformidad L4
 **Relacionado:** ACP-REP-PORTABILITY-1.0

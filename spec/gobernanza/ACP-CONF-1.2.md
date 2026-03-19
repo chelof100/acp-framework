@@ -11,8 +11,8 @@ Depends-on: ACP-SIGN-1.0, ACP-CT-1.0, ACP-CAP-REG-1.0, ACP-HP-1.0,
             ACP-PROVENANCE-1.0, ACP-POLICY-CTX-1.0, ACP-PSN-1.0,
             ACP-PAY-1.0, ACP-REP-1.2, ACP-REP-PORTABILITY-1.0,
             ACP-GOV-EVENTS-1.0, ACP-LIA-1.0, ACP-HIST-1.0,
-            ACP-NOTIFY-1.0, ACP-DISC-1.0, ACP-BULK-1.0, ACP-CROSS-ORG-1.0,
-            ACP-DCMA-1.0
+            ACP-NOTIFY-1.0, ACP-DISC-1.0, ACP-BULK-1.0, ACP-CROSS-ORG-1.1,
+            ACP-DCMA-1.1
 Required-by: —
 
 ---
@@ -59,7 +59,7 @@ ACP 1.2 define cinco niveles de conformidad cumulativos:
 | L2    | SECURITY      | L1 + RISK + REV + ITA-1.0                                               |
 | L3    | FULL          | L2 + API + EXEC + LEDGER + PROVENANCE + POLICY-CTX + PSN                |
 | L4    | EXTENDED      | L3 + PAY + REP-1.2 + ITA-1.1 + GOV-EVENTS + LIA + HIST +               |
-|       |               | NOTIFY + DISC + BULK + CROSS-ORG + REP-PORTABILITY                      |
+|       |               | NOTIFY + DISC + BULK + CROSS-ORG-1.1 + REP-PORTABILITY                  |
 | L5    | DECENTRALIZED | L4 + ACP-D + ITA-1.1 BFT                                                |
 
 Los niveles son cumulativos. Una implementación que declara nivel Lk MUST
@@ -352,14 +352,23 @@ La implementación MUST:
 - El éxito parcial MUST ser soportado: la respuesta MUST incluir estado
   por ítem para cada elemento del lote.
 
-7.10 Cross-Organization (ACP-CROSS-ORG-1.0)
+7.10 Cross-Organization (ACP-CROSS-ORG-1.1)
 
 La implementación MUST:
 
-- Soportar delegación de capabilities entre organizaciones.
+- Soportar delegación de capabilities entre organizaciones per ACP-CROSS-ORG-1.1.
 - Los tokens cross-org MUST incluir org_id en el claim.
 - El verificador MUST validar los trust anchors cross-org según ACP-ITA-1.1
   antes de aceptar tokens cross-org.
+- Asignar un `interaction_id` UUIDv7 en la primera emisión y reutilizarlo en
+  todos los reintentos de la misma interacción lógica.
+- Implementar el protocolo de reintento tolerante a fallos: 3 intentos con
+  backoff +30s/+60s/+120s per ACP-CROSS-ORG-1.1 §8.
+- Deduplicar bundles entrantes por `interaction_id` en el destino.
+- Emitir `CROSS_ORG_ACK` como tipo de evento de primer nivel ACP-LEDGER-1.3.
+- Computar estado derivado de interacción a partir de eventos del ledger per
+  ACP-CROSS-ORG-1.1 §9 (sin campo de estado mutable).
+- Cumplir SLA de `pending_review` de 24 horas per ACP-CROSS-ORG-1.1 §8.4.
 
 7.11 Portabilidad de Reputación (ACP-REP-PORTABILITY-1.0)
 

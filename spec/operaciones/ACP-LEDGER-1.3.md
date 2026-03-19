@@ -7,7 +7,7 @@
 **Emitters:** ACP-LIA-1.0 emits `LIABILITY_RECORD` events; ACP-PSN-1.0 emits `POLICY_SNAPSHOT_CREATED` events. These specs write to the ledger but the ledger does not depend on them for its own correctness.
 **Required-by:** ACP-CONF-1.2
 **Changelog:**
-- v1.3 — Hace `sig` normativamente obligatorio en todas las implementaciones de producción. Agrega código de error LEDGER-012 para firma ausente o vacía. Elimina la ambigüedad en §4.4 (era solo descriptivo; ahora usa MUST). Actualiza la verificación de cadena en §7 (paso 1 ahora rechaza sig ausente antes del chequeo criptográfico). Actualiza §8 y §12 con LEDGER-012. Actualiza los requisitos de conformidad en §13. Aclara postura de testing: las implementaciones de test MUST usar una clave real (MAY ser una clave de test determinista per ACP-TS-1.1); las claves nil no son conformes ni en modo desarrollo.
+- v1.3 — Hace `sig` normativamente obligatorio en todas las implementaciones de producción. Agrega código de error LEDGER-012 para firma ausente o vacía. Elimina la ambigüedad en §4.4 (era solo descriptivo; ahora usa MUST). Actualiza la verificación de cadena en §7 (paso 1 ahora rechaza sig ausente antes del chequeo criptográfico). Actualiza §8 y §12 con LEDGER-012. Actualiza los requisitos de conformidad en §13. Aclara postura de testing: las implementaciones de test MUST usar una clave real (MAY ser una clave de test determinista per ACP-TS-1.1); las claves nil no son conformes ni en modo desarrollo. Agrega §5.15 tipo de evento `CROSS_ORG_ACK` (registrado por ACP-CROSS-ORG-1.1).
 - v1.2 — Correcciones de esquema: agrega campo `resolver_type` en `ESCALATION_RESOLVED` §5.11 (requerido por ACP-LIA-1.0 §6 Regla 1); corrige tipo de score a `float` (escala 0.0–1.0) en `REPUTATION_UPDATED` §5.14 para alinear con ACP-REP-1.2.
 - v1.1 — Agrega tipos de evento `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; agrega `policy_snapshot_ref` y `policy_version` a los payloads de AUTHORIZATION y RISK_EVALUATION; define compatibilidad retroactiva con v1.0.
 
@@ -387,6 +387,7 @@ Registra cada transición de política en el ledger para trazabilidad histórica
 `previous_snapshot_id` es `null` para el primer snapshot de la institución.
 
 ### 5.14 `REPUTATION_UPDATED`
+
 Generado por ACP-REP-1.2 tras procesar eventos de ejecución. Hace auditable
 el scoring de reputación — cada actualización de score se registra en el
 ledger con su evento desencadenante.
@@ -405,6 +406,33 @@ ledger con su evento desencadenante.
   }
 }
 ```
+
+### 5.15 `CROSS_ORG_ACK`
+Generado por ACP-CROSS-ORG-1.1 §7.4. Emitido por la institución destino para acusar recibo y
+validación de un evento `CROSS_ORG_INTERACTION`. Almacenado en el ledger del destino (en emisión)
+y en el ledger del origen (al recibirlo del destino). Un verificador ACP-LEDGER-1.3 que encuentre
+este tipo de evento MUST verificar su firma e integridad de cadena normalmente.
+
+```json
+{
+  "event_type": "CROSS_ORG_ACK",
+  "payload": {
+    "ack_id": "<uuid_v4>",
+    "interaction_id": "<uuid_v7>",
+    "original_event_id": "<uuid_v4>",
+    "source_institution_id": "<AgentID>",
+    "target_institution_id": "<AgentID>",
+    "validated_at": 1742299202,
+    "status": "accepted | rejected | pending_review",
+    "review_deadline": "<segundos_unix_o_null>",
+    "rejection_reason": "<string_o_null>",
+    "ledger_sequence": 17
+  }
+}
+```
+
+`review_deadline` es obligatorio cuando `status` es `pending_review`. Es `null` para los estados
+`accepted` y `rejected`.
 
 ---
 
@@ -544,7 +572,7 @@ Una implementación es conforme a ACP-LEDGER-1.3 si:
 - Retiene eventos por un mínimo de 7 años
 - Incluye `chain_valid` en respuestas de consulta
 - Incluye `policy_snapshot_ref` en eventos AUTHORIZATION y RISK_EVALUATION
-- Implementa tipos de evento LIABILITY_RECORD, POLICY_SNAPSHOT_CREATED,
+- Implementa tipos de evento LIABILITY_RECORD, POLICY_SNAPSHOT_CREATED, CROSS_ORG_ACK,
   REPUTATION_UPDATED
 - Incluye `resolver_type` en eventos ESCALATION_RESOLVED
 - Usa tipo `float` (0.0–1.0) para los campos `previous_score` y `new_score`
