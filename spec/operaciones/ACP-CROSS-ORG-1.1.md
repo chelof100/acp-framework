@@ -11,7 +11,7 @@
 
 ## Historial de cambios
 
-- **v1.1** — Agrega protocolo bilateral tolerante a fallos. Introduce `interaction_id` (UUIDv7) como identificador de correlación obligatorio para deduplicación entre reintentos. Define modelo de estado derivado de interacción (§9). Agrega protocolo formal de reintento: 3 intentos, backoff +30s/+60s/+120s (§8). Formaliza SLA de `pending_review` (24h) y transiciones de estado (§8.4). Registra `CROSS_ORG_ACK` como tipo de evento de primer nivel en ACP-LEDGER-1.3 §5. Agrega códigos de error CROSS-012 a CROSS-015. Actualiza dependencia de ACP-LEDGER-1.2 a ACP-LEDGER-1.3.
+- **v1.1** — Agrega protocolo bilateral tolerante a fallos. Introduce `interaction_id` (UUIDv7) como identificador de correlación obligatorio para deduplicación entre reintentos. Define modelo de estado derivado de interacción (§9). Agrega protocolo formal de reintento: 3 intentos, backoff +30s/+60s/+120s (§8). Formaliza SLA de `pending_review` (24h) y transiciones de estado (§8.4). Registra `CROSS_ORG_ACK` como tipo de evento de primer nivel en ACP-LEDGER-1.3 §5. Agrega códigos de error CROSS-012 a CROSS-015. Actualiza dependencia de ACP-LEDGER-1.2 a ACP-LEDGER-1.3. **v1.1 rev.1:** Agrega §9.1 Invariantes de Estado de Interacción (INV-1..5) y §13.1 Consideraciones de Seguridad (tabla de amenazas + alcance limitado).
 - **v1.0** — Especificación inicial: tipo de evento `CROSS_ORG_INTERACTION`, protocolo de transmisión bilateral CrossOrgBundle, CrossOrgAck, extensiones de consulta HIST-1.0.
 
 ---
@@ -430,6 +430,20 @@ Dado un `interaction_id`, el estado derivado se computa así:
 
 **Regla de verificación:** Una implementación que computa el estado derivado MUST leer el ledger en tiempo de consulta. El estado derivado MUST NOT ser cacheado más allá del alcance de la petición sin invalidación.
 
+### 9.1 Invariantes de Estado de Interacción
+
+Para cualquier `interaction_id`, los siguientes invariantes DEBEN cumplirse:
+
+| # | Invariante | Mecanismo de cumplimiento |
+|---|------------|--------------------------|
+| INV-1 | A lo sumo existe un estado terminal (`acked` o `rejected`) por `interaction_id`. | CROSS-014 ante duplicado con payload distinto. |
+| INV-2 | Un `CROSS_ORG_ACK` válido (accepted o rejected) MUST cancelar todos los reintentos pendientes de inmediato. | CROSS-RULE-10. |
+| INV-3 | Los reintentos MUST NOT crear nuevos valores de `interaction_id`; solo `event_id` cambia entre intentos. | CROSS-RULE-7. |
+| INV-4 | Una vez en estado `acked` o `rejected`, el estado derivado MUST NOT regresar a un estado no terminal. | Reglas de precedencia §9. |
+| INV-5 | La transición `pending_review → pending_review` está prohibida. | CROSS-015. |
+
+Estos invariantes son verificables desde el ledger únicamente, sin acceso a ningún estado mutable en tiempo de ejecución.
+
 ---
 
 ## 10. Extensiones de Consulta (HIST-1.0)
@@ -539,6 +553,21 @@ flowchart TD
 | CROSS-013 | 408 | SLA de `pending_review` vencido: sin resolución dentro de las 24 horas del review_deadline. |
 | CROSS-014 | 409 | `interaction_id` duplicado con `payload_hash` o `action_type` diferente (intento de manipulación de payload). |
 | CROSS-015 | 422 | Transición de ACK inválida: `pending_review → pending_review` está prohibida. |
+
+### 13.1 Consideraciones de Seguridad
+
+ACP-CROSS-ORG-1.1 asume comunicación autenticada entre instituciones. Todos los eventos `CROSS_ORG_INTERACTION` y `CROSS_ORG_ACK` DEBEN estar firmados con la clave ITA Ed25519 de la institución emisora y serializados mediante JCS (RFC 8785), garantizando autenticidad, integridad y no repudio.
+
+**Mitigaciones de amenazas:**
+
+| Amenaza | Mitigación |
+|---------|------------|
+| Ataque de replay | `interaction_id` (UUIDv7) + `event_id` (UUIDv4) permiten al destino detectar y rechazar duplicados (CROSS-014). |
+| Forja de eventos | Firmas Ed25519 sobre payloads canónicos JCS impiden la inyección de eventos ACK o INTERACTION aparentemente válidos. |
+| Divergencia de auditoría | `CROSS_ORG_ACK` como evento de ledger de primer nivel en ambas instituciones permite verificación independiente sin confiar en el estado mutable de ninguna. |
+| Manipulación de estado | El modelo de estado derivado (§9) elimina todo campo de estado mutable; no existe evento `CROSS_ORG_STATUS_UPDATE`. |
+
+**Alcance limitado:** ACP no aborda la confidencialidad a nivel de red (usar TLS), la resolución de disputas a nivel de negocio ni la tolerancia a fallos bizantinos. Proporciona detección estructurada, manejo y auditoría de fallos a nivel de protocolo.
 
 ---
 
