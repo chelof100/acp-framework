@@ -1,3 +1,7 @@
+> **Estado:** Superado
+> **Superado por:** ACP-POLICY-CTX-1.1
+> **Fecha de superación:** 2026-03-19
+
 # ACP-POLICY-CTX-1.0
 ## Especificación de Instantánea de Contexto de Política
 
