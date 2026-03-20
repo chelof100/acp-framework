@@ -421,7 +421,7 @@ Versión activa actual por especificación. Esta tabla es la referencia autorita
 | ACP-DISC | 1.0 | L4 |
 | ACP-BULK | 1.0 | L4 |
 | ACP-CROSS-ORG | 1.0 | L4 |
-| ACP-REP-PORTABILITY | 1.0 | L4 |
+| ACP-REP-PORTABILITY | 1.1 | L4 |
 | **ACP-CONF** | **1.2** | — |
 
 Las versiones supersedidas están archivadas en [`archivo/specs/`](archivo/specs/README.md).
@@ -531,6 +531,11 @@ acp-framework/
 # Opción 1: servidor de referencia Go
 cd impl/go
 docker compose up
+
+# Opción 5: Demo multi-org — Org-A emite policy+reputación firmados, Org-B valida de forma independiente
+cd examples/multi-org-demo
+docker compose up
+# Org-A: http://localhost:8081  |  Org-B: http://localhost:8082
 
 # Opción 2: Python SDK — patrón de control de admisión (sin servidor)
 cd impl/python
