@@ -9,7 +9,7 @@ Depends-on: ACP-SIGN-1.0, ACP-CT-1.0, ACP-CAP-REG-1.0, ACP-HP-1.0,
             ACP-RISK-1.0, ACP-REV-1.0, ACP-ITA-1.1,
             ACP-API-1.0, ACP-EXEC-1.0, ACP-LEDGER-1.3,
             ACP-PROVENANCE-1.0, ACP-POLICY-CTX-1.0, ACP-PSN-1.0,
-            ACP-PAY-1.0, ACP-REP-1.2, ACP-REP-PORTABILITY-1.0,
+            ACP-PAY-1.0, ACP-REP-1.2, ACP-REP-PORTABILITY-1.1,
             ACP-GOV-EVENTS-1.0, ACP-LIA-1.0, ACP-HIST-1.0,
             ACP-NOTIFY-1.0, ACP-DISC-1.0, ACP-BULK-1.0, ACP-CROSS-ORG-1.1,
             ACP-DCMA-1.1
@@ -370,15 +370,21 @@ La implementación MUST:
   ACP-CROSS-ORG-1.1 §9 (sin campo de estado mutable).
 - Cumplir SLA de `pending_review` de 24 horas per ACP-CROSS-ORG-1.1 §8.4.
 
-7.11 Portabilidad de Reputación (ACP-REP-PORTABILITY-1.0)
+7.11 Portabilidad de Reputación (ACP-REP-PORTABILITY-1.1)
+
+> **Errata 2026-03-20:** Esta sección ahora referencia ACP-REP-PORTABILITY-1.1
+> (reemplaza a 1.0). Los requisitos se han actualizado en consecuencia.
 
 La implementación MUST:
 
-- Soportar exportación de registros de reputación firmados por agente.
-- Los registros exportados MUST estar firmados por la clave de la
-  institución originadora.
-- Una institución importadora MUST verificar la firma de origen antes de
-  incorporar un registro de reputación portátil.
+- Emitir objetos `ReputationSnapshot` firmados por agente usando `Capture()`
+  con JCS (RFC 8785) + SHA-256 + Ed25519 (ACP-REP-PORTABILITY-1.1 §6).
+- Establecer `valid_until` en todos los snapshots v1.1 y aplicar expiración
+  al recibirlos (REP-011).
+- Aplicar `evaluated_at ≤ valid_until` (REP-001) y límites de puntuación
+  dentro de escala (REP-002).
+- Verificar la firma Ed25519 del emisor via `VerifySig()` antes de incorporar
+  un snapshot de reputación portátil (REP-010).
 
 ---
 
