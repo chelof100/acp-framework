@@ -3,10 +3,11 @@
 **Status:** Stable
 **Version:** 1.3
 **Supersedes:** ACP-LEDGER-1.2
-**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-REV-1.0, ACP-EXEC-1.0
+**Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-RISK-1.0, ACP-RISK-2.0, ACP-REV-1.0, ACP-EXEC-1.0
 **Emitters:** ACP-LIA-1.0 emits `LIABILITY_RECORD` events; ACP-PSN-1.0 emits `POLICY_SNAPSHOT_CREATED` events. These specs write to the ledger but the ledger does not depend on them for its own correctness.
 **Required-by:** ACP-CONF-1.2
 **Changelog:**
+- v1.3 (Sprint E) — Extiende el esquema §5.3 `RISK_EVALUATION` para ACP-RISK-2.0: agrega `f_anom` (suma del factor de anomalía), objeto `anomaly_detail` (flags de activación por regla), y `policy_hash` (SHA-256 del documento de política firmado, distinto de `policy_snapshot_ref`). Agrega ACP-RISK-2.0 a Depends-on.
 - v1.3 — Hace `sig` normativamente obligatorio en todas las implementaciones de producción. Agrega código de error LEDGER-012 para firma ausente o vacía. Elimina la ambigüedad en §4.4 (era solo descriptivo; ahora usa MUST). Actualiza la verificación de cadena en §7 (paso 1 ahora rechaza sig ausente antes del chequeo criptográfico). Actualiza §8 y §12 con LEDGER-012. Actualiza los requisitos de conformidad en §13. Aclara postura de testing: las implementaciones de test MUST usar una clave real (MAY ser una clave de test determinista per ACP-TS-1.1); las claves nil no son conformes ni en modo desarrollo. Agrega §5.15 tipo de evento `CROSS_ORG_ACK` (registrado por ACP-CROSS-ORG-1.1).
 - v1.2 — Correcciones de esquema: agrega campo `resolver_type` en `ESCALATION_RESOLVED` §5.11 (requerido por ACP-LIA-1.0 §6 Regla 1); corrige tipo de score a `float` (escala 0.0–1.0) en `REPUTATION_UPDATED` §5.14 para alinear con ACP-REP-1.2.
 - v1.1 — Agrega tipos de evento `LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`; agrega `policy_snapshot_ref` y `policy_version` a los payloads de AUTHORIZATION y RISK_EVALUATION; define compatibilidad retroactiva con v1.0.
@@ -148,7 +149,7 @@ solo un registro de éxitos.
 sin estos campos se tratan como legacy v1.0.
 
 ### 5.3 `RISK_EVALUATION`
-Generado por el motor de riesgo ACP-RISK-1.0.
+Generado por el motor de riesgo ACP-RISK-1.0 / ACP-RISK-2.0.
 
 ```json
 {
@@ -162,18 +163,38 @@ Generado por el motor de riesgo ACP-RISK-1.0.
     "f_ctx": 15,
     "f_hist": 0,
     "f_res": 15,
-    "rs_final": 65,
-    "decision": "ESCALATED",
+    "f_anom": 15,
+    "rs_final": 80,
+    "decision": "DENIED",
+    "denied_reason": null,
+    "anomaly_detail": {
+      "rule1_triggered": false,
+      "rule2_triggered": false,
+      "rule3_triggered": true
+    },
     "threshold_config": {
       "approved_max": 39,
       "escalated_max": 69,
       "autonomy_level": 2
     },
-    "factors_applied": ["f_ctx_ip_non_corporate", "f_res_sensitive"],
-    "policy_snapshot_ref": "<uuid>"
+    "factors_applied": ["f_ctx_ip_non_corporate", "f_res_restricted", "f_anom_rule3"],
+    "policy_snapshot_ref": "<uuid>",
+    "policy_hash": "sha256:abc123..."
   }
 }
 ```
+
+`f_anom`, `anomaly_detail` y `policy_hash` son REQUIRED cuando la evaluación fue realizada por
+ACP-RISK-2.0. Pueden estar ausentes en eventos registrados por implementaciones ACP-RISK-1.0
+(tratados como legacy).
+
+`denied_reason` es no-nulo solo cuando la evaluación fue cortocircuitada antes de calcular RS
+(p.ej., `"COOLDOWN_ACTIVE"`, `"AUTONOMY_LEVEL_0"`). Cuando RS fue calculado normalmente, `denied_reason`
+es `null`.
+
+`anomaly_detail` MUST registrar qué reglas F_anom se activaron (`rule1_triggered`,
+`rule2_triggered`, `rule3_triggered`). Los tres campos son REQUIRED cuando `f_anom` está presente,
+incluso si todos son `false`.
 
 ### 5.4 `REVOCATION`
 Generado por POST /acp/v1/rev/revoke.
@@ -572,6 +593,7 @@ Una implementación es conforme a ACP-LEDGER-1.3 si:
 - Retiene eventos por un mínimo de 7 años
 - Incluye `chain_valid` en respuestas de consulta
 - Incluye `policy_snapshot_ref` en eventos AUTHORIZATION y RISK_EVALUATION
+- Incluye `f_anom`, `anomaly_detail` y `policy_hash` en eventos RISK_EVALUATION al usar ACP-RISK-2.0
 - Implementa tipos de evento LIABILITY_RECORD, POLICY_SNAPSHOT_CREATED, CROSS_ORG_ACK,
   REPUTATION_UPDATED
 - Incluye `resolver_type` en eventos ESCALATION_RESOLVED

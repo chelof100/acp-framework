@@ -104,39 +104,42 @@ Negative test vectors with wrong signatures use `aGVsbG8gd29ybGQ` (base64url of 
 | TS-EXEC-NEG-005 | EXEC | L3 | Negative | EXEC-005: agent_id mismatch |
 | TS-EXEC-NEG-006 | EXEC | L3 | Negative | EXEC-006: resource mismatch |
 | TS-EXEC-NEG-007 | EXEC | L3 | Negative | EXEC-007: action_parameters_hash mismatch |
-| TS-PROV-POS-001 | PROV | L3 | Positive | Cadena de delegación 2-hop válida con registro de provenance |
-| TS-PROV-POS-002 | PROV | L3 | Positive | Autorización institucional directa |
-| TS-PROV-NEG-001 | PROV | L3 | Negative | PROV-001: registro de provenance con campos requeridos faltantes |
-| TS-PROV-NEG-002 | PROV | L3 | Negative | PROV-002: verificación de firma fallida |
-| TS-PROV-NEG-003 | PROV | L3 | Negative | PROV-003: cadena de delegación rota |
-| TS-PROV-NEG-004 | PROV | L3 | Negative | PROV-004: escalación de capability en la cadena |
-| TS-PROV-NEG-005 | PROV | L3 | Negative | PROV-005: delegación expirada en la cadena |
-| TS-PROV-NEG-006 | PROV | L3 | Negative | PROV-007: emisor no pertenece al conjunto de trust anchors |
-| TS-PROV-NEG-007 | PROV | L3 | Negative | PROV-009: cadena de provenance no coincide con el contexto de ejecución |
-| TS-PCTX-POS-001 | PCTX | L3 | Positive | Instantánea válida: ver 1.1, frescura=30s < delta_max=60s |
-| TS-PCTX-POS-002 | PCTX | L3 | Positive | Límite productor: frescura=60s exactamente igual a snapshot.delta_max=60s |
-| TS-PCTX-POS-003 | PCTX | L3 | Positive | Compatibilidad retroactiva: instantánea ver 1.0 sin campos de frescura DEBE pasar (§12) |
-| TS-PCTX-POS-004 | PCTX | L3 | Positive | Límite verificador: frescura=60s exactamente igual a verifier.delta_max_allowed=60s |
-| TS-PCTX-NEG-001 | PCTX | L3 | Negative | PCTX-001: execution_id no coincide con el ET vinculado |
-| TS-PCTX-NEG-002 | PCTX | L3 | Negative | PCTX-002: snapshot_at fuera de la ventana de validez del ET |
-| TS-PCTX-NEG-003 | PCTX | L3 | Negative | PCTX-004: policy_hash corrompido (último byte modificado) |
-| TS-PCTX-NEG-004 | PCTX | L3 | Negative | PCTX-006: firma institucional con un byte modificado |
-| TS-PCTX-NEG-005 | PCTX | L3 | Negative | PCTX-007: snapshot_id vacío — campo requerido faltante |
-| TS-PCTX-NEG-006 | PCTX | L3 | Negative | PCTX-009: instantánea ver 1.1 sin policy_captured_at |
-| TS-PCTX-NEG-007 | PCTX | L3 | Negative | PCTX-009: frescura=120s supera snapshot.delta_max=60s |
-| TS-PCTX-NEG-008 | PCTX | L3 | Negative | PCTX-009: sesgo de reloj=10s supera tolerancia de 5s |
-| TS-PCTX-NEG-009 | PCTX | L3 | Negative | PCTX-009: snapshot.delta_max=300s > verifier.delta_max_allowed=60s — verificador domina |
-| TS-REP-POS-001 | REP | L4 | Positive | Snapshot v1.1 válido: score=0.82, escala=0-1, firma Ed25519 real |
-| TS-REP-POS-002 | REP | L4 | Positive | Expiración borderline: now == valid_until (límite es inclusivo) |
-| TS-REP-POS-003 | REP | L4 | Positive | Compatibilidad hacia atrás: snapshot ver=1.0 — expiración NO aplicada (§12) |
-| TS-REP-NEG-001 | REP | L4 | Negative | REP-001: evaluated_at > valid_until (orden temporal violado) |
-| TS-REP-NEG-002 | REP | L4 | Negative | REP-011: snapshot expirado — now > valid_until |
-| TS-REP-NEG-003 | REP | L4 | Negative | REP-002: score=1.5 supera límite superior de escala=0-1 |
-| TS-REP-NEG-004 | REP | L4 | Negative | REP-004: campo issuer está vacío |
-| TS-REP-NEG-005 | REP | L4 | Negative | REP-010: campo signature está vacío |
-| TS-REP-NEG-006 | REP | L4 | Negative | REP-002: scale=unknown no es un valor de escala soportado |
+| TS-PROV-POS-001 | PROV | L3 | Positive | Valid 2-hop delegation chain with provenance record |
+| TS-PROV-POS-002 | PROV | L3 | Positive | Direct institutional authorization |
+| TS-PROV-NEG-001 | PROV | L3 | Negative | PROV-001: provenance record missing required fields |
+| TS-PROV-NEG-002 | PROV | L3 | Negative | PROV-002: signature verification failed |
+| TS-PROV-NEG-003 | PROV | L3 | Negative | PROV-003: delegation chain broken |
+| TS-PROV-NEG-004 | PROV | L3 | Negative | PROV-004: capability escalation in chain |
+| TS-PROV-NEG-005 | PROV | L3 | Negative | PROV-005: expired delegation in chain |
+| TS-PROV-NEG-006 | PROV | L3 | Negative | PROV-007: issuer not in trust anchor set |
+| TS-PROV-NEG-007 | PROV | L3 | Negative | PROV-009: provenance chain does not match execution context |
+| TS-PCTX-POS-001 | PCTX | L3 | Positive | Valid snapshot: ver 1.1, freshness=30s < delta_max=60s |
+| TS-PCTX-POS-002 | PCTX | L3 | Positive | Borderline producer limit: freshness=60s exactly equals snapshot.delta_max=60s |
+| TS-PCTX-POS-003 | PCTX | L3 | Positive | Backward compatibility: ver 1.0 snapshot without freshness fields MUST pass (§12) |
+| TS-PCTX-POS-004 | PCTX | L3 | Positive | Borderline verifier limit: freshness=60s exactly equals verifier.delta_max_allowed=60s |
+| TS-PCTX-NEG-001 | PCTX | L3 | Negative | PCTX-001: execution_id does not match bound ET |
+| TS-PCTX-NEG-002 | PCTX | L3 | Negative | PCTX-002: snapshot_at outside ET validity window |
+| TS-PCTX-NEG-003 | PCTX | L3 | Negative | PCTX-004: policy_hash corrupted (last byte modified) |
+| TS-PCTX-NEG-004 | PCTX | L3 | Negative | PCTX-006: institutional signature has one byte modified |
+| TS-PCTX-NEG-005 | PCTX | L3 | Negative | PCTX-007: snapshot_id empty — required field missing |
+| TS-PCTX-NEG-006 | PCTX | L3 | Negative | PCTX-009: ver 1.1 snapshot missing policy_captured_at |
+| TS-PCTX-NEG-007 | PCTX | L3 | Negative | PCTX-009: freshness=120s exceeds snapshot.delta_max=60s |
+| TS-PCTX-NEG-008 | PCTX | L3 | Negative | PCTX-009: clock skew=10s exceeds 5s tolerance |
+| TS-PCTX-NEG-009 | PCTX | L3 | Negative | PCTX-009: snapshot.delta_max=300s > verifier.delta_max_allowed=60s — verifier dominates |
+| TS-REP-POS-001 | REP | L4 | Positive | Valid v1.1 snapshot: score=0.82, scale=0-1, real Ed25519 signature |
+| TS-REP-POS-002 | REP | L4 | Positive | Borderline expiration: now == valid_until (limit is inclusive) |
+| TS-REP-POS-003 | REP | L4 | Positive | Backward compatibility: ver=1.0 snapshot — expiration NOT enforced (§12) |
+| TS-REP-NEG-001 | REP | L4 | Negative | REP-001: evaluated_at > valid_until (temporal order violated) |
+| TS-REP-NEG-002 | REP | L4 | Negative | REP-011: snapshot expired — now > valid_until |
+| TS-REP-NEG-003 | REP | L4 | Negative | REP-002: score=1.5 exceeds scale=0-1 upper bound |
+| TS-REP-NEG-004 | REP | L4 | Negative | REP-004: issuer field is empty |
+| TS-REP-NEG-005 | REP | L4 | Negative | REP-010: signature field is empty |
+| TS-REP-NEG-006 | REP | L4 | Negative | REP-002: scale=unknown is not a supported scale value |
 
-**Total: 73 vectores** — 8 CORE (L1) + 4 DCMA (L1) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3) + 9 PROV (L3) + 13 PCTX (L3) + 9 REP (L4)
+**Total: 73 signed vectors** — 8 CORE (L1) + 4 DCMA (L1) + 10 HP (L1) + 11 LEDGER (L3) + 9 EXEC (L3) + 9 PROV (L3) + 13 PCTX (L3) + 9 REP (L4)
+
+**+ 65 unsigned RISK-2.0 vectors** in `risk-2.0/` — see `risk-2.0/README.md`.
+These test the deterministic scoring formula (ACP-RISK-2.0 §3) without cryptographic pipeline.
 
 ---
 
