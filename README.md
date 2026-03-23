@@ -1,12 +1,12 @@
 ﻿# ACP — Agent Control Protocol
 
-**Control de admisión para acciones de agentes.**
+**Admission control for agent actions.**
 
-Antes de que cualquier agente mute el estado del sistema, ACP responde cuatro preguntas: *¿Quién es este agente? ¿Qué está autorizado a hacer? ¿Cumple la acción con las políticas vigentes? ¿Puede el resultado trazarse a una institución responsable?*
+Before any agent mutates system state, ACP answers four questions: *Who is this agent? What are they authorized to do? Is this action policy-compliant? Can the outcome be traced to an accountable institution?*
 
-`Identidad criptográfica · Tokens de capacidad con alcance · Cadenas de delegación verificables · Prueba de ejecución`
+`Cryptographic identity · Scoped capability tokens · Verifiable delegation chains · Execution proof`
 
-## Sitio Oficial
+## Official Website
 
 https://agentcontrolprotocol.xyz
 
@@ -21,380 +21,378 @@ arXiv: [2603.18829](https://arxiv.org/abs/2603.18829)
 
 ---
 
-## Por Qué Existe ACP
+## Why ACP Exists
 
-Los agentes autónomos están pasando de la experimentación a la producción. Ya interactúan con APIs, sistemas empresariales, infraestructura financiera y otros agentes.
+Autonomous agents are moving from experimentation into production. They already interact with APIs, enterprise systems, financial infrastructure, and other agents.
 
-Cuando uno actúa entre organizaciones, surgen inmediatamente varias preguntas:
+When one acts across organizations, several questions immediately arise:
 
-- ¿Quién autorizó al agente para actuar?
-- ¿Qué capacidades tiene realmente el agente?
-- ¿Qué política permitió la acción?
-- ¿Qué se ejecutó exactamente?
-- ¿Puede verificarse esa ejecución más adelante?
-- ¿Puede reconstruirse el historial completo de interacciones?
+- Who authorized the agent to act?
+- What capabilities does the agent actually have?
+- What policy allowed the action?
+- What exactly was executed?
+- Can that execution be verified later?
+- Can the full interaction history be reconstructed?
 
-Hoy, la mayoría de los sistemas no pueden responder estas preguntas de forma confiable.
+Today, most systems cannot answer these questions reliably.
 
-ACP introduce la infraestructura para responderlas todas.
+ACP introduces the infrastructure to answer all of them.
 
 ---
 
-## ACP vs Protocolos Relacionados
+## ACP vs Related Protocols
 
-Varias iniciativas abordan cómo los agentes autónomos interactúan con sistemas.
-La mayoría se enfoca en **acceso a herramientas o comunicación**.
-ACP se enfoca en **autoridad, verificación de ejecución y responsabilidad institucional**.
+Several initiatives address how autonomous agents interact with systems.
+Most focus on **tool access or communication**.
+ACP focuses on **authority, execution verification, and institutional accountability**.
 
-| Protocolo | Enfoque | Límite de alcance |
+| Protocol | Focus | Scope boundary |
 |---|---|---|
-| MCP (Model Context Protocol) | Acceso a herramientas para LLMs | Verificación de autoridad, aplicación de políticas, auditabilidad de ejecución |
-| A2A (Agent-to-Agent) | Patrones de comunicación entre agentes | Confianza institucional, gobernanza, cadena de responsabilidad |
-| OpenAI Agents SDK | Orquestación de herramientas | Autoridad entre organizaciones, procedencia, responsabilidad |
-| Agent Client Protocol ¹ | Integración cliente/agente en tiempo de ejecución | Gobernanza, cadenas de delegación, historial de ejecución verificable |
-| **ACP (Agent Control Protocol)** | **Infraestructura de gobernanza y responsabilidad** | **—** |
+| MCP (Model Context Protocol) | Tool access for LLMs | Authority verification, policy enforcement, execution auditability |
+| A2A (Agent-to-Agent) | Agent communication patterns | Institutional trust, governance, accountability chain |
+| OpenAI Agents SDK | Tool orchestration | Cross-organization authority, provenance, liability |
+| Agent Client Protocol ¹ | Runtime client/agent integration | Governance, delegation chains, verifiable execution history |
+| **ACP (Agent Control Protocol)** | **Governance & accountability infrastructure** | **—** |
 
-ACP aborda una capa diferente: **quién autorizó la acción, bajo qué política y quién es responsable del resultado**.
+ACP addresses a different layer: **who authorized the action, under what policy, and who is accountable for the outcome**.
 
-### ACP vs Sistemas de Política y Autenticación
+### ACP vs Policy & Auth Systems
 
-Los ingenieros que evalúan ACP frecuentemente preguntan: "¿por qué no usar OPA?" Estos sistemas son complementarios, no competidores.
+Engineers evaluating ACP often ask: "why not use OPA?" These systems are complementary, not competitive.
 
-| Sistema | Qué hace | Qué añade ACP |
+| System | What it does | What ACP adds |
 |---|---|---|
-| **OPA** (Open Policy Agent) | Evalúa políticas sobre datos y reglas | Identidad criptográfica del agente + cadena de delegación + prueba de ejecución |
-| **AWS IAM / Azure RBAC** | Modelo de permisos estático para recursos cloud | Delegación dinámica agente-a-agente con cadena verificable + ledger |
-| **OAuth 2.0 + OIDC** | Autorización de usuarios y servicios mediante tokens | Delegación multi-salto con no-escalación + responsabilidad institucional |
-| **SPIFFE / SPIRE** | Identidad criptográfica de workloads | ACP parte de la identidad para añadir alcance de capacidades + gobernanza |
-| **ACP** | Control de admisión para acciones de agentes | — |
+| **OPA** (Open Policy Agent) | Evaluates policies from data and rules | Cryptographic agent identity + delegation chain + execution proof |
+| **AWS IAM / Azure RBAC** | Static permission model for cloud resources | Dynamic agent-to-agent delegation with verifiable chain + ledger |
+| **OAuth 2.0 + OIDC** | User and service authorization via tokens | Multi-hop agent delegation with non-escalation + institutional liability |
+| **SPIFFE / SPIRE** | Cryptographic workload identity | ACP builds on workload identity to add capability scoping + governance |
+| **ACP** | Admission control for agent actions | — |
 
-OPA puede usarse como motor de evaluación de políticas *dentro* de un sistema compatible con ACP. ACP no reemplaza a OPA — añade la capa de identidad del agente, cadena de delegación y prueba de ejecución que OPA no proporciona.
-
----
-
-¹ ACP (Agent Control Protocol) no está relacionado con otras iniciativas que compartan el mismo acrónimo.
+OPA can be used as the policy evaluation engine *inside* an ACP-compliant system. ACP does not replace OPA — it adds the agent identity layer, delegation chain, and execution proof that OPA does not provide.
 
 ---
 
-## ACP como Control de Admisión
+¹ ACP (Agent Control Protocol) is unrelated to other initiatives sharing the same acronym.
 
-Kubernetes usa un Admission Controller para interceptar solicitudes a la API antes de que lleguen al clúster — evaluando políticas, aplicando cuotas y rechazando operaciones no conformes. ACP aplica el mismo patrón a las acciones de agentes.
+---
+
+## ACP as Admission Control
+
+Kubernetes uses an Admission Controller to intercept API requests before they reach the cluster — evaluating policies, enforcing quotas, rejecting non-compliant operations. ACP applies the same pattern to agent actions.
 
 ```
-intención del agente
+agent intent
     ↓
-[1] Verificación de identidad   →  pkg/agent + pkg/hp       (ACP-AGENT-1.0, ACP-HP-1.0)
+[1] Identity check       →  pkg/agent + pkg/hp       (ACP-AGENT-1.0, ACP-HP-1.0)
     ↓
-[2] Verificación de capacidad   →  pkg/ct + pkg/dcma         (ACP-CT-1.0, ACP-DCMA-1.0)
+[2] Capability check     →  pkg/ct + pkg/dcma         (ACP-CT-1.0, ACP-DCMA-1.0)
     ↓
-[3] Verificación de política    →  pkg/risk + pkg/psn        (ACP-RISK-1.0, ACP-PSN-1.0)
+[3] Policy check         →  pkg/risk + pkg/psn        (ACP-RISK-1.0, ACP-PSN-1.0)
     ↓
-[4] ADMITIR / DENEGAR / ESCALAR
-    ↓  (si ADMITIR)
-[5] Token de ejecución          →  pkg/exec                  (ACP-EXEC-1.0)
+[4] ADMIT / DENY / ESCALATE
+    ↓  (if ADMIT)
+[5] Execution token      →  pkg/exec                  (ACP-EXEC-1.0)
     ↓
-[6] Registro en ledger          →  pkg/ledger                (ACP-LEDGER-1.3)
+[6] Ledger record        →  pkg/ledger                (ACP-LEDGER-1.3)
     ↓
-mutación del estado del sistema
+system state mutation
 ```
 
-La diferencia con Kubernetes: ACP opera entre fronteras institucionales. Un agente del Banco A puede ser admitido por el Banco B sin que el Banco B confíe en la infraestructura interna del Banco A — solo importa la prueba criptográfica.
+The difference from Kubernetes: ACP operates across institutional boundaries. An agent from Bank A can be admitted by Bank B without Bank B trusting Bank A's internal infrastructure — only the cryptographic proof matters.
 
 ---
 
-## Cómo Funciona ACP
+## How ACP Works
 
-ACP trata las interacciones de agentes como **operaciones gobernadas**, no simples solicitudes.
+ACP treats agent interactions as **governed operations**, not simple requests.
 
-Cada interacción pasa por seis etapas estructuradas:
+Every interaction passes through six structured stages:
 
-1. **Verificación de identidad** — confirmar quién es el agente (`ACP-AGENT-1.0`, `ACP-HP-1.0`)
-2. **Validación de capacidades** — confirmar qué está autorizado a hacer el agente (`ACP-CT-1.0`, `ACP-DCMA-1.0`)
-3. **Autorización por política** — confirmar que la acción está permitida bajo la política vigente (`ACP-RISK-1.0`, `ACP-PSN-1.0`)
-4. **Ejecución determinista** — ejecutar exactamente lo que fue autorizado, nada más (`ACP-EXEC-1.0`)
-5. **Registro verificable** — producir prueba criptográfica de lo ocurrido (`ACP-LEDGER-1.3`, `ACP-PROVENANCE-1.0`)
-6. **Actualización de confianza** — actualizar reputación y estado de atestación según la interacción (`ACP-REP-1.2`, `ACP-LIA-1.0`)
+1. **Identity verification** — confirm who the agent is (`ACP-AGENT-1.0`, `ACP-HP-1.0`)
+2. **Capability validation** — confirm what the agent is authorized to do (`ACP-CT-1.0`, `ACP-DCMA-1.0`)
+3. **Policy authorization** — confirm the action is permitted under current policy (`ACP-RISK-1.0`, `ACP-PSN-1.0`)
+4. **Deterministic execution** — execute exactly what was authorized, nothing more (`ACP-EXEC-1.0`)
+5. **Verifiable recording** — produce cryptographic proof of what occurred (`ACP-LEDGER-1.3`, `ACP-PROVENANCE-1.0`)
+6. **Trust update** — update reputation and attestation state based on the interaction (`ACP-REP-1.2`, `ACP-LIA-1.0`)
 
-Esto permite que las interacciones sean trazables, auditables y atribuibles entre organizaciones.
+This allows interactions to become traceable, auditable and attributable across organizations.
 
 ---
 
-## Invariante Constitucional
+## Constitutional Invariant
 
-La ejecución en ACP está gobernada por un único invariante arquitectónico.
+ACP execution is governed by a single architectural invariant.
 
 ```
 Execute(request) ⟹
     ValidIdentity  ∧  ValidCapability  ∧  ValidDelegationChain  ∧  AcceptableRisk
 ```
 
-| Condición | Significado |
+| Condition | Meaning |
 |---|---|
-| `ValidIdentity` | El agente tiene una identidad verificada y firmada |
-| `ValidCapability` | El agente posee un Token de Capacidad autorizado |
-| `ValidDelegationChain` | Cada paso de delegación es trazable hasta una raíz institucional |
-| `AcceptableRisk` | La puntuación de riesgo está dentro de los umbrales de política institucional |
+| `ValidIdentity` | The agent has a verified, signed identity |
+| `ValidCapability` | The agent holds an authorized Capability Token |
+| `ValidDelegationChain` | Every delegation step is traceable to an institutional root |
+| `AcceptableRisk` | The risk score is within institutional policy thresholds |
 
-Ninguna acción de agente se ejecuta a menos que las cuatro condiciones se satisfagan simultáneamente.
+No agent action is executed unless all four conditions are satisfied simultaneously.
 
-Las capas del protocolo existen para hacer cumplir este invariante en cada límite de interacción.
+The protocol layers exist to enforce this invariant at every interaction boundary.
 
 ---
 
-## Arquitectura del Protocolo
+## Protocol Architecture
 
-ACP está organizado en cinco capas de protocolo.
-Cada capa construye sobre la anterior y agrega una capacidad de gobernanza distinta.
+ACP is organized in five protocol layers.
+Each layer builds on the previous and adds a distinct governance capability.
 
 ```
-                 ARQUITECTURA DEL PROTOCOLO ACP
+                    ACP PROTOCOL ARCHITECTURE
 
-          ┌──────────────────────────────────────┐
-          │               ACTORES                │
-          │      Humanos · Sistemas · Agentes    │
-          └──────────────────────────────────────┘
-                             │
-                             ▼
-==================================================================== L1 — EJECUCIÓN NÚCLEO
+             ┌──────────────────────────────────────┐
+             │                ACTORS                │
+             │       Humans · Systems · Agents      │
+             └──────────────────────────────────────┘
+                                │
+                                ▼
+==================================================================== L1 — CORE EXECUTION
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ IDENTIDAD Y CAPACIDADES                                          │
+│ IDENTITY & CAPABILITIES                                          │
 │ SIGN · AGENT · CT · CAP-REG                                      │
 │                                                                  │
-│ Identidad del agente, verificación de credenciales y registro    │
-│ de capacidades                                                   │
+│ Agent identity, credential verification and capability registry  │
 └──────────────────────────────────────────────────────────────────┘
-                             │
-                             ▼
+                                │
+                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│ POLÍTICA Y AUTORIDAD                                             │
+│ POLICY & AUTHORITY                                               │
 │ HP · DCMA                                                        │
 │                                                                  │
-│ Evaluación de política y decisión de autorización                │
+│ Policy evaluation and authorization decision                     │
 └──────────────────────────────────────────────────────────────────┘
-                             │
-                             ▼
+                                │
+                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│ EJECUCIÓN                                                        │
+│ EXECUTION                                                        │
 │ MESSAGES                                                         │
 │                                                                  │
-│ Ejecución determinista de comandos y manejo de interacciones     │
+│ Deterministic command execution and interaction handling         │
 └──────────────────────────────────────────────────────────────────┘
 
-==================================================================== L2 — CAPA DE CONFIANZA
+==================================================================== L2 — TRUST LAYER
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ GESTIÓN DE RIESGO                                                │
+│ RISK MANAGEMENT                                                  │
 │ RISK · REV                                                       │
 │                                                                  │
-│ Puntuación de riesgo y control de revocación                     │
+│ Risk scoring and revocation control                              │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ CONFIANZA EN INTERACCIONES                                       │
+│ INTERACTION TRUST                                                │
 │ ITA                                                              │
 │                                                                  │
-│ Atestaciones de confianza para interacciones                     │
+│ Trust attestations for interactions                              │
 └──────────────────────────────────────────────────────────────────┘
 
-==================================================================== L3 — EJECUCIÓN VERIFICABLE
+==================================================================== L3 — VERIFIABLE EXECUTION
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ REGISTRO DE EJECUCIÓN                                            │
+│ EXECUTION RECORD                                                 │
 │ EXEC · POLICY-CTX                                                │
 │                                                                  │
-│ Prueba de ejecución y instantánea del contexto de política       │
+│ Proof of execution and policy context snapshot                   │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ PROCEDENCIA                                                      │
+│ PROVENANCE                                                       │
 │ PROVENANCE GRAPH                                                 │
 │                                                                  │
-│ Linaje de interacciones y seguimiento de eventos entre sistemas  │
+│ Interaction lineage and cross-system event tracking              │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
 │ LEDGER                                                           │
 │                                                                  │
-│ Almacenamiento resistente a manipulación del historial           │
-│ de ejecución verificable                                         │
+│ Tamper-resistant storage for verifiable execution history        │
 └──────────────────────────────────────────────────────────────────┘
 
-==================================================================== L4 — GOBERNANZA
+==================================================================== L4 — GOVERNANCE
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ EVENTOS DE GOBERNANZA                                            │
+│ GOVERNANCE EVENTS                                                │
 │ GOV-EVENTS                                                       │
 │                                                                  │
-│ Seguimiento de gobernanza institucional                          │
+│ Institutional governance tracking                                │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ REPUTACIÓN Y RESPONSABILIDAD                                     │
+│ REPUTATION & LIABILITY                                           │
 │ REP · LIA                                                        │
 │                                                                  │
-│ Acumulación de reputación y atribución de responsabilidad        │
+│ Reputation accumulation and liability attribution                │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ REGISTRO HISTÓRICO                                               │
+│ HISTORICAL RECORD                                                │
 │ HIST                                                             │
 │                                                                  │
-│ Historial de interacciones verificable a largo plazo             │
+│ Verifiable long-term interaction history                         │
 └──────────────────────────────────────────────────────────────────┘
 
-==================================================================== L5 — FEDERACIÓN
+==================================================================== L5 — FEDERATION
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ ACP DESCENTRALIZADO                                              │
+│ DECENTRALIZED ACP                                                │
 │ ACP-D                                                            │
 │                                                                  │
-│ Federación y verificación entre instituciones                    │
+│ Cross-institution federation and verification                    │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-→ **¿Nuevo en ACP? Empieza aquí:** [docs/admission-flow.md](docs/admission-flow.md) — guía completa paso a paso del admission check
+→ **New to ACP? Start here:** [docs/admission-flow.md](docs/admission-flow.md) — the complete step-by-step guide to the admission check
 
-→ Modelo de dominio formal y grafo de dependencias: [ARCHITECTURE.md](ARCHITECTURE.md)
+→ Formal domain model and dependency graph: [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
-## Interacción Entre Instituciones
+## Cross-Institution Interaction
 
-ACP está diseñado para interacciones entre sistemas independientes.
-Cada paso produce un artefacto verificable que forma parte del registro permanente de interacciones.
+ACP is designed for interactions between independent systems.
+Every step produces a verifiable artifact that becomes part of the permanent interaction record.
 
 ```
-   INSTITUCIÓN A                               INSTITUCIÓN B
+      INSTITUTION A                               INSTITUTION B
 ┌─────────────────────────────┐           ┌─────────────────────────────┐
 │                             │           │                             │
-│          AGENTE A           │           │          AGENTE B           │
+│           AGENT A           │           │           AGENT B           │
 │                             │           │                             │
 └──────────────┬──────────────┘           └──────────────┬──────────────┘
                │                                         │
-               │  1  solicitud de interacción            │
+               │  1  interaction request                 │
                └────────────────────────────────────────►│
                                                          ▼
                                           ┌───────────────────────────┐
-                                          │      AUTORIDAD (HP)       │
-                                          │  evaluación de política   │
-                                          │  validación de capacidad  │
-                                          │  verificación riesgo/rev  │
+                                          │       AUTHORITY (HP)      │
+                                          │  policy evaluation        │
+                                          │  capability validation    │
+                                          │  risk / revocation check  │
                                           └─────────────┬─────────────┘
-                                                        │  2  decisión
+                                                        │  2  decision
                                                         ▼
                                           ┌───────────────────────────┐
-                                          │        EJECUCIÓN          │
-                                          │  acción determinista      │
-                                          │  ejecución de comando     │
+                                          │        EXECUTION          │
+                                          │  deterministic action     │
+                                          │  command execution        │
                                           └─────────────┬─────────────┘
-                                                        │  3  registro de ejecución
+                                                        │  3  execution record
                                                         ▼
                                           ┌───────────────────────────┐
-                                          │       PROCEDENCIA         │
-                                          │  linaje de interacción    │
-                                          │  atribución inter-org     │
+                                          │        PROVENANCE         │
+                                          │  interaction lineage      │
+                                          │  cross-org attribution    │
                                           └─────────────┬─────────────┘
-                                                        │  4  registro verificable
+                                                        │  4  verifiable record
                                                         ▼
                                           ┌───────────────────────────┐
                                           │          LEDGER           │
-                                          │  hash de ejecución        │
-                                          │  instantánea de política  │
+                                          │  execution hash           │
+                                          │  policy context snapshot  │
                                           └─────────────┬─────────────┘
-                                                        │  5  actualización de confianza
+                                                        │  5  trust update
                                                         ▼
                                           ┌───────────────────────────┐
-                                          │       REPUTACIÓN          │
-                                          │  atestación ITA           │
-                                          │  actualización reputación │
+                                          │        REPUTATION         │
+                                          │  ITA attestation          │
+                                          │  reputation update        │
                                           └───────────────────────────┘
 ```
 
 ---
 
-## Principios de Diseño
+## Design Principles
 
-### Autoridad Explícita
-Toda acción de agente debe estar autorizada por una política definida.
-Sin permisos implícitos. Sin acceso ambiental.
+### Explicit Authority
+Every agent action must be authorized by a defined policy.
+No implicit permissions. No ambient access.
 
-### Ejecución Determinista
-La ejecución debe coincidir exactamente con el comando autorizado.
-Lo que fue autorizado es lo que se ejecuta — nada más.
+### Deterministic Execution
+Execution must match the authorized command exactly.
+What was authorized is what gets executed — nothing more.
 
-### Historial Verificable
-Cada interacción produce artefactos criptográficamente verificables.
-La ejecución puede probarse a posteriori, sin confiar en ninguna parte individual.
+### Verifiable History
+Every interaction produces cryptographically verifiable artifacts.
+Execution can be proven after the fact, without trusting any single party.
 
-### Responsabilidad Institucional
-La responsabilidad siempre es atribuible a un actor identificable.
-Las cadenas de delegación son completas y trazables hasta una raíz institucional.
+### Institutional Accountability
+Responsibility is always attributable to an identifiable actor.
+Delegation chains are complete and traceable to an institutional root.
 
-### Confianza Federada
-Los sistemas independientes pueden verificarse mutuamente sin una autoridad central.
-La confianza se gana a través del historial de interacciones verificable, no se asume.
-
----
-
-## Componentes del Protocolo
-
-### L1 · Ejecución Núcleo
-Identidad, capacidades, aplicación de políticas y ejecución determinista.
-
-| Componente | Rol |
-|---|---|
-| **SIGN** | Firma criptográfica — base de todos los objetos del protocolo |
-| **AGENT** | Especificación formal de identidad de agente `A=(ID,C,P,D,L,S)` |
-| **CT** | Capability Token — estructura, emisión y verificación |
-| **CAP-REG** | Registro canónico de capacidades `acp:cap:*` |
-| **HP** | Handshake Protocol — prueba criptográfica de posesión de capacidad |
-| **DCMA** | Delegación multi-salto — no-escalación y revocación transitiva |
-| **MESSAGES** | Formato de wire — 5 tipos de mensajes normalizados |
-
-### L2 · Capa de Confianza
-Evaluación dinámica de riesgo y gestión de confianza en interacciones.
-
-| Componente | Rol |
-|---|---|
-| **RISK** | Motor de riesgo determinista — Puntuación de Riesgo RS (0–100) |
-| **REV** | Protocolo de revocación — endpoint y CRL |
-| **ITA** | Ancla de Confianza Institucional — atestaciones de confianza por interacción |
-
-### L3 · Ejecución Verificable
-Cada interacción deja un registro completo y criptográficamente verificable.
-
-| Componente | Rol |
-|---|---|
-| **EXEC** | Tokens de Ejecución — uso único, validez de 300s |
-| **POLICY-CTX** | Instantánea de Contexto de Política — estado de política firmado al momento de ejecución |
-| **PROVENANCE** | Procedencia de Autoridad — prueba retrospectiva de cadena de delegación |
-| **LEDGER** | Ledger de Auditoría — append-only, encadenado por hash |
-
-### L4 · Gobernanza
-Responsabilidad a largo plazo y supervisión institucional.
-
-| Componente | Rol |
-|---|---|
-| **GOV-EVENTS** | Flujo de eventos de gobernanza — seguimiento institucional |
-| **REP** | Extensión de Reputación — puntuación compuesta `0.6·ITS + 0.4·ERS` |
-| **LIA** | Trazabilidad de Responsabilidad — cadena de responsabilidad atribuida |
-| **HIST** | API de Consulta de Historial — historial de ejecución auditado |
-
-### L5 · Federación
-Interoperabilidad entre instituciones independientes.
-
-| Componente | Rol |
-|---|---|
-| **ACP-D** | ACP Descentralizado — federación entre instituciones, quórum BFT |
+### Federated Trust
+Independent systems can verify each other without a central authority.
+Trust is earned through verifiable interaction history, not assumed.
 
 ---
 
-## Versiones de Especificación Activas
+## Protocol Components
 
-Versión activa actual por especificación. Esta tabla es la referencia autoritativa para "¿qué versión debo implementar?".
+### L1 · Core Execution
+Identity, capabilities, policy enforcement and deterministic execution.
 
-| Spec | Versión activa | Nivel |
+| Component | Role |
+|---|---|
+| **SIGN** | Cryptographic signing — foundation of all protocol objects |
+| **AGENT** | Formal agent identity specification `A=(ID,C,P,D,L,S)` |
+| **CT** | Capability Token — structure, issuance and verification |
+| **CAP-REG** | Canonical capability registry `acp:cap:*` |
+| **HP** | Handshake Protocol — cryptographic proof of capability possession |
+| **DCMA** | Multi-hop delegation — non-escalation and transitive revocation |
+| **MESSAGES** | Wire format — 5 normalized message types |
+
+### L2 · Trust Layer
+Dynamic risk evaluation and interaction trust management.
+
+| Component | Role |
+|---|---|
+| **RISK** | Deterministic risk engine — Risk Score RS (0–100) |
+| **REV** | Revocation protocol — endpoint and CRL |
+| **ITA** | Institutional Trust Anchor — trust attestations per interaction |
+
+### L3 · Verifiable Execution
+Every interaction leaves a complete, cryptographically verifiable record.
+
+| Component | Role |
+|---|---|
+| **EXEC** | Execution Tokens — single-use, 300s validity |
+| **POLICY-CTX** | Policy Context Snapshot — signed policy state at execution time |
+| **PROVENANCE** | Authority Provenance — retrospective proof of delegation chain |
+| **LEDGER** | Audit Ledger — append-only, hash-chained |
+
+### L4 · Governance
+Long-term accountability and institutional oversight.
+
+| Component | Role |
+|---|---|
+| **GOV-EVENTS** | Governance event stream — institutional tracking |
+| **REP** | Reputation Extension — composite score `0.6·ITS + 0.4·ERS` |
+| **LIA** | Liability Traceability — attributed liability chain |
+| **HIST** | History Query API — audited execution history |
+
+### L5 · Federation
+Interoperability across independent institutions.
+
+| Component | Role |
+|---|---|
+| **ACP-D** | Decentralized ACP — cross-institution federation, BFT quorum |
+
+---
+
+## Active Specification Versions
+
+Current active version per specification. This table is the authoritative reference for "which version to implement".
+
+| Spec | Active version | Level |
 |---|---|---|
 | ACP-SIGN | 1.0 | L1 |
 | ACP-AGENT | 1.0 | L1 |
@@ -424,136 +422,146 @@ Versión activa actual por especificación. Esta tabla es la referencia autorita
 | ACP-REP-PORTABILITY | 1.1 | L4 |
 | **ACP-CONF** | **1.2** | — |
 
-Las versiones supersedidas están archivadas en [`archivo/specs/`](archivo/specs/README.md).
+Superseded versions are archived in [`archive/specs/`](archive/specs/README.md).
 
 ---
 
-## Niveles de Conformidad
+## Conformance Levels
 
-Las implementaciones pueden adoptar ACP incrementalmente, comenzando desde L1.
+Implementations may adopt ACP incrementally, starting from L1.
 
-| Nivel | Nombre | Qué se obtiene |
+| Level | Name | What you get |
 |---|---|---|
-| **L1** | Núcleo | Identidad, tokens de capacidad y ejecución |
-| **L2** | Seguridad | Puntuación de riesgo, revocación y anclas de confianza |
-| **L3** | Ejecución Verificable | Tokens de ejecución, ledger y procedencia |
-| **L4** | Gobernanza | Reputación, historial y responsabilidad |
-| **L5** | Federación | Redes ACP descentralizadas |
+| **L1** | Core | Identity, capability tokens and execution |
+| **L2** | Security | Risk scoring, revocation and trust anchors |
+| **L3** | Verifiable Execution | Execution tokens, ledger and provenance |
+| **L4** | Governance | Reputation, history and liability |
+| **L5** | Federation | Decentralized ACP networks |
 
-Requisitos normativos completos por nivel:
+Full normative requirements per level:
 
-| Nivel | Especificaciones requeridas |
+| Level | Required specs |
 |---|---|
 | **L1** | SIGN · AGENT · CT · CAP-REG · HP · DCMA · MESSAGES |
 | **L2** | L1 + RISK · REV · ITA-1.0 |
 | **L3** | L2 + API · EXEC · LEDGER · PROVENANCE · POLICY-CTX · PSN |
 | **L4** | L3 + PAY · REP-1.2 · ITA-1.1 · GOV-EVENTS · LIA · HIST · NOTIFY · DISC · BULK · CROSS-ORG · REP-PORTABILITY |
-| **L5** | L4 + ACP-D · quórum BFT ITA-1.1 |
+| **L5** | L4 + ACP-D · ITA-1.1 BFT quorum |
 
-→ Definición normativa de conformidad: [`spec/gobernanza/ACP-CONF-1.2.md`](spec/gobernanza/ACP-CONF-1.2.md)
-
----
-
-## Especificaciones
-
-### L1 · Ejecución Núcleo
-- [ACP-SIGN-1.0](spec/nucleo/ACP-SIGN-1.0.md) — firma criptográfica, base de todos los objetos del protocolo
-- [ACP-AGENT-1.0](spec/nucleo/ACP-AGENT-1.0.md) — identidad formal de agente `A=(ID,C,P,D,L,S)`
-- [ACP-CT-1.0](spec/nucleo/ACP-CT-1.0.md) — estructura, emisión y verificación del Capability Token
-- [ACP-CAP-REG-1.0](spec/nucleo/ACP-CAP-REG-1.0.md) — registro canónico de capacidades `acp:cap:*`
-- [ACP-HP-1.0](spec/nucleo/ACP-HP-1.0.md) — Handshake Protocol, prueba criptográfica de posesión de capacidad
-- [ACP-DCMA-1.0](spec/nucleo/ACP-DCMA-1.0.md) — delegación multi-salto, no-escalación y revocación transitiva
-- [ACP-MESSAGES-1.0](spec/nucleo/ACP-MESSAGES-1.0.md) — formato de wire, 5 tipos de mensajes normalizados
-
-### L2 · Capa de Confianza
-- [ACP-RISK-1.0](spec/seguridad/ACP-RISK-1.0.md) — motor de riesgo determinista, Puntuación de Riesgo RS (0–100)
-- [ACP-REV-1.0](spec/seguridad/ACP-REV-1.0.md) — protocolo de revocación, endpoint y CRL
-- [ACP-ITA-1.0](spec/seguridad/ACP-ITA-1.0.md) — Ancla de Confianza Institucional, modelo centralizado
-- [ACP-ITA-1.1](spec/seguridad/ACP-ITA-1.1.md) — Gobernanza del Ancla de Confianza, modelo BFT distribuido
-
-### L3 · Ejecución Verificable
-- [ACP-EXEC-1.0](spec/operaciones/ACP-EXEC-1.0.md) — Tokens de Ejecución, uso único, validez de 300s
-- [ACP-POLICY-CTX-1.0](spec/operaciones/ACP-POLICY-CTX-1.0.md) — estado de política firmado al momento de ejecución
-- [ACP-PROVENANCE-1.0](spec/nucleo/ACP-PROVENANCE-1.0.md) — prueba retrospectiva de cadena de delegación en ejecución
-- [ACP-LEDGER-1.3](spec/operaciones/ACP-LEDGER-1.3.md) — ledger de auditoría, append-only, encadenado por hash, sig institucional obligatoria
-- [ACP-PSN-1.0](spec/operaciones/ACP-PSN-1.0.md) — Nodo de Proceso-Sesión, seguimiento de sesiones de ejecución
-- [ACP-API-1.0](spec/operaciones/ACP-API-1.0.md) — API HTTP, todos los endpoints institucionales
-
-### L4 · Gobernanza
-- [ACP-GOV-EVENTS-1.0](spec/gobernanza/ACP-GOV-EVENTS-1.0.md) — flujo de eventos de gobernanza institucional
-- [ACP-REP-1.2](spec/seguridad/ACP-REP-1.2.md) — extensión de reputación, puntuación compuesta `0.6·ITS + 0.4·ERS`
-- [ACP-LIA-1.0](spec/operaciones/ACP-LIA-1.0.md) — cadena de responsabilidad atribuida
-- [ACP-HIST-1.0](spec/operaciones/ACP-HIST-1.0.md) — API de consulta de historial de ejecución auditado
-- [ACP-PAY-1.0](spec/operaciones/ACP-PAY-1.0.md) — extensión de capacidad financiera verificable
-- [ACP-NOTIFY-1.0](spec/operaciones/ACP-NOTIFY-1.0.md) — eventos y webhooks
-- [ACP-DISC-1.0](spec/operaciones/ACP-DISC-1.0.md) — registro y resolución de agentes
-- [ACP-BULK-1.0](spec/operaciones/ACP-BULK-1.0.md) — ejecución de capacidades en lote
-- [ACP-CROSS-ORG-1.0](spec/operaciones/ACP-CROSS-ORG-1.0.md) — interacciones de agentes entre instituciones
-
-### L5 · Federación
-- [ACP-D-1.0](spec/descentralizado/ACP-D-1.0.md) — ACP descentralizado, federación entre instituciones, quórum BFT
-
-### Gobernanza
-- [ACP-CONF-1.2](spec/gobernanza/ACP-CONF-1.2.md) — definición normativa de conformidad (actual)
-- [ACP-CHANGELOG](CHANGELOG.md) — historial de versiones
+→ Normative conformance definition: [`spec/governance/ACP-CONF-1.2.md`](spec/governance/ACP-CONF-1.2.md)
 
 ---
 
-## Estructura del Repositorio
+## Specifications
+
+### L1 · Core Execution
+- [ACP-SIGN-1.0](spec/core/ACP-SIGN-1.0.md) — cryptographic signing, foundation of all protocol objects
+- [ACP-AGENT-1.0](spec/core/ACP-AGENT-1.0.md) — formal agent identity `A=(ID,C,P,D,L,S)`
+- [ACP-CT-1.0](spec/core/ACP-CT-1.0.md) — Capability Token structure, issuance and verification
+- [ACP-CAP-REG-1.0](spec/core/ACP-CAP-REG-1.0.md) — canonical capability registry `acp:cap:*`
+- [ACP-HP-1.0](spec/core/ACP-HP-1.0.md) — Handshake Protocol, cryptographic proof of capability possession
+- [ACP-DCMA-1.0](spec/core/ACP-DCMA-1.0.md) — multi-hop delegation, non-escalation and transitive revocation
+- [ACP-MESSAGES-1.0](spec/core/ACP-MESSAGES-1.0.md) — wire format, 5 normalized message types
+
+### L2 · Trust Layer
+- [ACP-RISK-1.0](spec/security/ACP-RISK-1.0.md) — deterministic risk engine, Risk Score RS (0–100)
+- [ACP-REV-1.0](spec/security/ACP-REV-1.0.md) — revocation protocol, endpoint and CRL
+- [ACP-ITA-1.0](spec/security/ACP-ITA-1.0.md) — Institutional Trust Anchor, centralized model
+- [ACP-ITA-1.1](spec/security/ACP-ITA-1.1.md) — Trust Anchor Governance, distributed BFT model
+
+### L3 · Verifiable Execution
+- [ACP-EXEC-1.0](spec/operations/ACP-EXEC-1.0.md) — Execution Tokens, single-use, 300s validity
+- [ACP-POLICY-CTX-1.0](spec/operations/ACP-POLICY-CTX-1.0.md) — signed policy state at execution time
+- [ACP-PROVENANCE-1.0](spec/core/ACP-PROVENANCE-1.0.md) — retrospective proof of delegation chain at execution
+- [ACP-LEDGER-1.3](spec/operations/ACP-LEDGER-1.3.md) — audit ledger, append-only, hash-chained, mandatory institutional sig
+- [ACP-PSN-1.0](spec/operations/ACP-PSN-1.0.md) — Process-Session Node, execution session tracking
+- [ACP-API-1.0](spec/operations/ACP-API-1.0.md) — HTTP API, all institutional endpoints
+
+### L4 · Governance
+- [ACP-GOV-EVENTS-1.0](spec/governance/ACP-GOV-EVENTS-1.0.md) — institutional governance event stream
+- [ACP-REP-1.2](spec/security/ACP-REP-1.2.md) — reputation extension, composite score `0.6·ITS + 0.4·ERS`
+- [ACP-LIA-1.0](spec/operations/ACP-LIA-1.0.md) — attributed liability chain
+- [ACP-HIST-1.0](spec/operations/ACP-HIST-1.0.md) — audited execution history query API
+- [ACP-PAY-1.0](spec/operations/ACP-PAY-1.0.md) — verifiable financial capability extension
+- [ACP-NOTIFY-1.0](spec/operations/ACP-NOTIFY-1.0.md) — events and webhooks
+- [ACP-DISC-1.0](spec/operations/ACP-DISC-1.0.md) — agent registry and resolution
+- [ACP-BULK-1.0](spec/operations/ACP-BULK-1.0.md) — batch capability execution
+- [ACP-CROSS-ORG-1.0](spec/operations/ACP-CROSS-ORG-1.0.md) — inter-institutional agent interactions
+
+### L5 · Federation
+- [ACP-D-1.0](spec/decentralized/ACP-D-1.0.md) — decentralized ACP, cross-institution federation, BFT quorum
+
+### Governance
+- [ACP-CONF-1.2](spec/governance/ACP-CONF-1.2.md) — normative conformance definition (current)
+- [ACP-CHANGELOG](CHANGELOG.md) — version history
+
+---
+
+## Repository Structure
 
 ```
 acp-framework/
 ├── spec/
-│   ├── nucleo/         ← L1: identidad, capacidad, delegación
-│   ├── seguridad/      ← L2: confianza, riesgo, revocación
-│   ├── operaciones/    ← L3–L4: ejecución, ledger, gobernanza
-│   ├── gobernanza/     ← conformidad, eventos, proceso
-│   └── descentralizado/ ← L5: ACP-D
+│   ├── core/          ← L1: identity, capability, delegation
+│   ├── security/      ← L2: trust, risk, revocation
+│   ├── operations/    ← L3–L4: execution, ledger, governance
+│   ├── governance/    ← conformance, events, process
+│   └── decentralized/ ← L5: ACP-D
 ├── openapi/
-│   └── acp-api-1.0.yaml  ← especificación OpenAPI 3.1.0 para todos los endpoints de ACP-API-1.0
+│   └── acp-api-1.0.yaml  ← OpenAPI 3.1.0 spec for all ACP-API-1.0 endpoints
 ├── compliance/
-│   ├── ACP-TS-1.1.md   ← formato de vectores de prueba
-│   └── test-vectors/   ← vectores de conformidad oficiales (CORE, DCMA, HP)
-├── archivo/
-│   └── specs/          ← versiones de especificación supersedidas (referencia histórica)
+│   ├── ACP-TS-1.1.md      ← test vector format specification
+│   ├── test-vectors/      ← single-shot conformance vectors (CORE · DCMA · HP · LEDGER · EXEC · RISK-2.0)
+│   │   └── sequence/      ← stateful sequence vectors (ACR-1.0, 5 scenarios)
+│   └── runner/            ← ACR-1.0 compliance runner (library mode + HTTP mode)
+├── tla/
+│   ├── ACP.tla            ← TLC-runnable formal model — Safety · LedgerAppendOnly · RiskDeterminism
+│   └── ACP.cfg            ← TLC configuration (2 agents × 4 caps × 3 resources, depth 5)
+├── archive/
+│   └── specs/         ← superseded specification versions (historical reference)
 ├── impl/
-│   └── go/             ← implementación de referencia
-├── ARCHITECTURE.md     ← modelo de dominio formal, grafo de dependencias
+│   └── go/            ← reference implementation
+├── ARCHITECTURE.md    ← formal domain model, dependency graph
 ├── CHANGELOG.md
 └── README.md
 ```
 
 ---
 
-## Inicio Rápido
+## Quick Start
 
 ```bash
-# Opción 1: servidor de referencia Go
+# Option 1: Go reference server
 cd impl/go
 docker compose up
 
-# Opción 5: Demo multi-org — Org-A emite policy+reputación firmados, Org-B valida de forma independiente
+# Option 6: ACR-1.0 sequence compliance runner — validate ACP-RISK-2.0 stateful behavior
+cd compliance/runner
+go run . --mode library --dir ../test-vectors/sequence --strict
+# PASS 5/5 — SEQ-BENIGN-001 SEQ-BOUNDARY-001 SEQ-PRIVJUMP-001 SEQ-FANOM-RULE3-001 SEQ-COOLDOWN-001
+
+# Option 5: Multi-org demo — Org-A issues signed policy+reputation, Org-B validates independently
 cd examples/multi-org-demo
 docker compose up
 # Org-A: http://localhost:8081  |  Org-B: http://localhost:8082
 
-# Opción 2: Python SDK — patrón de control de admisión (sin servidor)
+# Option 2: Python SDK — core admission control pattern (no server required)
 cd impl/python
 pip install -e .
 python examples/admission_control_demo.py
 
-# Opción 3: Python SDK — integración LangChain (decorador @acp_tool)
+# Option 3: Python SDK — LangChain integration (@acp_tool decorator)
 cd impl/python
 pip install -e .
 python examples/langchain_agent_demo.py
 
-# Opción 4: LangChain + agente con LLM real
+# Option 4: LangChain + real LLM agent
 pip install langchain langchain-openai
 export OPENAI_API_KEY=sk-...
 python examples/langchain_agent_demo.py --with-llm
 ```
 
-Verificación de estado:
+Health check:
 
 ```bash
 curl http://localhost:8080/acp/v1/health
@@ -575,27 +583,30 @@ curl http://localhost:8080/acp/v1/health
 
 ---
 
-## Hoja de Ruta
+## Roadmap
 
-| Ítem | Estado |
+| Item | Status |
 |---|---|
-| ACP-CONF-1.2 | ✅ Completo — única fuente normativa de conformidad |
-| ACP-LEDGER-1.3 | ✅ Completo — sig normativa obligatoria |
-| Spec OpenAPI (`openapi/acp-api-1.0.yaml`) | ✅ Completo — OpenAPI 3.1.0, todos los endpoints de ACP-API-1.0 |
-| Vectores de prueba de conformidad (CORE · DCMA · HP · LEDGER · EXEC · PROV · PCTX · REP · RISK-2.0) | ✅ Completo — 73 firmados + 65 no firmados RISK-2.0 |
-| Implementación de referencia — 23 paquetes Go (L1–L4) | ✅ Completo — `impl/go/pkg/` cubre todos los niveles de conformidad |
-| `pkg/psn` policy snapshot | ✅ Completo — transiciones atómicas, único snapshot ACTIVO |
-| Python SDK — `ACPAdmissionGuard` + `@acp_tool` (LangChain) | ✅ Completo — `impl/python/` |
-| ACP-RISK-2.0 — `F_anom` + Cooldown + `pkg/risk` | ✅ Completo — determinista, sub-µs, 65 vectores |
-| Demo payment-agent (`examples/payment-agent/`) | ✅ Completo — v1.16 |
-| ACP-SIGN-2.0 — Spec híbrida post-cuántica (Ed25519 + ML-DSA-65) | ✅ Completo — spec v1.16; impl Go v1.17 |
-| SDKs TypeScript / Rust | 🔜 En roadmap |
-| v1.x | Protocolo núcleo e implementación de referencia — activo |
-| v2.0 | ACP Descentralizado (ACP-D) — en diseño |
-| futuro | Verificación ZK, gobernanza descentralizada |
+| ACP-CONF-1.2 | ✅ Complete — sole normative conformance source |
+| ACP-LEDGER-1.3 | ✅ Complete — sig normatively mandatory |
+| OpenAPI spec (`openapi/acp-api-1.0.yaml`) | ✅ Complete — OpenAPI 3.1.0, all ACP-API-1.0 endpoints |
+| Conformance test vectors (CORE · DCMA · HP · LEDGER · EXEC · PROV · PCTX · REP · RISK-2.0) | ✅ Complete — 73 signed + 65 unsigned RISK-2.0 test vectors |
+| Reference implementation — 23 Go packages (L1–L4) | ✅ Complete — `impl/go/pkg/` covers all conformance levels |
+| `pkg/psn` policy snapshot | ✅ Complete — atomic transitions, single ACTIVE snapshot |
+| Python SDK — `ACPAdmissionGuard` + `@acp_tool` (LangChain) | ✅ Complete — `impl/python/` |
+| ACP-RISK-2.0 — `F_anom` + Cooldown + `pkg/risk` | ✅ Complete — deterministic, sub-µs, 65 vectors |
+| Payment-agent demo (`examples/payment-agent/`) | ✅ Complete — v1.16 |
+| ACP-SIGN-2.0 — Post-quantum hybrid spec (Ed25519 + ML-DSA-65) | ✅ Complete — spec v1.16; HYBRID stub `pkg/sign2/` v1.17 |
+| ACR-1.0 sequence compliance runner (`compliance/runner/`) | ✅ Complete — v1.17 · library + HTTP mode · 5/5 PASS |
+| Sequence test vectors (`compliance/test-vectors/sequence/`) | ✅ Complete — v1.17 · 5 stateful scenarios |
+| TLA+ formal model (`tla/ACP.tla`) | ✅ Complete — v1.17 · TLC-runnable · 0 violations |
+| TypeScript / Rust SDKs | 🔜 On roadmap |
+| v1.x | Core protocol and reference implementation — active |
+| v2.0 | Decentralized ACP (ACP-D) — in design |
+| future | ZK verification, decentralized governance |
 
 ---
 
-## Licencia
+## License
 
 Apache 2.0
