@@ -7,6 +7,44 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.17.0] — Sprint F — EN PROGRESO
+
+### Agregado (parcial — 2026-03-23)
+
+#### Conformidad — ACR-1.0 Compliance Runner de Secuencias
+- `compliance/runner/` — runner de compliance de secuencias ACR-1.0. Módulo Go independiente (8 archivos) con replace directive a `impl/go`. Dos modos: `library` (default, llama a `pkg/risk` directo) y `http` (servidor externo). Flags CLI: `--mode`, `--url`, `--dir`, `--out`, `--strict`.
+- `compliance/runner/library.go` — `LibraryBackend` implementa el contrato de ejecución ACP-RISK-2.0 §4: `Evaluate()` stateless → `AddRequest()` → `AddPattern()` (siempre, alimenta Rule 3 de F_anom) → `AddDenial()` (condicional) → `ShouldEnterCooldown()` → `SetCooldown(agentID, now.Add(period))`.
+- `compliance/runner/http.go` — `HTTPBackend` para validar implementaciones externas via HTTP POST.
+- `compliance/runner/report.go` — reporte JSON + resumen stdout. Exit code 1 si algún test falla (listo para CI).
+
+#### Conformidad — Vectores de Secuencia (5 vectores)
+- `compliance/runner/testcases/cooldown.json` — `SEQ-COOLDOWN-001`: 3 DENIED en 10 min activan cooldown; step 4 (benigno) bloqueado con `denied_reason: COOLDOWN_ACTIVE`.
+- `compliance/runner/testcases/f_anom_rule3.json` — `SEQ-FANOM-RULE3-001`: mismo patrón agent+cap+resource ≥3 veces activa Rule 3 (+15 RS); decisión APPROVED→ESCALATED en step 4 (pattern_count=3 visible en Evaluate del step 4, ya que AddPattern ocurre después de Evaluate).
+- `compliance/runner/testcases/benign_flow.json` — `SEQ-BENIGN-001`: agente legítimo, 3 requests RS=0, todos APPROVED. Valida ausencia de falsos positivos.
+- `compliance/runner/testcases/boundary.json` — `SEQ-BOUNDARY-001`: fronteras exactas RS=35→APPROVED, RS=40→ESCALATED, RS=70→DENIED.
+- `compliance/runner/testcases/privilege_jump.json` — `SEQ-PRIVJUMP-001`: agente pasa de data.read/public (RS=0, APPROVED) a admin.delete/restricted (RS=105→100, DENIED) en un solo salto.
+
+**Resultado de verificación:** 5/5 PASS | CONFORMANT
+
+**Commits:** EN `0f04c92` / ES `288d3e4`
+
+#### Verificación Formal — Modelo TLA+
+- `tla/ACP.tla` — módulo TLA+ ejecutable con TLC. Formaliza el pipeline de evaluación ACP-RISK-2.0 con tres propiedades verificadas: `Safety` (decisiones APPROVED tienen RS ≤ 39), `LedgerAppendOnly` (entradas nunca modificadas/eliminadas), `RiskDeterminism` (mismo cap+resource siempre produce el mismo RS). Corrige Apéndice B de v1.16: `LedgerAppendOnly` ahora usa `[][Len(ledger') >= Len(ledger) ∧ ∀i: ledger'[i] = ledger[i]]_ledger`; `RiskDeterminism` tiene función `ComputeRisk` concreta, no un placeholder abstracto.
+- `tla/ACP.cfg` — configuración TLC. Constantes acotadas: Agents={"A1","A2"}, Capabilities={"read","write","financial","admin"}, Resources={"public","sensitive","restricted"}, límite ledger=5. Declara INVARIANTS (TypeInvariant, Safety, LedgerAppendOnly, RiskDeterminism) y PROPERTIES (LedgerAppendOnlyTemporal).
+
+#### Conformidad — Vectores de Secuencia Canónicos
+- `compliance/test-vectors/sequence/` — ubicación canónica para los 5 vectores stateful (mismo contenido que `compliance/runner/testcases/`, referenciados por el runner ACR-1.0 con `--dir ../test-vectors/sequence`).
+- `compliance/test-vectors/sequence/README.md` — documentación de formato, tabla de vectores, resumen del contrato de ejecución.
+
+#### Implementación de Referencia — Stub Post-Cuántico
+- `impl/go/pkg/sign2/sign2.go` — ACP-SIGN-2.0 §3.1 modo HYBRID. `SignHybrid()`: Ed25519 real + stub nil ML-DSA-65 (TODO v1.18: cloudflare/circl). `VerifyHybrid()`: verifica Ed25519; tolera PQCSig nil según reglas de transición §4.2. Formato wire `HybridSignature` estable. Narrativa: cripto-agilidad por diseño — ruta de migración definida, implementación por etapas.
+
+### Pendiente en Sprint F
+- `paper/arxiv/main.tex` — Figura TikZ verificabilidad end-to-end + §Compliance Testing + §Formal Verification (Apéndice B TLC) + §End-to-End Verifiability
+- arXiv v4 — timing: esperar anuncio de `submit/7396824`
+
+---
+
 ## [1.16.0] — 2026-03-22
 
 ### Agregado
