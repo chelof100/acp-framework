@@ -1,43 +1,70 @@
 # Changelog — ACP (Agent Control Protocol)
 
-Todos los cambios notables a la especificación ACP se documentan en este archivo.
+All notable changes to the ACP specification are documented in this file.
 
-El formato sigue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.20.0] — Sprint I (partial) — 2026-03-26
+
+### Added
+
+#### Adversarial Evaluation — Experiment 4 (`compliance/adversarial/`)
+- `exp_token_replay.go` — Experiment 4: Token Replay Attack. Four sub-cases demonstrating ACP's bounded replay resistance without nonce tracking.
+  - **Case 1 — Normal traffic baseline:** 10 requests, unique resource per call, RS=0, no pattern accumulation, no cooldown. (Comparison anchor.)
+  - **Case 2 — Sequential replay:** 10 identical tokens (`financial.transfer / sensitive / NoHistory=true`, RS_base=55 ESCALATED). F_anom Rule 3 fires at request 4 after 3 pattern accumulations in 5-min window (+15 RS → RS=70 DENIED). Cooldown triggers after 3 DENIED; 4/10 subsequent requests blocked.
+  - **Case 3 — Concurrent replay:** 5 workers × 4 requests. InMemoryQuerier mutex serializes reads; concurrency does not bypass accumulation. 14/20 requests blocked.
+  - **Case 4 — Near-identical replay:** Resource suffix varies per request (`accounts/sensitive-000…009`). Different patternKey per call → Rule 3 never fires → RS stays at 55 (ESCALATED) → no cooldown. Demonstrates bounded replay resistance; motivates §Limitations note.
+- `main.go` — Updated: `--exp=4` flag added (`token-replay`); `--exp=0` (all) includes Experiment 4.
+
+#### Paper — v1.20
+- `paper/arxiv/main.tex` — Version bumped to v1.20. Added `\subsubsection*{Experiment 4}` with results table and RS-trajectory figure (pgfplots). Updated: abstract (4 attack scenarios), Q4, adversarial section intro, Security Properties (Bounded Replay Resistance paragraph), Limitations (nonce note), Roadmap table, spec changelog, conclusion. Added `\usepackage{pgfplots}`.
+
+### Key results (Experiment 4, Intel i7-8665U, Go 1.22)
+| Case | Requests | ESCALATED | DENIED | Cooldown-blocked |
+|------|----------|-----------|--------|-----------------|
+| Normal baseline | 10 | 0 | 0 | 0 |
+| Sequential replay | 10 | 3 | 3 | 4 |
+| Concurrent replay | 20 | 3 | 3 | 14 |
+| Near-identical | 10 | 10 | 0 | 0 |
+
+RS trajectory (sequential): reqs 1–3 → RS=55 (ESCALATED); reqs 4–6 → RS=70 (DENIED, Rule 3); reqs 7–10 → COOLDOWN_ACTIVE.
 
 ---
 
 ## [1.19.0] — Sprint H — 2026-03-24
 
-### Agregado
+### Added
 
-#### Evaluación Adversarial (`compliance/adversarial/`)
-- `compliance/adversarial/` — módulo Go de 8 archivos (dependencia `go-redis/v9`) con 3 experimentos adversariales ACP-RISK-2.0 y una implementación `RedisQuerier` de `LedgerMutator`.
-- **Experimento 1 — Ataque de Evasión de Cooldown:** 1 agente, 500 requests, patrón alternado alto riesgo/bajo riesgo. Cooldown activa tras exactamente 3 DENIED reales; 495/500 requests bloqueados (99%). Rendimiento: 815.927 req/s.
-- **Experimento 2 — Ataque Multi-Agente Distribuido:** 100/500/1.000 agentes × 10 requests c/u. Cada agente bloqueado individualmente tras 3 DENIED; denials libres totales = 3N (lineal en cantidad de agentes). Demuestra el límite de diseño por-agente.
-- **Experimento 3 — Estrés del Backend de Estado:** 500 agentes × 20 requests (10.000 total). InMemoryQuerier ~350k req/s (limitado por mutex, ±30% varianza); RedisQuerier ~2.100 req/s (limitado por RTT, ±4%). Valida LedgerQuerier como abstracción reemplazable.
-- `redis_querier.go` — `RedisQuerier` completo implementando `LedgerMutator` usando Redis sorted sets (ZAdd/ZCount) con comandos por operación (sin pipelining).
+#### Adversarial Evaluation (`compliance/adversarial/`)
+- `compliance/adversarial/` — 8-file Go module (`go-redis/v9` dependency) with 3 ACP-RISK-2.0 adversarial experiments and a `RedisQuerier` implementation of `LedgerMutator`.
+- **Experiment 1 — Cooldown Evasion Attack:** 1 agent, 500 requests, alternating high-risk/low-risk pattern. Cooldown triggers after exactly 3 real DENIED decisions; 495/500 requests blocked (99%). Throughput: 815,927 req/s.
+- **Experiment 2 — Distributed Multi-Agent Attack:** 100/500/1,000 agents × 10 requests each. Each agent individually blocked after 3 DENIED; total free denials = 3N (linear in agent count). Demonstrates per-agent design boundary.
+- **Experiment 3 — State Backend Stress:** 500 agents × 20 requests (10,000 total). InMemoryQuerier ~350k req/s (mutex-bound, ±30% variance); RedisQuerier ~2,100 req/s (RTT-bound, ±4%). Validates LedgerQuerier as replaceable abstraction.
+- `redis_querier.go` — Full `RedisQuerier` implementing `LedgerMutator` using Redis sorted sets (ZAdd/ZCount) with per-operation commands (no pipelining).
 
 #### Paper — v1.19
-- `paper/arxiv/main.tex` — Versión actualizada a v1.19. Se agregó `\subsection{Adversarial Evaluation (ACP-RISK-2.0)}` con 3 tablas y resultados. Q4 agregado a los Objetivos de Evaluación. Limitaciones y tabla de roadmap actualizadas (evaluación adversarial v1.19 Completa; Dilithium diferido a v1.20).
+- `paper/arxiv/main.tex` — Version bumped to v1.19. Added `\subsection{Adversarial Evaluation (ACP-RISK-2.0)}` with 3 tables and results. Added Q4 to Evaluation Goals. Updated Limitations, roadmap table (adversarial evaluation v1.19 Complete; Dilithium deferred to v1.20).
 
-### Corregido
-- Uso de API corregido vs documentos de planificación: `PatternKey(agentID, capability, resource)` toma 3 parámetros; `ShouldEnterCooldown(agentID, policy, querier, now)` toma 4 parámetros con policy en segundo lugar.
+### Fixed
+- API usage corrected vs planning docs: `PatternKey(agentID, capability, resource)` takes 3 parameters; `ShouldEnterCooldown(agentID, policy, querier, now)` takes 4 parameters with policy second.
 
 ---
 
 ## [1.17.0] — Sprint F — EN PROGRESO
 
-### Agregado (parcial — 2026-03-23)
+### Added (parcial — 2026-03-23)
 
-#### Conformidad — ACR-1.0 Compliance Runner de Secuencias
-- `compliance/runner/` — runner de compliance de secuencias ACR-1.0. Módulo Go independiente (8 archivos) con replace directive a `impl/go`. Dos modos: `library` (default, llama a `pkg/risk` directo) y `http` (servidor externo). Flags CLI: `--mode`, `--url`, `--dir`, `--out`, `--strict`.
-- `compliance/runner/library.go` — `LibraryBackend` implementa el contrato de ejecución ACP-RISK-2.0 §4: `Evaluate()` stateless → `AddRequest()` → `AddPattern()` (siempre, alimenta Rule 3 de F_anom) → `AddDenial()` (condicional) → `ShouldEnterCooldown()` → `SetCooldown(agentID, now.Add(period))`.
+#### Compliance — ACR-1.0 Compliance Runner
+- `compliance/runner/` — ACR-1.0 sequence compliance runner. Go module independiente (8 archivos, 548 LOC) con replace directive a `impl/go`. Dos modos: `library` (default, llama a `pkg/risk` directo) y `http` (servidor externo). CLI flags: `--mode`, `--url`, `--dir`, `--out`, `--strict`.
+- `compliance/runner/library.go` — `LibraryBackend` implementa el execution contract de ACP-RISK-2.0 §4: `Evaluate()` stateless → `AddRequest()` → `AddPattern()` (siempre, alimenta Rule 3 de F_anom) → `AddDenial()` (condicional) → `ShouldEnterCooldown()` → `SetCooldown(agentID, now.Add(period))`.
 - `compliance/runner/http.go` — `HTTPBackend` para validar implementaciones externas via HTTP POST.
-- `compliance/runner/report.go` — reporte JSON + resumen stdout. Exit code 1 si algún test falla (listo para CI).
+- `compliance/runner/report.go` — JSON report + resumen stdout. Exit code 1 si algún test falla (CI-ready).
 
-#### Conformidad — Vectores de Secuencia (5 vectores)
-- `compliance/runner/testcases/cooldown.json` — `SEQ-COOLDOWN-001`: 3 DENIED en 10 min activan cooldown; step 4 (benigno) bloqueado con `denied_reason: COOLDOWN_ACTIVE`.
+#### Compliance — Sequence Test Vectors (5 vectores)
+- `compliance/runner/testcases/cooldown.json` — `SEQ-COOLDOWN-001`: 3 DENIED en 10 min activan cooldown; step 4 (benign) bloqueado con `denied_reason: COOLDOWN_ACTIVE`.
 - `compliance/runner/testcases/f_anom_rule3.json` — `SEQ-FANOM-RULE3-001`: mismo patrón agent+cap+resource ≥3 veces activa Rule 3 (+15 RS); decisión APPROVED→ESCALATED en step 4 (pattern_count=3 visible en Evaluate del step 4, ya que AddPattern ocurre después de Evaluate).
 - `compliance/runner/testcases/benign_flow.json` — `SEQ-BENIGN-001`: agente legítimo, 3 requests RS=0, todos APPROVED. Valida ausencia de falsos positivos.
 - `compliance/runner/testcases/boundary.json` — `SEQ-BOUNDARY-001`: fronteras exactas RS=35→APPROVED, RS=40→ESCALATED, RS=70→DENIED.
@@ -47,188 +74,197 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Commits:** EN `0f04c92` / ES `288d3e4`
 
-#### Verificación Formal — Modelo TLA+
-- `tla/ACP.tla` — módulo TLA+ ejecutable con TLC. Formaliza el pipeline de evaluación ACP-RISK-2.0 con tres propiedades verificadas: `Safety` (decisiones APPROVED tienen RS ≤ 39), `LedgerAppendOnly` (entradas nunca modificadas/eliminadas), `RiskDeterminism` (mismo cap+resource siempre produce el mismo RS). Corrige Apéndice B de v1.16: `LedgerAppendOnly` ahora usa `[][Len(ledger') >= Len(ledger) ∧ ∀i: ledger'[i] = ledger[i]]_ledger`; `RiskDeterminism` tiene función `ComputeRisk` concreta, no un placeholder abstracto.
-- `tla/ACP.cfg` — configuración TLC. Constantes acotadas: Agents={"A1","A2"}, Capabilities={"read","write","financial","admin"}, Resources={"public","sensitive","restricted"}, límite ledger=5. Declara INVARIANTS (TypeInvariant, Safety, LedgerAppendOnly, RiskDeterminism) y PROPERTIES (LedgerAppendOnlyTemporal).
+#### Formal Verification — TLA+ Model
+- `tla/ACP.tla` — TLC-runnable TLA+ module. Formalizes ACP-RISK-2.0 evaluation pipeline with three checked properties: `Safety` (APPROVED decisions have RS ≤ 39), `LedgerAppendOnly` (entries never modified/removed), `RiskDeterminism` (same cap+resource always produces same RS). Corrects v1.16 Appendix B: `LedgerAppendOnly` now uses `[][Len(ledger') >= Len(ledger) ∧ ∀i: ledger'[i] = ledger[i]]_ledger`; `RiskDeterminism` now has a concrete `ComputeRisk` function, not an abstract placeholder.
+- `tla/ACP.cfg` — TLC configuration. Bounded constants: Agents={"A1","A2"}, Capabilities={"read","write","financial","admin"}, Resources={"public","sensitive","restricted"}, ledger bound=5. Declares INVARIANTS (TypeInvariant, Safety, LedgerAppendOnly, RiskDeterminism) and PROPERTIES (LedgerAppendOnlyTemporal).
 
-#### Conformidad — Vectores de Secuencia Canónicos
-- `compliance/test-vectors/sequence/` — ubicación canónica para los 5 vectores stateful (mismo contenido que `compliance/runner/testcases/`, referenciados por el runner ACR-1.0 con `--dir ../test-vectors/sequence`).
-- `compliance/test-vectors/sequence/README.md` — documentación de formato, tabla de vectores, resumen del contrato de ejecución.
+#### Compliance — Canonical Sequence Vectors
+- `compliance/test-vectors/sequence/` — canonical location for the 5 stateful test vectors (same content as `compliance/runner/testcases/`, referenced by ACR-1.0 runner with `--dir ../test-vectors/sequence`).
+- `compliance/test-vectors/sequence/README.md` — format docs, vector table, execution contract summary.
 
-#### Implementación de Referencia — Stub Post-Cuántico
-- `impl/go/pkg/sign2/sign2.go` — ACP-SIGN-2.0 §3.1 modo HYBRID. `SignHybrid()`: Ed25519 real + stub nil ML-DSA-65 (TODO v1.18: cloudflare/circl). `VerifyHybrid()`: verifica Ed25519; tolera PQCSig nil según reglas de transición §4.2. Formato wire `HybridSignature` estable. Narrativa: cripto-agilidad por diseño — ruta de migración definida, implementación por etapas.
+#### Reference Implementation — Post-Quantum Stub
+- `impl/go/pkg/sign2/sign2.go` — ACP-SIGN-2.0 §3.1 HYBRID mode. `SignHybrid()`: Ed25519 real + ML-DSA-65 nil stub (TODO v1.18: cloudflare/circl). `VerifyHybrid()`: verifies Ed25519; tolerates nil PQCSig per transition rules §4.2. `HybridSignature` wire format stable. Narrative: crypto-agility by design — migration path defined, implementation staged.
 
 ### Pendiente en Sprint F
-- `paper/arxiv/main.tex` — Figura TikZ verificabilidad end-to-end + §Compliance Testing + §Formal Verification (Apéndice B TLC) + §End-to-End Verifiability
+- `paper/arxiv/main.tex` — Figura TikZ end-to-end verifiability + §Compliance Testing + §Formal Verification upgrade (Appendix B TLC) + §End-to-End Verifiability
 - arXiv v4 — timing: esperar anuncio de `submit/7396824`
 
 ---
 
 ## [1.16.0] — 2026-03-22
 
-### Agregado
+### Added
 
-#### Especificación
-- `spec/security/ACP-RISK-2.0.md` — reemplaza RISK-1.0. Introduce `F_anom` (3 reglas deterministas): Regla 1 tasa de solicitudes alta (>N en 60s, +20), Regla 2 denegaciones recientes (≥X en 24h, +15), Regla 3 patrón repetido via `hash(agent_id||capability||resource)` (≥Y en 5min, +15). Mecanismo de cooldown (§3.5): 3 DENIED en 10min → agente bloqueado por `cooldown_period`. Desglose completo de factores en el registro de evaluación. Interfaz `LedgerQuerier`. Códigos de error RISK-008/009. Diseño fail-closed.
-- `spec/core/ACP-SIGN-2.0.md` — spec de firma híbrida post-cuántica. Ed25519 + ML-DSA-65 (NIST FIPS 204 / Dilithium). Tres modos de transición: `CLASSIC_ONLY → HYBRID → PQC_ONLY`. Campos de política: `acp_sign_mode`, `pqc_required`, `pqc_required_after`. Formato wire y procedimientos de firma/verificación. Códigos de error SIGN-010–015. Biblioteca de referencia: `github.com/cloudflare/circl/sign/dilithium`. Implementación Go planificada para v1.17. "Cripto-agilidad por diseño."
-- `spec/operations/ACP-LEDGER-1.3.md` — actualizado para RISK-2.0: esquema de evento `RISK_EVALUATION` agrega campos `f_anom`, `anomaly_detail` (rule1/2/3_triggered), `denied_reason`, `policy_hash`. Requisito de conformidad §13 para usuarios de RISK-2.0.
+#### Specification
+- `spec/security/ACP-RISK-2.0.md` — supersedes RISK-1.0. Introduces `F_anom` (3 deterministic rules): Rule 1 high request rate (>N in 60s, +20), Rule 2 recent denials (≥X in 24h, +15), Rule 3 repeated pattern via `hash(agent_id||capability||resource)` (≥Y in 5min, +15). Cooldown mechanism (§3.5): 3 DENIED in 10min → agent blocked for `cooldown_period`. Full factor breakdown in evaluation record. `LedgerQuerier` interface. Error codes RISK-008/009. Fail-closed design.
+- `spec/core/ACP-SIGN-2.0.md` — post-quantum hybrid signing spec. Ed25519 + ML-DSA-65 (NIST FIPS 204 / Dilithium). Three transition modes: `CLASSIC_ONLY → HYBRID → PQC_ONLY`. Policy fields: `acp_sign_mode`, `pqc_required`, `pqc_required_after`. Wire format and signing/verification procedures. Error codes SIGN-010–015. Reference library: `github.com/cloudflare/circl/sign/dilithium`. Go implementation planned for v1.17. "Crypto-agility by design."
+- `spec/operations/ACP-LEDGER-1.3.md` — updated for RISK-2.0: `RISK_EVALUATION` event schema adds `f_anom`, `anomaly_detail` (rule1/2/3_triggered), `denied_reason`, `policy_hash` fields. §13 conformance requirement for RISK-2.0 users.
 
-#### Implementación de Referencia — Go (23 paquetes)
-- `impl/go/pkg/risk/engine.go` — reescrito para ACP-RISK-2.0. Punto de entrada `Evaluate()`. `F_anom` con 3 reglas, ventanas deslizantes, `PatternKey` (hash SHA-256). Short-circuit de cooldown. Interfaz `LedgerQuerier` con `InMemoryQuerier`. `ShouldEnterCooldown()`. Solo aritmética entera, sin flotantes.
-- `impl/go/pkg/risk/engine_v2_test.go` — 26 nuevas pruebas (33 en total pasan). Cubre todas las reglas F_anom, activación/expiración de cooldown, casos límite de RS, vectores anti-gaming.
-- `impl/go/pkg/risk/engine_bench_test.go` — 6 benchmarks: `Evaluate` APPROVED (1.012 ns/op), `Evaluate` DENIED (863 ns/op), `Evaluate` las 3 reglas F_anom (1.331 ns/op), `Evaluate` short-circuit COOLDOWN (149 ns/op), `PatternKey` SHA-256 (996 ns/op), `ShouldEnterCooldown` (88 ns/op). Medido en Intel i7-8665U @ 1,90GHz, Go 1.22.
+#### Reference Implementation — Go (23 packages)
+- `impl/go/pkg/risk/engine.go` — rewritten for ACP-RISK-2.0. `Evaluate()` entry point. `F_anom` with 3 rules, sliding windows, `PatternKey` (SHA-256 hash). Cooldown short-circuit. `LedgerQuerier` interface with `InMemoryQuerier`. `ShouldEnterCooldown()`. Integer arithmetic only, no floats.
+- `impl/go/pkg/risk/engine_v2_test.go` — 26 new tests (33 total pass). Covers all F_anom rules, cooldown trigger/expiry, RS boundary cases, anti-gaming vectors.
+- `impl/go/pkg/risk/engine_bench_test.go` — 6 benchmarks: `Evaluate` APPROVED (1,012 ns/op), `Evaluate` DENIED (863 ns/op), `Evaluate` all 3 F_anom rules (1,331 ns/op), `Evaluate` COOLDOWN short-circuit (149 ns/op), `PatternKey` SHA-256 (996 ns/op), `ShouldEnterCooldown` (88 ns/op). Measured on Intel i7-8665U @ 1.90GHz, Go 1.22.
 
-#### Conformidad — Vectores de Prueba
-- `compliance/test-vectors/risk-2.0/` — 65 vectores RISK-2.0 no firmados (23 APPROVED + 19 ESCALATED + 23 DENIED). 6 bloques: casos base, factores de contexto, factores de historial, límites de F_anom, mezclas complejas, casos límite anti-gaming/cooldown/autonomía. Nota: no firmados — prueban la fórmula de puntuación, no el pipeline criptográfico.
-- `impl/go/cmd/gen-risk2-vectors/main.go` — generador reproducible de vectores RISK-2.0.
-- `compliance/test-vectors/README.md` — actualizado: 73 firmados + 65 no firmados = 138 vectores totales.
+#### Compliance — Test Vectors
+- `compliance/test-vectors/risk-2.0/` — 65 unsigned RISK-2.0 vectors (23 APPROVED + 19 ESCALATED + 23 DENIED). 6 blocks: base cases, context factors, history factors, F_anom boundaries, complex mixes, anti-gaming/cooldown/autonomy edge cases. Note: unsigned — test the scoring formula, not the cryptographic pipeline.
+- `impl/go/cmd/gen-risk2-vectors/main.go` — reproducible generator for RISK-2.0 vectors.
+- `compliance/test-vectors/README.md` — updated: 73 signed + 65 unsigned = 138 total vectors.
 
 #### API
-- `openapi/acp-api-1.0.yaml` — endpoint 18: `GET /audit/agent/{id}?window=24h` — línea de tiempo de decisiones del agente con entradas F_anom completas, estado de cooldown y desglose de factores según ACP-RISK-2.0 §6. Nuevos esquemas: `AgentAuditData`, `AgentDecisionEvent`. Total: 18 endpoints.
+- `openapi/acp-api-1.0.yaml` — endpoint 18: `GET /audit/agent/{id}?window=24h` — agent decision timeline with full F_anom inputs, cooldown state, and factor breakdown per ACP-RISK-2.0 §6. New schemas: `AgentAuditData`, `AgentDecisionEvent`. Total: 18 endpoints.
 
 #### Demo
-- `examples/payment-agent/` — demo killer de payment-agent. Servidor Go ejecutable. `POST /admission` → evaluación RISK-2.0 → decisión + desglose de factores. Cooldown se activa automáticamente tras 3 DENIED en 10min. Ledger en memoria append-only. `GET /audit/agent/{id}` (endpoint 18). 5 escenarios documentados. `go run .` → servidor en :8080.
+- `examples/payment-agent/` — payment-agent killer demo. Executable Go server. `POST /admission` → RISK-2.0 evaluation → decision + factor breakdown. Cooldown auto-triggers after 3 DENIED in 10min. Append-only in-memory ledger. `GET /audit/agent/{id}` (endpoint 18). 5 documented scenarios. `go run .` → server on :8080.
 
 #### Paper (local, gitignored)
-- `paper/arxiv/main.tex` — actualizado a v1.16: tabla de benchmarks (datos reales ns/op), Apéndice B boceto de verificación formal (módulo TLA+ con invariantes `Safety`, `LedgerAppendOnly`, `RiskDeterminism` + `THEOREM SafetyAndDeterminism`), hoja de ruta y conclusión actualizadas.
+- `paper/arxiv/main.tex` — updated to v1.16: benchmark table (real ns/op data), Appendix B formal verification sketch (TLA+ module with `Safety`, `LedgerAppendOnly`, `RiskDeterminism` invariants + `THEOREM SafetyAndDeterminism`), roadmap and conclusion updated.
+
+### Published
+- **Zenodo:** `10.5281/zenodo.19185033` — ACP v1.16 specification archive. https://zenodo.org/records/19185033
+- **arXiv:** `2603.18829` — v3 submitted as `submit/7396824` (replacement). Pending announcement.
 
 ---
 
 ## [1.15.0] — 2026-03-21
 
-### Agregado
+### Added
 
 #### API
-- `openapi/acp-api-1.0.yaml` — T5 extendido: 17 endpoints cubriendo POLICY-CTX-1.1 + REP-PORTABILITY-1.1. Nuevos endpoints: `GET /policy/context/{agent_id}`, `GET /policy/context/history/{agent_id}`, `POST /policy/context/validate`, `GET /reputation/export/{agent_id}`, `GET /reputation/diff`. Nuevos esquemas: `PolicyContext`, `PolicyContextHistory`, `ReputationExport`.
+- `openapi/acp-api-1.0.yaml` — T5 extended: 17 endpoints covering POLICY-CTX-1.1 + REP-PORTABILITY-1.1. New endpoints: `GET /policy/context/{agent_id}`, `GET /policy/context/history/{agent_id}`, `POST /policy/context/validate`, `GET /reputation/export/{agent_id}`, `GET /reputation/diff`. New schemas: `PolicyContext`, `PolicyContextHistory`, `ReputationExport`.
 
-#### Python SDK — Integraciones (GAP-A completo)
-- `impl/python/examples/langchain_agent_demo.py` — fábrica de decoradores `@acp_tool()` para LangChain. 5 escenarios. Flag `--with-llm` para agente ReAct.
-- `impl/python/examples/pydantic_ai_demo.py` — `ACPAdmissionGuard` como `deps` de Pydantic AI. DENIED/ESCALATED → `ModelRetry`.
-- `impl/python/examples/mcp_server_demo.py` — `ACPToolDispatcher`: verificación de admisión ACP en la capa de despacho MCP. Compatible con FastMCP via `dispatcher.mount()`.
+#### Python SDK — Integrations (GAP-A complete)
+- `impl/python/examples/langchain_agent_demo.py` — `@acp_tool()` decorator factory for LangChain. 5 scenarios. `--with-llm` flag for ReAct agent.
+- `impl/python/examples/pydantic_ai_demo.py` — `ACPAdmissionGuard` as Pydantic AI `deps`. DENIED/ESCALATED → `ModelRetry`.
+- `impl/python/examples/mcp_server_demo.py` — `ACPToolDispatcher`: ACP admission check in MCP dispatch layer. FastMCP-compatible via `dispatcher.mount()`.
 
-### Corregido
-- Auditoría HTML del sitio web: corregidas referencias de versión, estadísticas actualizadas, páginas EN/ES sincronizadas.
+### Fixed
+- Website HTML audit: corrected version references, updated stats, synchronized EN/ES pages.
 
 ---
 
 ## [1.14.0] — 2026-03-20
 
-### Agregado
+### Added
 
-#### Especificación
-- `spec/reputation/ACP-REP-PORTABILITY-1.1.md` — reemplaza 1.0. Aplicación de validez temporal: `valid_from` / `valid_until` por registro. Detección de divergencia: `divergence_flag` cuando δ > umbral. Exportación de portabilidad firmada con clave institucional.
+#### Specification
+- `spec/reputation/ACP-REP-PORTABILITY-1.1.md` — supersedes 1.0. Temporal validity enforcement: `valid_from` / `valid_until` per record. Divergence detection: `divergence_flag` when δ > threshold. Portability export signed with institutional key.
 
 #### Demo
-- `examples/multi-org-demo/` — demo de interoperabilidad multi-org GAP-14. Org-A emite tokens, Org-B valida delegación cross-org. Docker Compose (`docker-compose.yml`). `go run .` → ambas orgs en :8080/:8081.
+- `examples/multi-org-demo/` — GAP-14 multi-org interoperability demo. Org-A issues tokens, Org-B validates cross-org delegation. Docker Compose (`docker-compose.yml`). `go run .` → both orgs on :8080/:8081.
 
-#### Conformidad
-- `compliance/test-vectors/` — 73 vectores de prueba firmados en total: 8 CORE + 4 DCMA + 10 HP + 11 LEDGER + 9 EXEC + 9 PROV + 13 PCTX + 9 REP. Todos llevan firmas Ed25519 reales sobre SHA-256(JCS).
+#### Compliance
+- `compliance/test-vectors/` — 73 signed test vectors total: 8 CORE + 4 DCMA + 10 HP + 11 LEDGER + 9 EXEC + 9 PROV + 13 PCTX + 9 REP. All carry real Ed25519 signatures over SHA-256(JCS).
 
-### Publicado
-- **arXiv:** `2603.18829` — v1 en vivo (cs.CR primario, cs.AI cross-list).
-- **Zenodo:** `10.5281/zenodo.19135282` — archivo de especificación ACP v1.14.
+### Published
+- **arXiv:** `2603.18829` — v1 live (cs.CR primary, cs.AI cross-list).
+- **Zenodo:** `10.5281/zenodo.19135282` — ACP v1.14 specification archive.
 
 ---
 
 ## [1.13.0] — 2026-03-18
 
-### Agregado
+### Added
 
-#### Especificación
-- `spec/core/ACP-DCMA-1.1.md` — reemplaza DCMA-1.0. Profundidad máxima 7 saltos (S-3). Esquema de registro de delegación con `delegation_chain_id`, `hop_index`, `delegator_agent_id`, `delegatee_agent_id`. Propiedad de no-escalación formalmente declarada.
-- `spec/core/ACP-CROSS-ORG-1.1.md` — reemplaza CROSS-ORG-1.0. Protocolo bilateral tolerante a fallos (GAP-10). §9.1 Invariantes de estado. §13.1 Consideraciones de seguridad. `VerifyBundle()`, `SignBundle()`, `BuildAck()`, `VerifyAck()`.
-- `spec/operations/ACP-POLICY-CTX-1.1.md` — reemplaza POLICY-CTX-1.0. Aplicación de validez temporal para snapshots de política. `valid_from` / `valid_until` en `PolicySnapshot`. Código de error PCTX-009 para snapshot expirado.
+#### Specification
+- `spec/core/ACP-DCMA-1.1.md` — supersedes DCMA-1.0. Max depth 7 hops (S-3). Delegation record schema with `delegation_chain_id`, `hop_index`, `delegator_agent_id`, `delegatee_agent_id`. Non-escalation property formally stated.
+- `spec/core/ACP-CROSS-ORG-1.1.md` — supersedes CROSS-ORG-1.0. Fault-tolerant bilateral protocol (GAP-10). §9.1 State Invariants. §13.1 Security Considerations. `VerifyBundle()`, `SignBundle()`, `BuildAck()`, `VerifyAck()`.
+- `spec/operations/ACP-POLICY-CTX-1.1.md` — supersedes POLICY-CTX-1.0. Temporal validity enforcement for policy snapshots. `valid_from` / `valid_until` on `PolicySnapshot`. Error code PCTX-009 for expired snapshot.
 
-### Publicado
-- **Submission arXiv iniciada.** ID arXiv: `2603.18829`. Zenodo v1.13: `10.5281/zenodo.19077019`.
+### Published
+- **arXiv submission initiated.** arXiv ID: `2603.18829`. Zenodo v1.13: `10.5281/zenodo.19077019`.
 
 ---
 
 ## [1.12.0] — 2026-03-17
 
-### Agregado
-- `compliance/test-vectors/TS-PROV-*` — 9 nuevos vectores de conformidad para ACP-PROVENANCE-1.0: TS-PROV-POS-001 (cadena 2-hop válida), TS-PROV-POS-002 (autorización institucional directa), TS-PROV-NEG-001..007 (códigos PROV-001/002/003/004/005/007/009). Firmas Ed25519 reales sobre SHA-256(JCS). **Total: 51 vectores** (8 CORE + 4 DCMA + 10 HP + 11 LEDGER + 9 EXEC + 9 PROV)
-- `impl/go/cmd/gen-prov-vectors/main.go` — generador de vectores TS-PROV-* usando clave de prueba RFC 8037 A
-- `paper/arxiv/` — fuente LaTeX (`main.tex`), bibliografía (`references.bib`), guía de submission (`SUBMIT.md`) para arXiv cs.CR + cs.AI
+### Added
+- `compliance/test-vectors/TS-PROV-*` — 9 new conformance vectors for ACP-PROVENANCE-1.0: TS-PROV-POS-001 (valid 2-hop chain), TS-PROV-POS-002 (direct institutional authorization), TS-PROV-NEG-001..007 (PROV-001/002/003/004/005/007/009 error codes). Real Ed25519 signatures over SHA-256(JCS). **Total: 51 vectors** (8 CORE + 4 DCMA + 10 HP + 11 LEDGER + 9 EXEC + 9 PROV)
+- `impl/go/cmd/gen-prov-vectors/main.go` — generator for TS-PROV-* vectors using RFC 8037 test key A
+- `paper/arxiv/` — LaTeX source (`main.tex`), bibliography (`references.bib`), submission guide (`SUBMIT.md`) for arXiv cs.CR + cs.AI submission
+- `paper/arxiv/SUBMIT.md` — full submission guide: steps, metadata, abstract, endorsement, post-acceptance
 
-### Corregido
-- Circularidad en grafo de dependencias (S-3): `ACP-DCMA-1.0` — removido `ACP-LEDGER-1.2` de Depends-on; `ACP-LEDGER-1.3` — removidos `ACP-LIA-1.0` y `ACP-PSN-1.0` de Depends-on; `ACP-EXEC-1.0` — removido `ACP-API-1.0` de Depends-on. El grafo de dependencias es ahora acíclico y resolvible.
+### Fixed
+- Dependency graph circularity (S-3): `ACP-DCMA-1.0` — removed `ACP-LEDGER-1.2` from Depends-on; `ACP-LEDGER-1.3` — removed `ACP-LIA-1.0` and `ACP-PSN-1.0` from Depends-on; `ACP-EXEC-1.0` — removed `ACP-API-1.0` from Depends-on. Dependency graph is now acyclic and resolvable.
 
-### Modificado
-- `README.md` — fila de cobertura de vectores actualizada: CORE · DCMA · HP · LEDGER · EXEC · PROV; 42→51 vectores; badge DOI actualizado a `10.5281/zenodo.19077019`
-- `paper/draft/ACP-Whitepaper-v1.0.md` — actualizado a v1.12: 42→51 vectores, cobertura PROV añadida
-- `paper/arxiv/main.tex` — 42→51 vectores en todas las tablas
+### Changed
+- `README.md` — vector coverage row updated: CORE · DCMA · HP · LEDGER · EXEC · PROV; 42→51 vectors; DOI badge updated to `10.5281/zenodo.19077019`
+- `paper/draft/ACP-Whitepaper-v1.0.md` — updated to v1.12: 42→51 vectors, PROV coverage added
+- `paper/arxiv/main.tex` — 42→51 vectors in all tables
 
 ---
 
 ## [1.11.0] — 2026-03-16
 
-### Agregado
+### Added
 
-#### Especificación
-- `spec/gobernanza/ACP-CONF-1.2.md` — especificación normativa de conformidad que supersede CONF-1.1. Corrige L1 (añade AGENT-1.0, DCMA-1.0, MESSAGES-1.0), L3 (añade PROVENANCE-1.0, POLICY-CTX-1.0, PSN-1.0), L4 (añade GOV-EVENTS-1.0, LIA-1.0, HIST-1.0, NOTIFY-1.0, DISC-1.0, BULK-1.0, CROSS-ORG-1.0, REP-PORTABILITY-1.0; actualiza REP-1.1→1.2, LEDGER-1.2→1.3). Apéndice A: mapeo desde CONF-1.1. Apéndice B: perfiles obsoletos.
-- `spec/operaciones/ACP-LEDGER-1.3.md` — supersede LEDGER-1.2. `sig` es MUST normativo en todos los eventos de producción. Código de error LEDGER-012 para firma ausente. Elimina ambigüedad dev-mode del §4.4.
-- `archive/specs/` — specs supersedidas movidas aquí con encabezados Superseded: ACP-CONF-1.0, ACP-CONF-1.1, ACP-LEDGER-1.2, ACP-REP-1.1, ACP-AGENT-SPEC-0.3. `archive/specs/README.md` creado.
-- `openapi/acp-api-1.0.yaml` — OpenAPI 3.1.0 para todos los endpoints de ACP-API-1.0 (12 endpoints). Seguridad: ACPAgent (header Authorization) + ACPPoP (header X-ACP-PoP). Esquemas completos y respuestas de error reutilizables.
-- `ARCHITECTURE.md` — modelo de dominio formal: 8 conceptos, stack de gobernanza de 8 capas, grafo de dependencias dirigido (ASCII), ciclo de vida de ejecución de 10 pasos, 7 propiedades formales.
+#### Specification
+- `spec/governance/ACP-CONF-1.2.md` — normative conformance specification superseding CONF-1.1. Corrects L1 (adds AGENT-1.0, DCMA-1.0, MESSAGES-1.0), L3 (adds PROVENANCE-1.0, POLICY-CTX-1.0, PSN-1.0), L4 (adds GOV-EVENTS-1.0, LIA-1.0, HIST-1.0, NOTIFY-1.0, DISC-1.0, BULK-1.0, CROSS-ORG-1.0, REP-PORTABILITY-1.0; updates REP-1.1→1.2, LEDGER-1.2→1.3). Appendix A: mapping from CONF-1.1. Appendix B: deprecated profiles.
+- `spec/operations/ACP-LEDGER-1.3.md` — supersedes LEDGER-1.2. `sig` is normative MUST on all production events. LEDGER-012 error code for absent signature. Removes dev-mode ambiguity from §4.4.
+- `archive/specs/` — superseded specs moved here with Superseded headers: ACP-CONF-1.0, ACP-CONF-1.1, ACP-LEDGER-1.2, ACP-REP-1.1, ACP-AGENT-SPEC-0.3. `archive/specs/README.md` created.
+- `openapi/acp-api-1.0.yaml` — OpenAPI 3.1.0 for all ACP-API-1.0 endpoints (12 endpoints). Security: ACPAgent (Authorization header) + ACPPoP (X-ACP-PoP header). Complete schemas and reusable error responses.
+- `ARCHITECTURE.md` — formal domain model: 8 domain concepts, 8-layer governance stack, directed dependency graph (ASCII), 10-step execution lifecycle, 7 formal properties (P-INVARIANT, P-NON-ESCALATION, P-TEMPORAL, P-CHAIN-COMPLETENESS, P-IMMUTABILITY, P-PORTABILITY, P-REVOCABILITY).
 
-#### Compliance — Vectores de prueba (42 total)
-- `TS-HP-POS-001/002`, `TS-HP-NEG-001..008` — 10 vectores para ACP-HP-1.0 (códigos HP-004/006/007/008/009/010/011/014). Firmas Ed25519 reales.
-- `TS-LEDGER-POS-001..003`, `TS-LEDGER-NEG-001..008` — 11 vectores para ACP-LEDGER-1.3 (LEDGER-002/003/004/005/006/008/010/012). Cadenas hash SHA-256, firmas Ed25519 reales.
-- `TS-EXEC-POS-001/002`, `TS-EXEC-NEG-001..007` — 9 vectores para ACP-EXEC-1.0 (EXEC-001..007). Tokens de ejecución Ed25519 reales.
-- `impl/go/cmd/gen-ledger-vectors/main.go` — generador de vectores LEDGER
-- `impl/go/cmd/gen-exec-vectors/main.go` — generador de vectores EXEC
+#### Compliance — Test Vectors (42 total)
+- `TS-HP-POS-001/002`, `TS-HP-NEG-001..008` — 10 vectors for ACP-HP-1.0 (HP-004/006/007/008/009/010/011/014 error codes). Real Ed25519 signatures.
+- `TS-LEDGER-POS-001..003`, `TS-LEDGER-NEG-001..008` — 11 vectors for ACP-LEDGER-1.3 (LEDGER-002/003/004/005/006/008/010/012 error codes). Hash chains with SHA-256, real Ed25519 signatures.
+- `TS-EXEC-POS-001/002`, `TS-EXEC-NEG-001..007` — 9 vectors for ACP-EXEC-1.0 (EXEC-001..007 error codes). Real Ed25519 execution tokens.
+- `impl/go/cmd/gen-ledger-vectors/main.go` — LEDGER vector generator
+- `impl/go/cmd/gen-exec-vectors/main.go` — EXEC vector generator
+- `impl/go/cmd/acp-sign-vectors/main.go` — rewritten: correct path, HP support
 
-#### Implementación de Referencia — Go (23 paquetes)
-- `impl/go/pkg/provenance/` — ACP-PROVENANCE-1.0: `Issue()`, `VerifySig()`, `ValidateChain()`. Centinelas PROV-001..009.
-- `impl/go/pkg/policyctx/` — ACP-POLICY-CTX-1.0: `Capture()`, `VerifySig()`, `VerifyPolicyHash()`. Centinelas PCTX-001..008.
-- `impl/go/pkg/govevents/` — ACP-GOV-EVENTS-1.0: `Emit()`, `InMemoryEventStream` con `List(QueryFilter)`. 10 tipos de payload normativos. Centinelas GEVE-001..007.
-- `impl/go/pkg/lia/` — ACP-LIA-1.0: `Emit()` con resolución de asignatario §6 (3 reglas). Centinelas LIA-001..008.
-- `impl/go/pkg/hist/` — ACP-HIST-1.0: `Query()` con filtrado completo + paginación cursor, `Export()` (ExportBundle firmado). Centinelas HIST-001..007.
-- `impl/go/pkg/notify/` — ACP-NOTIFY-1.0: `Subscribe()`, `BuildPayload()` firmado, rotación de secreto. Centinelas NOTI-001..005.
-- `impl/go/pkg/disc/` — ACP-DISC-1.0: `Register()` con TTL, `Query(QueryFilter)` con awareness de expiración. Centinelas DISC-001..004.
-- `impl/go/pkg/bulk/` — ACP-BULK-1.0: `ValidateBatchRequest()` (máx. 100), `ValidateLiabilityQuery()` (máx. 1000). Centinelas BULK-001..005.
-- `impl/go/pkg/crossorg/` — ACP-CROSS-ORG-1.0: `VerifyBundle()`, `SignBundle()`, `BuildAck()`, `VerifyAck()`. Centinelas CROSS-001..010.
-- `impl/go/pkg/pay/` — ACP-PAY-1.0: `VerifyToken()` con detección de doble gasto por ProofID. Centinelas PAY-001..006+010.
-- `impl/go/pkg/psn/` — ACP-PSN-1.0: `Create()`, `Transition()` atómico, `VerifySig()`. Centinelas PSN-001..007.
+#### Reference Implementation — Go (23 packages)
+- `impl/go/pkg/provenance/` — ACP-PROVENANCE-1.0: `Issue()`, `VerifySig()`, `ValidateChain()`, `InMemoryProvenanceStore`. Sentinels PROV-001..009.
+- `impl/go/pkg/policyctx/` — ACP-POLICY-CTX-1.0: `Capture()`, `VerifySig()`, `VerifyPolicyHash()`, `ComputePolicyHash()`, `InMemorySnapshotStore`. Sentinels PCTX-001..008.
+- `impl/go/pkg/govevents/` — ACP-GOV-EVENTS-1.0: `Emit()`, `VerifySig()`, `IsValidEventType()`, `InMemoryEventStream` with `List(QueryFilter)`. 10 normative payload types. Sentinels GEVE-001..007.
+- `impl/go/pkg/lia/` — ACP-LIA-1.0: `Emit()` with §6 assignee resolution (3 rules), `InMemoryLiabilityStore`. Sentinels LIA-001..008.
+- `impl/go/pkg/hist/` — ACP-HIST-1.0: `Query()` with full filtering + cursor pagination, `AgentHistory()`, `Export()` (signed ExportBundle). Sentinels HIST-001..007.
+- `impl/go/pkg/notify/` — ACP-NOTIFY-1.0: `Subscribe()`, `BuildPayload()`, `VerifyPayloadSig()`, `InMemorySubscriptionStore` with secret rotation. Sentinels NOTI-001..005.
+- `impl/go/pkg/disc/` — ACP-DISC-1.0: `Register()` with TTL, expiry-aware `Query(QueryFilter)`, `InMemoryDiscoveryRegistry`. Sentinels DISC-001..004.
+- `impl/go/pkg/bulk/` — ACP-BULK-1.0: `ValidateBatchRequest()` (max 100), `ValidateLiabilityQuery()` (max 1000). Sentinels BULK-001..005.
+- `impl/go/pkg/crossorg/` — ACP-CROSS-ORG-1.0: `VerifyBundle()`, `SignBundle()`, `BuildAck()`, `VerifyAck()`, `InMemoryCrossOrgStore`. Sentinels CROSS-001..010.
+- `impl/go/pkg/pay/` — ACP-PAY-1.0: `VerifyToken()` with double-spend detection by ProofID, `InMemoryPayStore`. Sentinels PAY-001..006+010.
+- `impl/go/pkg/psn/` — ACP-PSN-1.0: `Create()`, `Transition()` (atomic under write lock), `VerifySig()`, `InMemorySnapshotStore`. Sentinels PSN-001..007.
+- `impl/go/pkg/ledger/` — Updated: 6 new event type constants (`LIABILITY_RECORD`, `POLICY_SNAPSHOT_CREATED`, `REPUTATION_UPDATED`, `PROVENANCE`, `POLICY_SNAPSHOT`, `GOVERNANCE`); verifier enforces LEDGER-008/010/011/012; Version→"1.3".
+- `impl/go/pkg/iut/evaluator.go` — Added `SignPoP()` per ACP-HP-1.0 §9.
 
-#### Python SDK e Integraciones
-- `impl/python/examples/admission_control_demo.py` — patrón `ACPAdmissionGuard`, modos offline + online, 4 escenarios.
-- `impl/python/examples/langchain_agent_demo.py` — decorador `@acp_tool()` para LangChain. 5 escenarios. Flag `--with-llm` para agente ReAct.
-- `impl/python/examples/pydantic_ai_demo.py` — `ACPAdmissionGuard` como `deps` de Pydantic AI. DENIED/ESCALATED → `ModelRetry`.
-- `impl/python/examples/mcp_server_demo.py` — `ACPToolDispatcher`: admission check ACP en capa de dispatch MCP. Compatible con FastMCP.
-- `impl/python/README.md` — README del SDK (faltaba; causaba fallo de `pip install -e .`).
+#### Python SDK & Integrations
+- `impl/python/examples/admission_control_demo.py` — `ACPAdmissionGuard` pattern, offline + online modes, 4 scenarios (APPROVED/ESCALATED/DENIED).
+- `impl/python/examples/langchain_agent_demo.py` — `@acp_tool()` decorator factory for LangChain. 5 scenarios. `--with-llm` flag for ReAct agent.
+- `impl/python/examples/pydantic_ai_demo.py` — `ACPAdmissionGuard` as Pydantic AI `deps`. DENIED/ESCALATED → `ModelRetry`.
+- `impl/python/examples/mcp_server_demo.py` — `ACPToolDispatcher`: ACP admission check in MCP dispatch layer. FastMCP-compatible via `dispatcher.mount()`.
+- `impl/python/examples/README.md` — index with decision table (APPROVED/ESCALATED/DENIED) for all 4 demos.
+- `impl/python/README.md` — SDK README (was missing; caused `pip install -e .` failure).
 
-#### Documentación
-- `docs/admission-flow.md` — guía completa del flujo admission check: 6 pasos, códigos de error, DCMA, cross-org, tabla L1–L4, ejemplos Go + Python.
-- `paper/draft/ACP-Whitepaper-v1.0.md` — actualizado a v1.11: §1.2 framing admission control, §8 reescrito (36 specs, 23 paquetes Go, 51 vectores).
-- `Makefile` — targets `make run`, `make test`, `make docker-build`.
-- `.env.example` — configuración de entorno de referencia.
+#### Documentation
+- `docs/admission-flow.md` — complete admission check flow guide: 6 steps, error codes, DCMA, cross-org, L1–L4 table, Go + Python examples.
+- `paper/draft/ACP-Whitepaper-v1.0.md` — updated to v1.11: §1.2 admission control framing, §8 rewritten (36 specs, 23 Go packages, 51 vectors).
+- `Makefile` — `make run`, `make test`, `make docker-build` targets.
+- `.env.example` — reference environment configuration.
 
-### Modificado
-- `README.md` — reescrito: tagline "Control de admisión para acciones de agentes"; sección "ACP como Admission Control" con flujo de 6 pasos; tabla comparativa ACP vs OPA/IAM/OAuth2/SPIFFE; hoja de ruta actualizada.
-- `QUICKSTART.md` — reescrito: estructura de repo correcta; Docker zero-setup; demo Python; path `impl/go` corregido.
+### Changed
+- `README.md` — rewritten: "Admission control for agent actions" tagline; "ACP as Admission Control" section with 6-step flow; ACP vs OPA/IAM/OAuth2/SPIFFE comparison table; admission-framing throughout; roadmap updated.
+- `QUICKSTART.md` — rewritten: repo structure aligned (spec/, openapi/, compliance/, impl/go/); Docker zero-setup; Python demo card; corrected impl/go clone path.
 
 ---
 
 ## [1.10.0] — 2026-03-11
 
-### Agregado
+### Added
 
-#### Reestructura del Repositorio
-- Nueva estructura de directorios: `spec/nucleo/`, `spec/seguridad/`, `spec/operaciones/`, `spec/gobernanza/`, `spec/descentralizado/`; `impl/go/`, `impl/python/`, `impl/rust/`, `impl/typescript/`; `compliance/test-vectors/`; `paper/draft/`, `paper/figures/`; `openapi/`; `docs/`
-- `archive/specs/` — placeholder para especificaciones supersedidas
+#### Repository Restructure
+- New directory layout: `spec/core/`, `spec/security/`, `spec/operations/`, `spec/governance/`, `spec/decentralized/`; `impl/go/`, `impl/python/`, `impl/rust/`, `impl/typescript/`; `compliance/test-vectors/`; `paper/draft/`, `paper/figures/`; `openapi/`; `docs/`
+- `archive/specs/` — placeholder for superseded specifications
 
-#### Especificaciones de la Capa de Evidencia
-- `spec/nucleo/ACP-PROVENANCE-1.0.md` — Provenance de Autoridad: artefacto estructurado que demuestra retrospectivamente el origen de la autoridad en el momento de ejecución.
-- `spec/operaciones/ACP-POLICY-CTX-1.0.md` — Instantánea de Contexto de Política: captura firmada del estado exacto de las políticas activas al momento de la acción.
-- `spec/gobernanza/ACP-GOV-EVENTS-1.0.md` — Stream de Eventos de Gobernanza: taxonomía formal de 10 tipos de eventos institucionales.
+#### Evidence Layer Specifications
+- `spec/core/ACP-PROVENANCE-1.0.md` — Authority Provenance: structured artifact proving retrospectively from where authority originated at execution time. Distinguishes from DCMA (how to delegate) — this proves the authority chain for audit.
+- `spec/operations/ACP-POLICY-CTX-1.0.md` — Policy Context Snapshot: signed point-in-time capture of active policies at action time. Critical for compliance and legal disputes.
+- `spec/governance/ACP-GOV-EVENTS-1.0.md` — Governance Event Stream: formal taxonomy of 10 institutional event types (delegation_revoked, agent_suspended, policy_updated, authority_transferred, sanction_applied, capability_suspended, agent_reactivated, delegation_extended, policy_rolled_back, institution_federated).
 
-#### Documentación
-- `ARCHITECTURE.md` — modelo de dominio formal: 8 conceptos (Actor, Agente `A=(ID,C,P,D,L,S)`, Institución, Autoridad, Interacción, Attestation, Historia, Reputación), stack de gobernanza de 8 capas, grafo de dependencias dirigido, ciclo de vida de ejecución de 10 pasos, 7 propiedades formales.
-- `docs/architecture-overview.md` — Agent Governance Stack, posicionamiento de ACP, descripción de capas.
-- `docs/quickstart.md` — niveles de conformidad, punteros a specs, rutas de implementación.
-- `docs/faq.md` — qué es ACP, relación con MIR/ARAF, provenance vs delegación, variante descentralizada.
+#### Documentation
+- `ARCHITECTURE.md` — formal domain model: 8 concepts (Actor, Agent `A=(ID,C,P,D,L,S)`, Institution, Authority, Interaction, Attestation, History, Reputation), 8-layer governance stack, directed dependency graph, 10-step execution lifecycle, 7 formal properties.
+- `docs/architecture-overview.md` — Agent Governance Stack, ACP positioning, layer descriptions.
+- `docs/quickstart.md` — conformance levels, spec pointers, implementation paths.
+- `docs/faq.md` — what is ACP, relationship to MIR/ARAF, provenance vs delegation, decentralized variant.
 
 ---
 
@@ -237,28 +273,28 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 #### ACP-HIST-1.0 — History Query API
-- `GET /acp/v1/audit/query` — consulta filtrada y paginada del ledger (event_type, agent_id, institution_id, capability, resource, decision, from_ts, to_ts, from_seq, to_seq, cursor, limit, verify_chain)
-- `GET /acp/v1/audit/events/{event_id}` — lookup de evento individual con verificación hash + sig
-- `GET /acp/v1/audit/agents/{agent_id}/history` — historial consolidado de agente con summary calculado
-- `POST /acp/v1/audit/export` — ExportBundle firmado y auto-verificable para compartir audit trail cross-institucional
-- Cursor-based pagination con expiración de 24h
-- Modelo de autorización por rol: SYSTEM / SUPERVISOR / AGENT / EXTERNAL_AUDITOR
-- Soporte de `verify_chain` on-demand; campo `chain_valid` en todas las respuestas
-- Cobertura de eventos archivados (cold storage 90d–7y) con header `X-ACP-Archive-Latency-Seconds`
-- Errores HIST-E001..HIST-E032
+- `GET /acp/v1/audit/query` — filtered, paginated ledger query (event_type, agent_id, institution_id, capability, resource, decision, from_ts, to_ts, from_seq, to_seq, cursor, limit, verify_chain)
+- `GET /acp/v1/audit/events/{event_id}` — single event lookup with hash + sig verification
+- `GET /acp/v1/audit/agents/{agent_id}/history` — consolidated agent history with computed summary
+- `POST /acp/v1/audit/export` — signed, self-verifiable ExportBundle for cross-institutional audit trail sharing
+- Cursor-based pagination with 24h expiration
+- Role-based authorization model: SYSTEM / SUPERVISOR / AGENT / EXTERNAL_AUDITOR
+- On-demand `verify_chain` support; `chain_valid` field in all responses
+- Archived event coverage (cold storage 90d–7y) with `X-ACP-Archive-Latency-Seconds` header
+- Errors HIST-E001..HIST-E032
 
 #### ACP-ITA-1.1 — Inter-Authority Federation
-- FederationRecord: acuerdo bilateral firmado con doble sig (ARK_A + ARK_B)
-- Protocolo de establecimiento de 3 fases (propuesta OOB → firma bilateral → activación)
-- `GET /ita/v1/federation` — lista de federaciones activas de la autoridad
-- `GET /ita/v1/federation/{federation_id}` — FederationRecord completo con ambas firmas
-- `GET /ita/v1/federation/resolve/{institution_id}` — resolución cross-authority de institución
-- `POST /ita/v1/revocation-notify` — propagación de revocaciones a peers federados
-- Algoritmo de resolución cross-authority (9 pasos, sin confiar en ITA remota directamente)
-- Federación no transitiva (max 1 hop directo)
-- Terminación de federación: mutua e unilateral con período de gracia de 7 días
-- Integración con ACP-REP-1.2: eventos cross-institutional requieren verificación via §8 para peso 1.0 en ERS
-- Errores ITA-F001..ITA-F016
+- FederationRecord: bilaterally signed agreement with dual sig (ARK_A + ARK_B)
+- 3-phase establishment protocol (OOB proposal → bilateral signing → activation)
+- `GET /ita/v1/federation` — list of active federations for the authority
+- `GET /ita/v1/federation/{federation_id}` — complete FederationRecord with both signatures
+- `GET /ita/v1/federation/resolve/{institution_id}` — cross-authority institution resolution
+- `POST /ita/v1/revocation-notify` — revocation propagation to federated peers
+- Cross-authority resolution algorithm (9 steps, no direct trust in remote ITA)
+- Non-transitive federation (max 1 direct hop)
+- Federation termination: mutual and unilateral with 7-day grace period
+- ACP-REP-1.2 integration: cross-institutional events require §8 verification for weight 1.0 in ERS
+- Errors ITA-F001..ITA-F016
 
 ---
 
@@ -267,112 +303,112 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.8.0] — 2026-03-09
 
-### Agregado — ACP-REP-1.2 (Reputation & Trust Layer)
+### Added — ACP-REP-1.2 (Reputation & Trust Layer)
 
-- **`03-protocolo-acp/especificacion/seguridad/ACP-REP-1.2.md`** — Especificación completa que supersede ACP-REP-1.1. Cierra L7 del Agent Governance Stack (ACP-AGS-1.0)
-  - **ExternalReputationScore (ERS):** score formal calculado desde eventos `REPUTATION_UPDATED` del ACP-LEDGER-1.1 via weighted moving average ponderado por contexto e inactividad
-  - **Dual Trust Model:** formalización ITS (InternalTrustScore, institucional privado) vs ERS (ExternalReputationScore, ecosistema externo portable)
-  - **Dual Trust Bootstrap:** TrustAttestation firmada por institución; `bootstrap_value = internal_score · discount_factor`; techo efectivo 0.195 para prevenir inflación artificial
-  - **Reputation Decay:** degradación exponencial del ERS ante inactividad; grace period 90d, half-life 180d, floor 0.10; no aplica al ITS
-  - **Nuevo endpoint `GET /acp/v1/rep/{agent_id}/score`:** consulta rápida para hot path; devuelve `composite_score = 0.6·ITS + 0.4·ERS`; rate limit 120 rpm
-  - **Nuevo endpoint `POST /acp/v1/rep/{agent_id}/bootstrap`:** emisión de TrustAttestation institucional con validaciones completas
-  - **Interface `ReputationStore` extendida:** 6 nuevos métodos para gestión ERS y attestations
-  - **`ReputationConfig` extendida:** 10 nuevos parámetros (ERS, decay, composite weights, bootstrap)
-  - **Errores REP-E008 a REP-E015** — 8 nuevos códigos de error
-  - **Integración ACP-RISK-1.0:** mapping composite_score → reputational_risk_modifier
-  - **Integración ACP-LEDGER-1.1:** consumo por `evaluation_context`; eventos de decay auditables
+- **`03-acp-protocol/specification/security/ACP-REP-1.2.md`** — Full specification superseding ACP-REP-1.1. Closes L7 of the Agent Governance Stack (ACP-AGS-1.0)
+  - **ExternalReputationScore (ERS):** formal external score computed from `REPUTATION_UPDATED` events in ACP-LEDGER-1.1 via weighted moving average by context and time
+  - **Dual Trust Model:** formalization of ITS (InternalTrustScore, institutional private) vs ERS (ExternalReputationScore, portable external ecosystem)
+  - **Dual Trust Bootstrap:** institution-signed TrustAttestation; `bootstrap_value = internal_score · discount_factor`; effective ceiling 0.195 to prevent artificial inflation
+  - **Reputation Decay:** exponential ERS degradation on inactivity; 90-day grace period, 180-day half-life, floor 0.10; does not apply to ITS
+  - **New endpoint `GET /acp/v1/rep/{agent_id}/score`:** fast query for authorization hot path; returns `composite_score = 0.6·ITS + 0.4·ERS`; 120 rpm rate limit
+  - **New endpoint `POST /acp/v1/rep/{agent_id}/bootstrap`:** institutional TrustAttestation issuance with full validations
+  - **Extended `ReputationStore` interface:** 6 new methods for ERS and attestation management
+  - **Extended `ReputationConfig`:** 10 new parameters (ERS, decay, composite weights, bootstrap)
+  - **Errors REP-E008 to REP-E015** — 8 new error codes
+  - **ACP-RISK-1.0 integration:** composite_score → reputational_risk_modifier mapping
+  - **ACP-LEDGER-1.1 integration:** consumption by `evaluation_context`; auditable decay events
 
 ---
 
 ## [1.6.0] — 2026-03-06
 
-### Corregido — Go Reference Server
+### Fixed — Go Reference Server
 
-- **`handleTokensIssue`**: reemplaza STUB 501 con implementación completa de delegación de Capability Token (firma Ed25519, ledger `TOKEN_ISSUED`, HTTP 201) — per ACP-CT-1.0
-- **`handleAuditQuery`**: agrega filtros completos `event_type`, `agent_id`, `time_range`, `from_sequence`, `to_sequence`, `limit`, `offset` con filtrado in-memory y paginación — per ACP-LEDGER-1.0 §6
-- **`handleRevRevoke`**: agrega campos `revoke_descendants` (bool) y `sig` (string) al request — per ACP-REV-1.0
-- **`handleRepState`**: renombra campo `state` → `new_state` en request body — per ACP-REP-1.1 §7
+- **`handleTokensIssue`**: replaces STUB 501 with full Capability Token delegation implementation (Ed25519 sign, ledger `TOKEN_ISSUED`, HTTP 201) — per ACP-CT-1.0
+- **`handleAuditQuery`**: adds complete filters `event_type`, `agent_id`, `time_range`, `from_sequence`, `to_sequence`, `limit`, `offset` with in-memory filtering and pagination — per ACP-LEDGER-1.0 §6
+- **`handleRevRevoke`**: adds fields `revoke_descendants` (bool) and `sig` (string) to request — per ACP-REV-1.0
+- **`handleRepState`**: renames field `state` → `new_state` in request body — per ACP-REP-1.1 §7
 
-### Corregido/Agregado — Python SDK v1.6.0
+### Fixed/Added — Python SDK v1.6.0
 
-- **`client.py`**: reescritura completa — 18 métodos alineados a spec (era 13 con nombres incorrectos)
-  - Nuevos métodos: `tokens_issue()`, `agent_register()`, `agent_get()`, `agent_state()`, `escalation_resolve()`
-  - Corregidos: `reputation_state()` usa `new_state`, `revoke()` agrega `revoke_descendants` + `sig`, `audit_query()` todos los filtros spec
-- **`tests/test_client.py`**: cobertura completa — 62 tests cubriendo los 18 métodos (era 5 clases de test)
-- **`pyproject.toml`**: versión `1.3.0` → `1.6.0`
+- **`client.py`**: complete rewrite — 18 spec-aligned methods (was 13 with wrong field names)
+  - New methods: `tokens_issue()`, `agent_register()`, `agent_get()`, `agent_state()`, `escalation_resolve()`
+  - Fixed: `reputation_state()` uses `new_state`, `revoke()` adds `revoke_descendants` + `sig`, `audit_query()` all spec filters
+- **`tests/test_client.py`**: full coverage — 62 tests covering all 18 methods (was 5 test classes)
+- **`pyproject.toml`**: version `1.3.0` → `1.6.0`
 
-### Verificado
+### Verified
 
-- `go build ./cmd/acp-server/...` — sin errores
-- `pytest` — 123/123 tests pasando
+- `go build ./cmd/acp-server/...` — no errors
+- `pytest` — 123/123 tests passing
 
 ---
 
 ## [1.4.0] — 2026-03-04
 
-### Agregado — TypeScript SDK
-- **`sdk/typescript/src/identity.ts`** — Clase `AgentIdentity`: método estático `generate()` (par de claves Ed25519 via libsodium), `agentId` (base58-SHA-256 según ACP-SIGN-1.0), `did` (formato did:key:z6Mk...)
-- **`sdk/typescript/src/signer.ts`** — Clase `ACPSigner`: `signCapability()` (Ed25519 sobre SHA-256(JCS(cap))), `signPoP()` (binding `Method|Path|Challenge|base64url(SHA-256(body))` según ACP-HP-1.0)
-- **`sdk/typescript/src/client.ts`** — Clase `ACPClient`: `register()`, `verify()`, `health()` con transporte de headers ACP-HP-1.0 correcto (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`)
-- **`sdk/typescript/tests/`** — 68 tests pasando: suite identity (formato AgentID, formato DID, par de claves), suite signer (firma capability, binding PoP), suite client (flujos register/verify/health)
+### Added — TypeScript SDK
+- **`sdk/typescript/src/identity.ts`** — `AgentIdentity` class: `generate()` static method (Ed25519 key pair via libsodium), `agentId` (base58-SHA-256 per ACP-SIGN-1.0), `did` (did:key:z6Mk... format)
+- **`sdk/typescript/src/signer.ts`** — `ACPSigner` class: `signCapability()` (Ed25519 over SHA-256(JCS(cap))), `signPoP()` (`Method|Path|Challenge|base64url(SHA-256(body))` binding per ACP-HP-1.0)
+- **`sdk/typescript/src/client.ts`** — `ACPClient` class: `register()`, `verify()`, `health()` with correct ACP-HP-1.0 header transport (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`)
+- **`sdk/typescript/tests/`** — 68 tests passing: identity suite (AgentID format, DID format, key pair), signer suite (capability signing, PoP binding), client suite (register/verify/health flows)
 
-### Agregado — Rust SDK
-- **`sdk/rust/src/identity.rs`** — Struct `AgentIdentity`: `generate()` (ed25519-dalek), `agent_id()` (base58-SHA-256 según ACP-SIGN-1.0), `did()` (formato did:key:z6Mk...)
-- **`sdk/rust/src/signer.rs`** — Struct `ACPSigner`: `sign_capability()` (Ed25519 sobre SHA-256(JCS(cap))), `sign_pop()` (binding PoP ACP-HP-1.0)
-- **`sdk/rust/src/client.rs`** — Struct `ACPClient`: métodos async `register()`, `verify()`, `health()` via reqwest
-- **`sdk/rust/tests/`** — 43 tests pasando: suites de test identity/signer/client
-- **`sdk/rust/Cargo.toml`** — dependencias: ed25519-dalek, sha2, bs58, serde_json, reqwest, tokio
+### Added — Rust SDK
+- **`sdk/rust/src/identity.rs`** — `AgentIdentity` struct: `generate()` (ed25519-dalek), `agent_id()` (base58-SHA-256 per ACP-SIGN-1.0), `did()` (did:key:z6Mk... format)
+- **`sdk/rust/src/signer.rs`** — `ACPSigner` struct: `sign_capability()` (Ed25519 over SHA-256(JCS(cap))), `sign_pop()` (ACP-HP-1.0 PoP binding)
+- **`sdk/rust/src/client.rs`** — `ACPClient` struct: `register()`, `verify()`, `health()` async methods via reqwest
+- **`sdk/rust/tests/`** — 43 tests passing: identity/signer/client test suites
+- **`sdk/rust/Cargo.toml`** — dependencies: ed25519-dalek, sha2, bs58, serde_json, reqwest, tokio
 
-### Agregado — Docker CI/CD
-- **`.github/workflows/docker.yml`** — Build y push automático de imagen Docker en merge a main; multi-plataforma (linux/amd64, linux/arm64); imágenes etiquetadas `chelof100/acp-go:{version}` y `chelof100/acp-go:latest`
+### Added — Docker CI/CD
+- **`.github/workflows/docker.yml`** — Automated Docker image build and push on merge to main; multi-platform (linux/amd64, linux/arm64); images tagged `chelof100/acp-go:{version}` and `chelof100/acp-go:latest`
 
 ---
 
 ## [1.3.0] — 2026-03-02
 
-### Corregido — Python SDK (reconciliado con Go server v1.0)
-- **`sdk/python/acp/identity.py`** — Formato AgentID corregido: era `"acp:agent:"+base64url(SHA-256(pk))`, ahora `base58(SHA-256(pk))` igualando Go `DeriveAgentID()`
-- **`sdk/python/acp/signer.py`** — Campo de firma en capability token: era anidado `capability["proof"]["signature"]` (estilo W3C VC), ahora plano `capability["sig"]` según ACP-CT-1.0
-- **`sdk/python/acp/client.py`** — Transporte HTTP para `/acp/v1/verify`: era cuerpo JSON, ahora headers HTTP (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`); binding PoP corregido a `Method|Path|Challenge|base64url(SHA-256(body))` según ACP-HP-1.0; método `register()` añadido
-- **`sdk/python/examples/agent_payment.py`** — Campos del token alineados con struct Go `CapabilityToken`; paso register añadido; demo PoP offline usa binding corregido; flag `--print-pubkey` para flujo de configuración del servidor
+### Fixed — Python SDK (reconciled with Go server v1.0)
+- **`sdk/python/acp/identity.py`** — AgentID format corrected: was `"acp:agent:"+base64url(SHA-256(pk))`, now `base58(SHA-256(pk))` matching Go `DeriveAgentID()`
+- **`sdk/python/acp/signer.py`** — Capability token signature field: was nested `capability["proof"]["signature"]` (W3C VC style), now flat `capability["sig"]` per ACP-CT-1.0
+- **`sdk/python/acp/client.py`** — HTTP transport for `/acp/v1/verify`: was JSON body, now HTTP headers (`Authorization: Bearer`, `X-ACP-Agent-ID`, `X-ACP-Challenge`, `X-ACP-Signature`); PoP binding corrected to `Method|Path|Challenge|base64url(SHA-256(body))` per ACP-HP-1.0; added `register()` method
+- **`sdk/python/examples/agent_payment.py`** — Token fields aligned with Go `CapabilityToken` struct; register step added; offline PoP demo uses corrected binding; `--print-pubkey` flag for server setup workflow
 
-### Agregado — Implementación de Referencia (IUT + Runner)
-- **`pkg/iut`** — Paquete IUT central: `Evaluate()` (lógica L1/L2), `SignCapability()` (Ed25519 sobre SHA-256(JCS(cap))), `resolveDIDKey()` (did:key: → clave pública Ed25519), `checkDelegation()` (reglas DCMA-1.0)
-- **`cmd/acp-evaluate`** — Binario IUT conforme ACP-IUT-PROTOCOL-1.0: lee TestVector de STDIN, escribe Response en STDOUT; flag `--manifest`
-- **`cmd/acp-runner`** — Compliance runner ACR-1.0: carga suite de tests, ejecuta IUT por vector, comparación estricta, genera `RunReport` + certificación automática `CertRecord`; flags `--impl --suite --level --layer --strict --performance`; 12/12 PASS → `CONFORMANT`
-- **`cmd/acp-sign-vectors`** — Herramienta para reemplazar firmas PLACEHOLDER en archivos de vectores con firmas Ed25519 reales usando clave de prueba RFC 8037 A
-- **`pkg/iut/evaluator_test.go`** — `TestCompliance`: carga los 12 vectores ACP-TS-1.1, firma PLACEHOLDERs en memoria, verifica decisión + error_code (12/12 PASS)
-- **`go.sum`** — Checksums de dependencias (jcs v1.0.1, base58 v1.2.0)
-- **`03-protocolo-acp/test-vectors/*.json`** — Firmas Ed25519 reales generadas via `acp-sign-vectors` (clave de prueba RFC 8037 A, seed `9d61b19d…`)
+### Added — Reference Implementation (IUT + Runner)
+- **`pkg/iut`** — Core IUT evaluation package: `Evaluate()` (L1/L2 compliance logic), `SignCapability()` (Ed25519 over SHA-256(JCS(cap))), `resolveDIDKey()` (did:key: → Ed25519 pubkey), `checkDelegation()` (DCMA-1.0 rules)
+- **`cmd/acp-evaluate`** — IUT binary conforming to ACP-IUT-PROTOCOL-1.0: reads TestVector from STDIN, writes Response to STDOUT; `--manifest` flag
+- **`cmd/acp-runner`** — ACR-1.0 compliance runner: loads test suite, executes IUT per vector, strict comparison, produces `RunReport` + auto-certification `CertRecord`; flags `--impl --suite --level --layer --strict --performance`; 12/12 PASS → `CONFORMANT`
+- **`cmd/acp-sign-vectors`** — Tool to replace PLACEHOLDER signatures in test vector files with real Ed25519 signatures using RFC 8037 test key A
+- **`pkg/iut/evaluator_test.go`** — `TestCompliance`: loads all 12 ACP-TS-1.1 test vectors, signs PLACEHOLDERs in-memory, asserts decision + error_code (12/12 PASS)
+- **`go.sum`** — Added dependency checksums (jcs v1.0.1, base58 v1.2.0)
+- **`03-acp-protocol/test-vectors/*.json`** — Fixed issuer DID in all test vectors; real Ed25519 signatures generated via `acp-sign-vectors` (RFC 8037 test key A, seed `9d61b19d…`)
 
 ---
 
 ## [1.2.0] — 2026
 
 ### Added — Compliance Ecosystem
-- **ACP-CONF-1.1** (`03-protocolo-acp/especificacion/gobernanza/`) — Conformance specification with 5 cumulative levels L1–L5; replaces the 4-profile model from v1.0 (Core, Extended, Governance, Full); adds L3 (API+EXEC+LEDGER) and L5 (ACP-D+BFT) previously absent; token format uses `conformance_level` instead of `profile`
-- **ACP-TS-SCHEMA-1.0** (`03-protocolo-acp/cumplimiento/`) — JSON Schema (Draft 2020-12) for test vector validation
-- **ACP-TS-1.0** (`03-protocolo-acp/cumplimiento/`) — Test Suite specification: required test cases per conformance level L1–L5
-- **ACP-TS-1.1** (`03-protocolo-acp/cumplimiento/`) — Normative JSON format for test vectors — deterministic, language-agnostic, uses `context.current_time` instead of system time
-- **ACP-IUT-PROTOCOL-1.0** (`03-protocolo-acp/cumplimiento/`) — Contract between compliance runner and Implementation Under Test (STDIN/STDOUT, 2000ms timeout, deterministic manifest)
-- **ACR-1.0** (`03-protocolo-acp/cumplimiento/`) — Official Compliance Runner — executes test vectors and emits signed certification records
-- **ACP-CERT-1.0** (`03-protocolo-acp/cumplimiento/`) — Public Certification System — badge format `ACP-CERT-YYYY-NNNN`, reproducible, cryptographically signed
-- **03-protocolo-acp/cumplimiento/** directory — full compliance and certification pipeline
+- **ACP-CONF-1.1** (`03-acp-protocol/specification/governance/`) — Conformance specification with 5 cumulative levels L1–L5; replaces the 4-profile model from v1.0 (Core, Extended, Governance, Full); adds L3 (API+EXEC+LEDGER) and L5 (ACP-D+BFT) previously absent; token format uses `conformance_level` instead of `profile`
+- **ACP-TS-SCHEMA-1.0** (`03-acp-protocol/compliance/`) — JSON Schema (Draft 2020-12) for test vector validation
+- **ACP-TS-1.0** (`03-acp-protocol/compliance/`) — Test Suite specification: required test cases per conformance level L1–L5
+- **ACP-TS-1.1** (`03-acp-protocol/compliance/`) — Normative JSON format for test vectors — deterministic, language-agnostic, uses `context.current_time` instead of system time
+- **ACP-IUT-PROTOCOL-1.0** (`03-acp-protocol/compliance/`) — Contract between compliance runner and Implementation Under Test (STDIN/STDOUT, 2000ms timeout, deterministic manifest)
+- **ACR-1.0** (`03-acp-protocol/compliance/`) — Official Compliance Runner — executes test vectors and emits signed certification records
+- **ACP-CERT-1.0** (`03-acp-protocol/compliance/`) — Public Certification System — badge format `ACP-CERT-YYYY-NNNN`, reproducible, cryptographically signed
+- **03-acp-protocol/compliance/** directory — full compliance and certification pipeline
 
 ### Added — Core Specification
-- **ACP-DCMA-1.0** (`03-protocolo-acp/especificacion/nucleo/`) — Multi-agent chained delegation with non-escalation guarantee and transitive revocation; formal predicate `HasCapability'(aⱼ,c)`
-- **ACP-AGENT-SPEC-0.3** (`03-protocolo-acp/especificacion/nucleo/`) — Formal agent ontology `A=(ID,C,P,D,L,S)` and agent lifecycle definition
-- **ACP-MESSAGES-1.0** (`03-protocolo-acp/especificacion/nucleo/`) — Protocol wire format: 5 message types (Registration, ActionRequest, AuthorizationDecision, StateChange, AuditQuery)
+- **ACP-DCMA-1.0** (`03-acp-protocol/specification/core/`) — Multi-agent chained delegation with non-escalation guarantee and transitive revocation; formal predicate `HasCapability'(aⱼ,c)`
+- **ACP-AGENT-SPEC-0.3** (`03-acp-protocol/specification/core/`) — Formal agent ontology `A=(ID,C,P,D,L,S)` and agent lifecycle definition
+- **ACP-MESSAGES-1.0** (`03-acp-protocol/specification/core/`) — Protocol wire format: 5 message types (Registration, ActionRequest, AuthorizationDecision, StateChange, AuditQuery)
 
 ### Added — Security and Formal Models
-- **Formal-Security-Model-v2** (`04-analisis-formal/`) — Updated formal security model with proofs covering all 5 layers
-- **Motor-Decision-Formal-MFMD** (`04-analisis-formal/`) — Formal decision engine model (MFMD)
+- **Formal-Security-Model-v2** (`04-formal-analysis/`) — Updated formal security model with proofs covering all 5 layers
+- **Formal-Decision-Engine-MFMD** (`04-formal-analysis/`) — Formal decision engine model (MFMD)
 
 ### Added — Vision
-- **Estructura-Final-Documentacion** (`02-modelo-gat/`) — Canonical documentation structure map
+- **Final-Documentation-Structure** (`02-gat-model/`) — Canonical documentation structure map
 
 ### Added — Test Vectors
-- **`03-protocolo-acp/test-vectors/`** — 12 normative JSON test vectors conforming to ACP-TS-1.1 format, covering:
+- **`03-acp-protocol/test-vectors/`** — 12 normative JSON test vectors conforming to ACP-TS-1.1 format, covering:
   - `TS-CORE-POS-001/002` — valid capability (canonical, multi-action)
   - `TS-CORE-NEG-001` — expired token (`EXPIRED`)
   - `TS-CORE-NEG-002` — missing expiry (`MALFORMED_INPUT`)
@@ -387,12 +423,12 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`test-vectors/README.md`** — test key pair documentation, PLACEHOLDER signature convention, coverage table
 
 ### Changed — Core Specification
-- **ACP-DCMA-1.0 §14** added: Revocación Transitiva — Timing Normativo — τ_propagation ≤ 60 seconds, cache TTL ≤ 30 seconds, in-flight re-evaluation requirement, atomicity guarantee
+- **ACP-DCMA-1.0 §14** added: Transitive Revocation — Normative Timing — τ_propagation ≤ 60 seconds, cache TTL ≤ 30 seconds, in-flight re-evaluation requirement, atomicity guarantee
 
 ### Fixed
-- **ACP-CERT-1.0** — certification authority renamed to "ACP-CA" (neutral placeholder); §7 Gobernanza rewritten with explicit decentralization intent: target model is multi-sig (n-of-m) for v2.x and BFT on-chain quorum for ACP-D (L5); no single entity controls certification issuance; `"issuer"` field updated to `"ACP-CA"`
-- **ACR-1.0** — signing attribution updated to "ACP Certification Authority (entidad de gobernanza a definir por la comunidad)"
-- **README.md Roadmap** — IEEE S&P / NDSS paper correctly labeled as "Draft en preparación" (was misleadingly labeled "Submission")
+- **ACP-CERT-1.0** — certification authority renamed to "ACP-CA" (neutral placeholder); §7 Governance rewritten with explicit decentralization intent: target model is multi-sig (n-of-m) for v2.x and BFT on-chain quorum for ACP-D (L5); no single entity controls certification issuance; `"issuer"` field updated to `"ACP-CA"`
+- **ACR-1.0** — signing attribution updated to "ACP Certification Authority (governance entity to be defined by the community)"
+- **README.md Roadmap** — IEEE S&P / NDSS paper correctly labeled as "Draft in preparation" (was misleadingly labeled "Submission")
 
 ### Added — Repository Infrastructure
 - `LICENSE` — Apache 2.0 (copyright 2026 Marcelo Fernandez, TraslaIA)
@@ -407,16 +443,16 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.1.0] — 2026
 
 ### Added — Economic and Reputation Layers
-- **ACP-PAY-1.0** (`03-protocolo-acp/especificacion/nucleo/`) — Economic binding layer (Layer 4): payment commitments, escrow, settlement
-- **ACP-REP-1.1** (`03-protocolo-acp/especificacion/nucleo/`) — Adaptive security layer (Layer 5): reputation scoring, dynamic capability adjustment
-- **ACP-ITA-1.1** (`03-protocolo-acp/especificacion/nucleo/`) — Updated Byzantine Fault Tolerant consensus; quorum rules `n ≥ 3f+1`, threshold `t ≥ 2f+1`
+- **ACP-PAY-1.0** (`03-acp-protocol/specification/operations/`) — Economic binding layer (Layer 4): payment commitments, escrow, settlement
+- **ACP-REP-1.1** (`03-acp-protocol/specification/security/`) — Adaptive security layer (Layer 5): reputation scoring, dynamic capability adjustment
+- **ACP-ITA-1.1** (`03-acp-protocol/specification/security/`) — Updated Byzantine Fault Tolerant consensus; quorum rules `n ≥ 3f+1`, threshold `t ≥ 2f+1`
 
 ### Added — Architecture
-- **ACP-Architecture-Specification** (`02-modelo-gat/`) — Unified 3-level / 5-layer architecture specification
-- **Arquitectura-Tres-Capas** (`02-modelo-gat/`) — Strategic 3-level framework (Sovereign AI / GAT Model / ACP Protocol)
+- **ACP-Architecture-Specification** (`02-gat-model/`) — Unified 3-level / 5-layer architecture specification
+- **Three-Layer-Architecture** (`02-gat-model/`) — Strategic 3-level framework (Sovereign AI / GAT Model / ACP Protocol)
 
 ### Added — Academic
-- **IEEE-NDSS-Paper-Structure** (`06-publicaciones/`) — Draft paper structure for academic publication
+- **IEEE-NDSS-Paper-Structure** (`06-publications/`) — Draft paper structure for academic publication
 
 ### Changed
 - Consolidated Layer 3 (ACP-D) and centralized consensus into unified architecture
@@ -430,7 +466,7 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **ACP-SIGN-1.0** — Cryptographic signature scheme: Ed25519, JCS canonicalization, nonce handling
 - **ACP-CT-1.0** — Capability Token format: structure, claims, issuer binding, expiry
 - **ACP-CAP-REG-1.0** — Capability Registry: registration, lookup, versioning
-- **ACP-HP-1.0** — Hardened Policy: policy enforcement layer
+- **ACP-HP-1.0** — Handshake Protocol: proof of possession
 - **ACP-RISK-1.0** — Risk scoring model: dynamic threat assessment
 - **ACP-REV-1.0** — Revocation protocol: token invalidation, propagation
 - **ACP-ITA-1.0** — Institutional Trust Anchor: centralized issuer model
@@ -439,27 +475,25 @@ El versionado sigue [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **ACP-LEDGER-1.0** — Audit ledger: append-only log, tamper-evidence
 
 ### Added — Decentralized Variant
-- **ACP-D-Especificacion** (`03-protocolo-acp/especificacion/descentralizado/`) — ACP-D: DID + VC + Self-Sovereign Capability
-- **Arquitectura-Sin-Issuer-Central** (`03-protocolo-acp/especificacion/descentralizado/`) — Decentralized architecture without central issuer
+- **ACP-D-Specification** (`03-acp-protocol/specification/decentralized/`) — ACP-D: DID + VC + Self-Sovereign Capability
+- **Architecture-Without-Central-Issuer** (`03-acp-protocol/specification/decentralized/`) — Decentralized architecture without central issuer
 
 ### Added — Vision and Analysis
-- Strategic vision documents (`02-modelo-gat/`)
-- GAT model specifications (`01-Modelo-GAT/`)
-- Use cases (`02-Casos-de-Uso/`)
-- Security analysis (`04-analisis-formal/`)
-- Reference implementations guidance (`05-Implementaciones-de-Referencia/`)
-- Adoption framework (`06-Adopción/`)
+- Strategic vision documents (`02-gat-model/`)
+- GAT model specifications (`01-sovereign-architecture/`)
+- Security analysis (`04-formal-analysis/`)
+- Implementation guidance (`05-implementation/`)
 
 ---
 
-[1.12.0]: https://github.com/chelof100/acp-framework/compare/v1.11.0...v1.12.0
-[1.11.0]: https://github.com/chelof100/acp-framework/compare/v1.10.0...v1.11.0
-[1.10.0]: https://github.com/chelof100/acp-framework/compare/v1.9.0...v1.10.0
-[1.9.0]: https://github.com/chelof100/acp-framework/compare/v1.8.0...v1.9.0
-[1.8.0]: https://github.com/chelof100/acp-framework/compare/v1.6.0...v1.8.0
-[1.6.0]: https://github.com/chelof100/acp-framework/compare/v1.4.0...v1.6.0
-[1.4.0]: https://github.com/chelof100/acp-framework/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/chelof100/acp-framework/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/chelof100/acp-framework/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/chelof100/acp-framework/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/chelof100/acp-framework/releases/tag/v1.0.0
+[1.12.0]: https://github.com/chelof100/acp-framework-en/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/chelof100/acp-framework-en/compare/v1.10.0...v1.11.0
+[1.10.0]: https://github.com/chelof100/acp-framework-en/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/chelof100/acp-framework-en/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/chelof100/acp-framework-en/compare/v1.6.0...v1.8.0
+[1.6.0]: https://github.com/chelof100/acp-framework-en/compare/v1.4.0...v1.6.0
+[1.4.0]: https://github.com/chelof100/acp-framework-en/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/chelof100/acp-framework-en/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/chelof100/acp-framework-en/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/chelof100/acp-framework-en/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/chelof100/acp-framework-en/releases/tag/v1.0.0
