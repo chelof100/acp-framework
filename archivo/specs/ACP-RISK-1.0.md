@@ -1,9 +1,11 @@
 # ACP-RISK-1.0
 ## Deterministic Risk Model Specification
-**Status:** Draft
+**Status:** Supersedida por ACP-RISK-2.0
 **Version:** 1.0
 **Depends-on:** ACP-SIGN-1.0, ACP-CT-1.0, ACP-CAP-REG-1.0
 **Required-by:** ACP-API-1.0, ACP-LEDGER-1.2
+
+> **Esta especificación ha sido supersedida.** Ver [ACP-RISK-2.0](../../spec/seguridad/ACP-RISK-2.0.md) para la versión vigente, que agrega detección de anomalías `F_anom` y mecanismo de cooldown. ACP-RISK-1.0 se conserva aquí únicamente como referencia histórica.
 
 ---
 
