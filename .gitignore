@@ -20,3 +20,6 @@ AGENTS.md
 
 # Node modules
 node_modules/
+
+# TLC model-checker artifacts (state dumps, run logs)
+tla/states/
