@@ -618,7 +618,8 @@ curl http://localhost:8080/acp/v1/health
 | Experimento 6: vulnerabilidad state-mixing (`pkg/risk/statemixing_test.go`) | ✅ Completo — v1.21 · contaminación cross-context Rule 1 · RS +20 · ESCALATED→DENIED tras 11 data.read |
 | Análisis state-mixing (paper §State-Mixing Vulnerability) | ✅ Completo — v1.21 · caracterización formal · números Exp 6 · camino de mitigación ACP-RISK-3.0 |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
-| TypeScript / Rust SDKs | 🔜 En roadmap |
+| TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
+| Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
 | v1.x | Protocolo core e implementación de referencia — activo |
 | v2.0 | ACP Descentralizado (ACP-D) — en diseño |
 | futuro | Verificación ZK, gobernanza descentralizada |
