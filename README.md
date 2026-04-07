@@ -519,7 +519,7 @@ acp-framework/
 │   ├── ACP-TS-1.1.md      ← especificación del formato de vectores de prueba
 │   ├── test-vectors/      ← vectores de conformidad single-shot (CORE · DCMA · HP · LEDGER · EXEC · RISK-2.0)
 │   │   └── sequence/      ← vectores de secuencia stateful (ACR-1.0, 5 escenarios)
-│   ├── adversarial/       ← evaluación adversarial (Exp 1–4: evasión de cooldown, multi-agente, backend stress, token replay)
+│   ├── adversarial/       ← evaluación adversarial (Exp 1–4 + Exp 9: evasión de cooldown, multi-agente, backend stress, token replay, deviation collapse)
 │   └── runner/            ← compliance runner ACR-1.0 (modo library + modo HTTP)
 ├── tla/
 │   ├── ACP.tla                   ← modelo formal base — Safety · LedgerAppendOnly · RiskDeterminism (v1.17)
@@ -612,14 +612,15 @@ curl http://localhost:8080/acp/v1/health
 | Vectores de secuencia (`compliance/test-vectors/sequence/`) | ✅ Completo — v1.17 · 5 escenarios stateful |
 | Modelo TLA+ base (`tla/ACP.tla`) | ✅ Completo — v1.17 · 3 invariantes · 0 violaciones |
 | Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.20 · 9 invariantes + 4 propiedades temporales · 5,684,342 estados · 0 violaciones |
-| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.20 · 4 experimentos · números reales de benchmark |
-| Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.7× speedup |
+| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.23 · 9 experimentos · números reales de benchmark (N=5 corridas, media±std) |
+| Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.8× speedup |
 | ML-DSA-65 benchmarks (`pkg/sign2/sign2_bench_test.go`) | ✅ Completo — v1.20 · Ed25519 ~25 µs sign / ~56 µs verify · ML-DSA-65 ~100–130 µs sign / ~81 µs verify |
 | NullQuerier + StatelessEngine (`pkg/risk/null_querier.go`, `stateless_engine.go`) | ✅ Completo — v1.21 · baseline stateless sin estado histórico para comparación directa |
 | Experimento 5: stateless vs. stateful (`pkg/risk/stateless_comparison_test.go`) | ✅ Completo — v1.21 · 500 req · stateless 500/500 vs ACP 2/500 (0.4%) · latencia de detección 11 acciones |
 | Experimento 6: vulnerabilidad state-mixing (`pkg/risk/statemixing_test.go`) | ✅ Completo — v1.21 · contaminación cross-context Rule 1 · RS +20 · ESCALATED→DENIED tras 11 data.read |
 | Análisis state-mixing (paper §State-Mixing Vulnerability) | ✅ Completo — v1.21 · caracterización formal · números Exp 6 · camino de mitigación ACP-RISK-3.0 |
 | Fix state-mixing (Exp 7, `pkg/risk/statemixing_fix_test.go`) | ✅ Completo — v1.22 · RISK-3.0 · 3 escenarios · clean RS=50 ESCALATED · contaminado RS=50 ESCALATED · burst mismo-contexto RS=85 DENIED |
+| Deviation collapse (Exp 9, `compliance/adversarial/exp_deviation_collapse.go`) | ✅ Completo — v1.23 · métrica BAR · 3 fases: baseline BAR=0.70 → collapse BAR=0.00 → counterfactual BAR=1.00 · §Limits of Execution-Only Governance |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
