@@ -621,7 +621,7 @@ curl http://localhost:8080/acp/v1/health
 | Análisis state-mixing (paper §State-Mixing Vulnerability) | ✅ Completo — v1.21 · caracterización formal · números Exp 6 · camino de mitigación ACP-RISK-3.0 |
 | Fix state-mixing (Exp 7, `pkg/risk/statemixing_fix_test.go`) | ✅ Completo — v1.22 · RISK-3.0 · 3 escenarios · clean RS=50 ESCALATED · contaminado RS=50 ESCALATED · burst mismo-contexto RS=85 DENIED |
 | Deviation collapse (Exp 9, `compliance/adversarial/exp_deviation_collapse.go`) | ✅ Completo — v1.23 · 3 fases: baseline BAR=0.70 → collapse BAR=0.00 → counterfactual BAR=1.00 |
-| Phase D drift simulation (extensión Exp 9) | ✅ Completo — v1.25 · 5 batches × 20 casos · 0%→80% sanitización · ΔBAR early-warning dispara en batch 3 antes del umbral |
+| Phase D drift simulation (extensión Exp 9) | ✅ Completo — v1.25 · 5 batches × 20 casos · 0%→80% sanitización · ΔBAR early-warning dispara en batch 2 (3 batches antes del colapso) |
 | `pkg/barmonitor` — BAR-Monitor con detección de tendencia ΔBAR | ✅ Completo — v1.24 · 18 tests · AlertThreshold + AlertTrend · ring buffer thread-safe |
 | API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
 | TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.25 · 0 violaciones · 5,684,342 estados |

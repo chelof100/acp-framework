@@ -14,8 +14,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 #### Sprint A — Phase D: Simulación de Drift (`compliance/adversarial/`)
 - `exp_deviation_collapse.go` — Phase D añadida al Experimento 9: simulación de drift progresivo en 5 batches × 20 casos.
   - Tasa de sanitización aumenta 0% → 20% → 40% → 60% → 80% por batch (casos DENIED eliminados primero).
-  - Ventana = 40 (dos batches completos); BAR por batch; ΔBAR early-warning dispara en batch 3 antes del umbral.
-  - Resultados: Batch 1 BAR=0.70 → Batch 3 BAR=0.50 (ΔBAR dispara) → Batch 5 BAR=0.00 (alerta umbral).
+  - Ventana = 40 (dos batches completos); BAR por batch; ΔBAR early-warning dispara en batch 2 antes del umbral.
+  - Resultados: Batch 1 BAR=0.70 → Batch 2 BAR=0.57 (ΔBAR=−0.25, TREND dispara) → Batch 5 BAR=0.00 (alerta umbral).
 
 #### Sprint A — Fix bug temporal en `computeTrend()` (`impl/go/pkg/barmonitor/monitor.go`)
 - Cuando el buffer circular está lleno, ΔBAR leía los halvos más nuevo/antiguo en orden invertido.
