@@ -7,6 +7,96 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.25.0] — v1.25 — 2026-04-07
+
+### Added
+
+#### Sprint A — Phase D: Simulación de Drift (`compliance/adversarial/`)
+- `exp_deviation_collapse.go` — Phase D añadida al Experimento 9: simulación de drift progresivo en 5 batches × 20 casos.
+  - Tasa de sanitización aumenta 0% → 20% → 40% → 60% → 80% por batch (casos DENIED eliminados primero).
+  - Ventana = 40 (dos batches completos); BAR por batch; ΔBAR early-warning dispara en batch 3 antes del umbral.
+  - Resultados: Batch 1 BAR=0.70 → Batch 3 BAR=0.50 (ΔBAR dispara) → Batch 5 BAR=0.00 (alerta umbral).
+
+#### Sprint A — Fix bug temporal en `computeTrend()` (`impl/go/pkg/barmonitor/monitor.go`)
+- Cuando el buffer circular está lleno, ΔBAR leía los halvos más nuevo/antiguo en orden invertido.
+  - Causa raíz: `ring[0..pos-1]` contiene las entradas MÁS NUEVAS cuando está lleno; leer `ring[0..half-1]` como "primera mitad (más antigua)" era incorrecto.
+  - Fix: cuando está lleno, empezar a leer desde `m.pos` (slot más antiguo) e iterar con `(start+i) % WindowSize`.
+  - Los 18 tests existentes confirman sin regresión.
+
+#### Sprint B — Invariantes TLA+ estructurales (`tla/ACP_Extended.tla`, `tla/ACP_Extended.cfg`)
+- Añadido `FailureConditionPreservation`: la capacidad estructural de producir DENIED siempre debe existir.
+  - Formalmente: `∃ cap ∈ Capabilities, res ∈ Resources: Decide(ComputeRiskWithAnom(cap, res, 0)) = "DENIED"`
+- Añadido `NoDegenerateAdmissibility`: solicitudes de alto riesgo (admin/financial × sensitive) nunca deben ser APPROVED.
+  - Formalmente: `∀i: (capability ∈ {admin,financial} ∧ resource = sensitive) ⟹ decision ≠ APPROVED`
+- INVARIANTS en `ACP_Extended.cfg`: 9 → 11 invariantes.
+- Ejecución TLC v1.25: 5,684,342 estados generados, 3,147,864 distintos, 0 violaciones, 34min 52s.
+
+#### Sprint C — Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`)
+- `main.go` — `handleCounterfactual()`: parsea `{base, mutations}`, llama `risk.EvaluateCounterfactual`, retorna `{bar, results}`.
+  - Mutaciones estructurales y conductuales soportadas vía HTTP; mutaciones temporales solo por librería.
+- `main_test.go` — 7 tests de integración (StructuralMutation, MultiMutation, NilMutation, MissingBase, EmptyMutations, Labels, UnknownResourceClass).
+
+### Fixed
+- Fix temporal en ring buffer de `computeTrend()` — dirección ΔBAR era incorrecta al wrappear el buffer.
+
+### Key results
+| Componente | Tests | Estado |
+|-----------|-------|--------|
+| `pkg/barmonitor` | 18/18 | ✅ PASS |
+| `cmd/acp-server` counterfactual | 7/7 | ✅ PASS |
+| TLA+ modelo extendido | 11 invariantes | ✅ 0 violaciones · 5,684,342 estados |
+
+---
+
+## [1.24.0] — v1.24 — 2026-04-07
+
+### Added
+
+#### pkg/barmonitor — Boundary Activation Monitoring
+- `impl/go/pkg/barmonitor/monitor.go` — `BARMonitor`: monitor BAR con ventana deslizante y detección de tendencia ΔBAR.
+  - `Config{WindowSize, Threshold, TrendThreshold}` — validación en construcción.
+  - `Record(d Decision) (*Alert, float64)` — registra una decisión, retorna BAR actual y alerta opcional.
+  - `AlertThreshold` dispara cuando `BAR_N < θ` (enforcement potencialmente inactivo).
+  - `AlertTrend` dispara cuando `ΔBAR < δ` — early warning dispara ANTES de que BAR alcance θ.
+  - ΔBAR = BAR(segunda mitad de ventana) − BAR(primera mitad); requiere ≥4 observaciones.
+  - Thread-safe (`sync.Mutex`); ring buffer circular; `Reset()` limpia estado.
+- `impl/go/pkg/barmonitor/monitor_test.go` — 18 tests.
+
+#### pkg/risk — API EvaluateCounterfactual
+- `impl/go/pkg/risk/counterfactual.go` — `EvaluateCounterfactual`: verifica que el deployment ACP retiene capacidad estructural de enforcement.
+  - `Mutation` struct: aditiva (solo campos no-nil sobreescriben base).
+  - `BAR([]CounterfactualResult) float64` — errores cuentan en denominador (semántica fail-closed).
+  - Factories: `StructuralMutation()` (RS=80→DENIED), `BehavioralMutation()` (RS=150→100→DENIED), `TemporalMutation(agentID)` (F_anom=+50).
+- `impl/go/pkg/risk/counterfactual_test.go` — 14 tests.
+
+### Key results
+| Componente | Tests | Estado |
+|-----------|-------|--------|
+| `pkg/barmonitor` | 18/18 | ✅ PASS |
+| `pkg/risk/counterfactual` | 14/14 | ✅ PASS |
+
+---
+
+## [1.23.0] — v1.23 — 2026-04-06
+
+### Added
+
+#### Experimento 9 — Deviation Collapse (`compliance/adversarial/`)
+- `exp_deviation_collapse.go` — Experimento 9: prueba si ACP es estructuralmente capaz de enforcement cuando la sanitización upstream suprime solicitudes que activan límites.
+  - Phase A (baseline): 20 casos → BAR_A = 0.70.
+  - Phase B (sanitizado): dataset reseteado → BAR_B = 0.00 (colapso confirmado).
+  - Phase C (counterfactual): 3 mutaciones evaluadas → BAR_C = 1.00.
+- `main.go` — flag `--exp=9` (`deviation-collapse`).
+
+### Key results (Experimento 9)
+| Fase | Descripción | BAR |
+|------|-------------|-----|
+| A — Baseline | Casos realistas mixtos (n=20) | 0.70 |
+| B — Sanitizado | Todas las señales de límite eliminadas | 0.00 |
+| C — Counterfactual | 3 mutaciones sintéticas aplicadas | 1.00 |
+
+---
+
 ## [1.20.0] — Sprint I (partial) — 2026-03-26
 
 ### Added

@@ -524,7 +524,7 @@ acp-framework/
 ├── tla/
 │   ├── ACP.tla                   ← modelo formal base — Safety · LedgerAppendOnly · RiskDeterminism (v1.17)
 │   ├── ACP.cfg                   ← configuración TLC para ACP.tla
-│   ├── ACP_Extended.tla          ← modelo extendido — F_anom · cooldown · liveness · 9 invariantes + 4 temporales (Sprint J2)
+│   ├── ACP_Extended.tla          ← modelo extendido — F_anom · cooldown · liveness · 11 invariantes + 4 temporales (v1.25)
 │   ├── ACP_Extended.cfg          ← config single-agent — 5,684,342 estados · 3,147,864 distintos · profundidad 15 · 0 violaciones
 │   └── ACP_Extended_2agents.cfg  ← config two-agent — verificación de aislamiento multi-agente (Sprint J2c)
 ├── archive/
@@ -611,7 +611,7 @@ curl http://localhost:8080/acp/v1/health
 | ACR-1.0 sequence compliance runner (`compliance/runner/`) | ✅ Completo — v1.17 · modo library + HTTP · 5/5 PASS |
 | Vectores de secuencia (`compliance/test-vectors/sequence/`) | ✅ Completo — v1.17 · 5 escenarios stateful |
 | Modelo TLA+ base (`tla/ACP.tla`) | ✅ Completo — v1.17 · 3 invariantes · 0 violaciones |
-| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.20 · 9 invariantes + 4 propiedades temporales · 5,684,342 estados · 0 violaciones |
+| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.25 · 11 invariantes + 4 propiedades temporales · 5,684,342 estados · 0 violaciones |
 | Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.23 · 9 experimentos · números reales de benchmark (N=5 corridas, media±std) |
 | Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.8× speedup |
 | ML-DSA-65 benchmarks (`pkg/sign2/sign2_bench_test.go`) | ✅ Completo — v1.20 · Ed25519 ~25 µs sign / ~56 µs verify · ML-DSA-65 ~100–130 µs sign / ~81 µs verify |
@@ -620,7 +620,12 @@ curl http://localhost:8080/acp/v1/health
 | Experimento 6: vulnerabilidad state-mixing (`pkg/risk/statemixing_test.go`) | ✅ Completo — v1.21 · contaminación cross-context Rule 1 · RS +20 · ESCALATED→DENIED tras 11 data.read |
 | Análisis state-mixing (paper §State-Mixing Vulnerability) | ✅ Completo — v1.21 · caracterización formal · números Exp 6 · camino de mitigación ACP-RISK-3.0 |
 | Fix state-mixing (Exp 7, `pkg/risk/statemixing_fix_test.go`) | ✅ Completo — v1.22 · RISK-3.0 · 3 escenarios · clean RS=50 ESCALATED · contaminado RS=50 ESCALATED · burst mismo-contexto RS=85 DENIED |
-| Deviation collapse (Exp 9, `compliance/adversarial/exp_deviation_collapse.go`) | ✅ Completo — v1.23 · métrica BAR · 3 fases: baseline BAR=0.70 → collapse BAR=0.00 → counterfactual BAR=1.00 · §Limits of Execution-Only Governance |
+| Deviation collapse (Exp 9, `compliance/adversarial/exp_deviation_collapse.go`) | ✅ Completo — v1.23 · 3 fases: baseline BAR=0.70 → collapse BAR=0.00 → counterfactual BAR=1.00 |
+| Phase D drift simulation (extensión Exp 9) | ✅ Completo — v1.25 · 5 batches × 20 casos · 0%→80% sanitización · ΔBAR early-warning dispara en batch 3 antes del umbral |
+| `pkg/barmonitor` — BAR-Monitor con detección de tendencia ΔBAR | ✅ Completo — v1.24 · 18 tests · AlertThreshold + AlertTrend · ring buffer thread-safe |
+| API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
+| TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.25 · 0 violaciones · 5,684,342 estados |
+| Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`) | ✅ Completo — v1.25 · 7 tests de integración · mutaciones estructurales + conductuales vía HTTP |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
