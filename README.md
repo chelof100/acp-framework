@@ -15,9 +15,9 @@ https://agentcontrolprotocol.xyz
 **Agent Control Protocol: Admission Control for Agent Actions**
 Marcelo Fernandez (TraslaIA), 2026
 
-DOI: [10.5281/zenodo.19473832](https://doi.org/10.5281/zenodo.19473832) — Zenodo (v1.25)
+DOI: [10.5281/zenodo.19485201](https://doi.org/10.5281/zenodo.19485201) — Zenodo (v1.27)
 
-arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v7 (v1.23)
+arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v8 (v1.27)
 
 ---
 
@@ -519,7 +519,7 @@ acp-framework/
 │   ├── ACP-TS-1.1.md      ← especificación del formato de vectores de prueba
 │   ├── test-vectors/      ← vectores de conformidad single-shot (CORE · DCMA · HP · LEDGER · EXEC · RISK-2.0)
 │   │   └── sequence/      ← vectores de secuencia stateful (ACR-1.0, 5 escenarios)
-│   ├── adversarial/       ← evaluación adversarial (Exp 1–4 + Exp 9: evasión de cooldown, multi-agente, backend stress, token replay, deviation collapse)
+│   ├── adversarial/       ← evaluación adversarial (Exp 1–12: evasión de cooldown, multi-agente, backend stress, token replay, deviation collapse, sensibilidad de umbrales, IPI multi-herramienta)
 │   └── runner/            ← compliance runner ACR-1.0 (modo library + modo HTTP)
 ├── tla/
 │   ├── ACP.tla                   ← modelo formal base — Safety · LedgerAppendOnly · RiskDeterminism (v1.17)
@@ -569,6 +569,12 @@ python examples/langchain_agent_demo.py
 pip install langchain langchain-openai
 export OPENAI_API_KEY=sk-...
 python examples/langchain_agent_demo.py --with-llm
+
+# Opción 7: Demo IPI con LLM real (Ollama + DeepSeek-R1:8b) — ACP bloquea fund_transfer inducido por IPI
+# Requiere: ollama serve && ollama pull deepseek-r1:8b
+cd demos/ollama-agent
+python agent_demo.py
+# ACP deniega todo fund_transfer inducido por IPI (RS=80); cooldown activa tras 3 denegaciones
 ```
 
 Health check:
@@ -626,6 +632,14 @@ curl http://localhost:8080/acp/v1/health
 | API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
 | TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.25 · 0 violaciones · 5,684,342 estados |
 | Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`) | ✅ Completo — v1.25 · 7 tests de integración · mutaciones estructurales + conductuales vía HTTP |
+| Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–11) | ✅ Completo — v1.26 · black-box / formula-aware / full-state · todos los experimentos mapeados |
+| Análisis de sensibilidad de umbrales (Exp 11, 5 configs ±10 pts) | ✅ Completo — v1.26 · tasa de falsa denegación 0.00 en todas · BAR monótono 0.75→0.60 · T3 óptimo local |
+| Garantías de detección — Proposición + P(detectar) binomial | ✅ Completo — v1.26 · W=40 τ=0.10 · P=1.00 en p₁=0.00 · P=0.95 en p₁=0.05 |
+| Comparación funcional con AgentSpec (5 dimensiones) | ✅ Completo — v1.26 · composable, no competitivo · detección de governance collapse como diferenciador |
+| Exp 12: control de admisión IPI multi-herramienta (`compliance/adversarial/exp_agent_multitool.go`) | ✅ Completo — v1.27 · 4 herramientas · 3 fases · BAR A=0.30/B=1.00/C=0.30 · persistencia F_anom 24h |
+| Demo IPI con LLM real (`demos/ollama-agent/agent_demo.py`) | ✅ Completo — v1.27 · DeepSeek-R1:8b · 5 turnos · IPI bloqueada · cooldown activado |
+| Análisis de tasa de falsa denegación (§False-Denial Rate Analysis) | ✅ Completo — v1.27 · 0.00 estado limpio (Exp 11) · 0.00 post-ataque bajo riesgo (Exp 12 Fase C) |
+| Modelo de madurez de despliegue (Tier 1/2/3) + perfiles PolicyConfig (Low/Medium/High/Critical) | ✅ Completo — v1.27 · BAR baseline por perfil · guía de migración RISK-2.0→RISK-3.0 |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
