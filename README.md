@@ -15,9 +15,9 @@ https://agentcontrolprotocol.xyz
 **Agent Control Protocol: Admission Control for Agent Actions**
 Marcelo Fernandez (TraslaIA), 2026
 
-DOI: [10.5281/zenodo.19485201](https://doi.org/10.5281/zenodo.19485201) — Zenodo (v1.27)
+DOI: [10.5281/zenodo.19559764](https://doi.org/10.5281/zenodo.19559764) — Zenodo (v1.28)
 
-arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v8 (v1.27)
+arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v8 (v1.28 — arXiv v9 pending)
 
 ---
 
@@ -617,8 +617,8 @@ curl http://localhost:8080/acp/v1/health
 | ACR-1.0 sequence compliance runner (`compliance/runner/`) | ✅ Completo — v1.17 · modo library + HTTP · 5/5 PASS |
 | Vectores de secuencia (`compliance/test-vectors/sequence/`) | ✅ Completo — v1.17 · 5 escenarios stateful |
 | Modelo TLA+ base (`tla/ACP.tla`) | ✅ Completo — v1.17 · 3 invariantes · 0 violaciones |
-| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.27 · 11 invariantes + 4 propiedades temporales · single-agent: 5,684,342 estados · two-agent LB=11: 4,294,930,695 estados distintos · 0 violaciones |
-| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.23 · 9 experimentos · números reales de benchmark (N=5 corridas, media±std) |
+| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.28 · 11 invariantes + 4 propiedades temporales · single-agent: 5,684,342 estados · two-agent LB=11: 4,294,930,695 estados distintos · 0 violaciones |
+| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.28 · 13 experimentos · números reales de benchmark (N=5 corridas, media±std) |
 | Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.8× speedup |
 | ML-DSA-65 benchmarks (`pkg/sign2/sign2_bench_test.go`) | ✅ Completo — v1.20 · Ed25519 ~25 µs sign / ~56 µs verify · ML-DSA-65 ~100–130 µs sign / ~81 µs verify |
 | NullQuerier + StatelessEngine (`pkg/risk/null_querier.go`, `stateless_engine.go`) | ✅ Completo — v1.21 · baseline stateless sin estado histórico para comparación directa |
@@ -632,7 +632,7 @@ curl http://localhost:8080/acp/v1/health
 | API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
 | TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.27 · 0 violaciones · 4,294,930,695 estados distintos (two-agent LB=11, 10.5h) |
 | Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`) | ✅ Completo — v1.25 · 7 tests de integración · mutaciones estructurales + conductuales vía HTTP |
-| Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–11) | ✅ Completo — v1.26 · black-box / formula-aware / full-state · todos los experimentos mapeados |
+| Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–13) | ✅ Completo — v1.28 · black-box / formula-aware / full-state · todos los experimentos mapeados |
 | Análisis de sensibilidad de umbrales (Exp 11, 5 configs ±10 pts) | ✅ Completo — v1.26 · tasa de falsa denegación 0.00 en todas · BAR monótono 0.75→0.60 · T3 óptimo local |
 | Garantías de detección — Proposición + P(detectar) binomial | ✅ Completo — v1.26 · W=40 τ=0.10 · P=1.00 en p₁=0.00 · P=0.95 en p₁=0.05 |
 | Comparación funcional con AgentSpec (5 dimensiones) | ✅ Completo — v1.26 · composable, no competitivo · detección de governance collapse como diferenciador |
@@ -640,6 +640,8 @@ curl http://localhost:8080/acp/v1/health
 | Demo IPI con LLM real (`demos/ollama-agent/agent_demo.py`) | ✅ Completo — v1.27 · DeepSeek-R1:8b · 5 turnos · IPI bloqueada · cooldown activado |
 | Análisis de tasa de falsa denegación (§False-Denial Rate Analysis) | ✅ Completo — v1.27 · 0.00 estado limpio (Exp 11) · 0.00 post-ataque bajo riesgo (Exp 12 Fase C) |
 | Modelo de madurez de despliegue (Tier 1/2/3) + perfiles PolicyConfig (Low/Medium/High/Critical) | ✅ Completo — v1.27 · BAR baseline por perfil · guía de migración RISK-2.0→RISK-3.0 |
+| Exp 13: Ventana de coordinación acotada (`compliance/adversarial/exp_coordination_window.go`) | ✅ Completo — v1.28 · CW=2N linealidad exacta · semántica evaluate-then-mutate · k₀=2 por agente · cota O(N) |
+| Sección LLM Agent Integration movida a §Technical Mechanisms | ✅ Completo — v1.28 · después de §Deterministic Risk Evaluation · composable con filtros IPI |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
