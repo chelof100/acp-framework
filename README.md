@@ -526,7 +526,7 @@ acp-framework/
 │   ├── ACP.cfg                   ← configuración TLC para ACP.tla
 │   ├── ACP_Extended.tla          ← modelo extendido — F_anom · cooldown · liveness · 11 invariantes + 4 temporales (v1.25)
 │   ├── ACP_Extended.cfg          ← config single-agent — 5,684,342 estados · 3,147,864 distintos · profundidad 15 · 0 violaciones
-│   └── ACP_Extended_2agents.cfg  ← config two-agent — verificación de aislamiento multi-agente (Sprint J2c)
+│   └── ACP_Extended_2agents.cfg  ← config two-agent — 4,294,930,695 estados distintos · LEDGER_BOUND=11 · 11 invariantes · 0 violaciones
 ├── archive/
 │   └── specs/         ← versiones de especificación supersedidas (referencia histórica)
 ├── impl/
@@ -617,7 +617,7 @@ curl http://localhost:8080/acp/v1/health
 | ACR-1.0 sequence compliance runner (`compliance/runner/`) | ✅ Completo — v1.17 · modo library + HTTP · 5/5 PASS |
 | Vectores de secuencia (`compliance/test-vectors/sequence/`) | ✅ Completo — v1.17 · 5 escenarios stateful |
 | Modelo TLA+ base (`tla/ACP.tla`) | ✅ Completo — v1.17 · 3 invariantes · 0 violaciones |
-| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.25 · 11 invariantes + 4 propiedades temporales · 5,684,342 estados · 0 violaciones |
+| Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.27 · 11 invariantes + 4 propiedades temporales · single-agent: 5,684,342 estados · two-agent LB=11: 4,294,930,695 estados distintos · 0 violaciones |
 | Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.23 · 9 experimentos · números reales de benchmark (N=5 corridas, media±std) |
 | Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.8× speedup |
 | ML-DSA-65 benchmarks (`pkg/sign2/sign2_bench_test.go`) | ✅ Completo — v1.20 · Ed25519 ~25 µs sign / ~56 µs verify · ML-DSA-65 ~100–130 µs sign / ~81 µs verify |
@@ -630,7 +630,7 @@ curl http://localhost:8080/acp/v1/health
 | Phase D drift simulation (extensión Exp 9) | ✅ Completo — v1.25 · 5 batches × 20 casos · 0%→80% sanitización · ΔBAR early-warning dispara en batch 2 (3 batches antes del colapso) |
 | `pkg/barmonitor` — BAR-Monitor con detección de tendencia ΔBAR | ✅ Completo — v1.24 · 18 tests · AlertThreshold + AlertTrend · ring buffer thread-safe |
 | API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
-| TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.25 · 0 violaciones · 5,684,342 estados |
+| TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.27 · 0 violaciones · 4,294,930,695 estados distintos (two-agent LB=11, 10.5h) |
 | Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`) | ✅ Completo — v1.25 · 7 tests de integración · mutaciones estructurales + conductuales vía HTTP |
 | Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–11) | ✅ Completo — v1.26 · black-box / formula-aware / full-state · todos los experimentos mapeados |
 | Análisis de sensibilidad de umbrales (Exp 11, 5 configs ±10 pts) | ✅ Completo — v1.26 · tasa de falsa denegación 0.00 en todas · BAR monótono 0.75→0.60 · T3 óptimo local |
