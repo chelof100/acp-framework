@@ -7,6 +7,29 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.29.0] — v1.29 — 2026-04-13
+
+### Añadido
+
+#### Experimento 14 — Comparación de Capacidad OPA vs ACP (`compliance/adversarial/exp_opa_benchmark.go`)
+- `RunOPABenchmark`: compara la capacidad de aplicación de ACP (stateful) vs ACP StatelessEngine vs OPA (Open Policy Agent v1.15.2, Rego v1).
+- Framing central: comparación de expresividad, no de performance. Los motores de política stateless no pueden aplicar restricciones dependientes del historial sin estado externo; ACP las aplica de forma nativa.
+- 3 escenarios: A (solicitud única — los tres coinciden), B (acumulación de frecuencia — 10 solicitudes), C (aplicación de cooldown).
+- Resultados Escenario B: ACP stateful APPROVED×2→ESCALATED×1→DENIED×3→COOLDOWN_ACTIVE×4; ACP stateless APPROVED×10; OPA puro allow=true×10. Primer ESCALATED: solicitud #3; primer DENIED: solicitud #4.
+- Resultados Escenario C: ACP stateful DENIED×3→COOLDOWN_ACTIVE×3; ACP stateless DENIED×6 (bucle, sin concepto de cooldown); OPA puro N/A (sin mecanismo de cooldown).
+- Variantes OPA+estado externo: aplican correctamente B/C cuando el caller inyecta `request_count` o `cooldown_active` — demostrando que la aplicación stateful debe ser diseñada alrededor de OPA.
+- Latencia (dato de soporte): ACP ~852 ns/op (50.000 iteraciones); OPA ~16.000 ns/op. La brecha refleja diferencia de modelo (Go nativo vs intérprete Rego), no complejidad algorítmica.
+- OPA invocado vía `os/exec` (`opa eval` + `opa bench`) — sin cambios en `go.mod`.
+
+#### Paper — v1.29
+- §Related Work — Verificación Formal y Aplicación en Runtime: ampliado de 2 oraciones a subsección completa cubriendo límite de expresividad OPA, distinción sistemas agénticos, argumento OPA+estado externo de revisores, alineación con autómata de seguridad de Schneider, referencia cruzada a §Experiment 14.
+- §Experiment 14: nueva sección con motivación, setup de 3 escenarios, resultados por escenario, tabla de matriz de capacidad, nota de latencia y resumen.
+- Tabla de taxonomía de adversario: fila Exp 14 añadida (motor stateless / evaluación stateless / 0 aplicados).
+- Tabla de roadmap: entrada Exp 14 añadida.
+- Todas las cadenas de versión actualizadas a v1.29.
+
+---
+
 ## [1.28.0] — v1.28 — 2026-04-13
 
 ### Añadido

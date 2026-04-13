@@ -618,7 +618,7 @@ curl http://localhost:8080/acp/v1/health
 | Vectores de secuencia (`compliance/test-vectors/sequence/`) | ✅ Completo — v1.17 · 5 escenarios stateful |
 | Modelo TLA+ base (`tla/ACP.tla`) | ✅ Completo — v1.17 · 3 invariantes · 0 violaciones |
 | Modelo TLA+ extendido (`tla/ACP_Extended.tla`) | ✅ Completo — v1.28 · 11 invariantes + 4 propiedades temporales · single-agent: 5,684,342 estados · two-agent LB=11: 4,294,930,695 estados distintos · 0 violaciones |
-| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.28 · 13 experimentos · números reales de benchmark (N=5 corridas, media±std) |
+| Evaluación adversarial (`compliance/adversarial/`) | ✅ Completo — v1.29 · 14 experimentos · números reales de benchmark (N=5 corridas, media±std) |
 | Redis pipelining (`compliance/adversarial/redis_pipelined.go`) | ✅ Completo — v1.20 · 2 RTTs/request · ~1.8× speedup |
 | ML-DSA-65 benchmarks (`pkg/sign2/sign2_bench_test.go`) | ✅ Completo — v1.20 · Ed25519 ~25 µs sign / ~56 µs verify · ML-DSA-65 ~100–130 µs sign / ~81 µs verify |
 | NullQuerier + StatelessEngine (`pkg/risk/null_querier.go`, `stateless_engine.go`) | ✅ Completo — v1.21 · baseline stateless sin estado histórico para comparación directa |
@@ -632,7 +632,7 @@ curl http://localhost:8080/acp/v1/health
 | API `EvaluateCounterfactual` (`impl/go/pkg/risk/counterfactual.go`) | ✅ Completo — v1.24 · 14 tests · 3 factories (estructural/conductual/temporal) · fail-closed |
 | TLA+ `FailureConditionPreservation` + `NoDegenerateAdmissibility` (11 invariantes) | ✅ Completo — v1.27 · 0 violaciones · 4,294,930,695 estados distintos (two-agent LB=11, 10.5h) |
 | Endpoint HTTP `POST /acp/v1/counterfactual` (`impl/go/cmd/acp-server/`) | ✅ Completo — v1.25 · 7 tests de integración · mutaciones estructurales + conductuales vía HTTP |
-| Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–13) | ✅ Completo — v1.28 · black-box / formula-aware / full-state · todos los experimentos mapeados |
+| Modelo formal de adversario A=(K,S,B) + taxonomía de experimentos (Exp 1–14) | ✅ Completo — v1.29 · black-box / formula-aware / full-state · todos los experimentos mapeados |
 | Análisis de sensibilidad de umbrales (Exp 11, 5 configs ±10 pts) | ✅ Completo — v1.26 · tasa de falsa denegación 0.00 en todas · BAR monótono 0.75→0.60 · T3 óptimo local |
 | Garantías de detección — Proposición + P(detectar) binomial | ✅ Completo — v1.26 · W=40 τ=0.10 · P=1.00 en p₁=0.00 · P=0.95 en p₁=0.05 |
 | Comparación funcional con AgentSpec (5 dimensiones) | ✅ Completo — v1.26 · composable, no competitivo · detección de governance collapse como diferenciador |
@@ -642,6 +642,8 @@ curl http://localhost:8080/acp/v1/health
 | Modelo de madurez de despliegue (Tier 1/2/3) + perfiles PolicyConfig (Low/Medium/High/Critical) | ✅ Completo — v1.27 · BAR baseline por perfil · guía de migración RISK-2.0→RISK-3.0 |
 | Exp 13: Ventana de coordinación acotada (`compliance/adversarial/exp_coordination_window.go`) | ✅ Completo — v1.28 · CW=2N linealidad exacta · semántica evaluate-then-mutate · k₀=2 por agente · cota O(N) |
 | Sección LLM Agent Integration movida a §Technical Mechanisms | ✅ Completo — v1.28 · después de §Deterministic Risk Evaluation · composable con filtros IPI |
+| Exp 14: Comparación de capacidad OPA vs ACP (`compliance/adversarial/exp_opa_benchmark.go`) | ✅ Completo — v1.29 · 3 escenarios · motores stateless no pueden aplicar frecuencia/cooldown sin estado externo · ACP aplica de forma nativa · ~852 ns/op ACP vs ~16,000 ns/op OPA |
+| §Related Work — Verificación Formal y Aplicación en Runtime (ampliado) | ✅ Completo — v1.29 · límite de expresividad OPA · alineación con autómata de seguridad de Schneider · referencia cruzada Exp 14 |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |
