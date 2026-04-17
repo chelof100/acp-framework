@@ -21,6 +21,22 @@ arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v8 (v1.28 — arXiv v9
 
 ---
 
+## Serie de Investigación
+
+ACP es la base publicada de una serie de cinco papers sobre gobernanza formal de agentes. Cada paper aborda una capa distinta del stack de gobernanza.
+
+| Paper | Título | Repo | Estado |
+|---|---|---|---|
+| **Paper 0** | Fronteras de Decisión Atómica | [decision-boundary-model](https://github.com/chelof100/decision-boundary-model) | En preparación |
+| **Paper 1** | Agent Control Protocol (ACP) — este repo | [acp-framework](https://github.com/chelof100/acp-framework) | **Publicado** — arXiv:2603.18829 |
+| **Paper 2** | De Admisión a Invariantes (IML) | [iml-benchmark](https://github.com/chelof100/iml-benchmark) | En preparación |
+| **Paper 3** | Gobernanza Atómica Justa | [fair-atomic-governance](https://github.com/chelof100/fair-atomic-governance) | En preparación |
+| **Paper 4** | Gobernanza Multi-Escala Irreducible | [compositional-governance](https://github.com/chelof100/compositional-governance) | En preparación |
+
+**Lógica de la serie:** Paper 0 prueba *cuándo* puede garantizarse admisibilidad → Paper 1 (ACP) construye el protocolo → Paper 2 detecta deriva invisible al enforcement → Paper 3 prueba que enforcement correcto ≠ asignación justa → Paper 4 compone las cuatro capas y prueba su necesidad conjunta.
+
+---
+
 ## Por Qué Existe ACP
 
 Los agentes autónomos están pasando de la experimentación a la producción. Ya interactúan con APIs, sistemas empresariales, infraestructura financiera y otros agentes.
