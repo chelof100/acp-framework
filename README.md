@@ -15,25 +15,24 @@ https://agentcontrolprotocol.xyz
 **Agent Control Protocol: Admission Control for Agent Actions**
 Marcelo Fernandez (TraslaIA), 2026
 
-DOI: [10.5281/zenodo.19561638](https://doi.org/10.5281/zenodo.19561638) — Zenodo (v1.29)
-
-arXiv: [2603.18829](https://arxiv.org/abs/2603.18829) — v8 (v1.28 — arXiv v9 pending)
+DOI: [10.5281/zenodo.19672575](https://doi.org/10.5281/zenodo.19672575) &nbsp;·&nbsp; arXiv: [2603.18829](https://arxiv.org/abs/2603.18829)
 
 ---
 
 ## Serie de Investigación
 
-ACP es la base publicada de una serie de cinco papers sobre gobernanza formal de agentes. Cada paper aborda una capa distinta del stack de gobernanza.
+ACP es la base publicada de una serie de seis papers sobre gobernanza formal de agentes. Cada paper aborda una capa distinta del stack de gobernanza.
 
 | Paper | Título | Repo | Estado |
 |---|---|---|---|
-| **Paper 0** | Fronteras de Decisión Atómica | [decision-boundary-model](https://github.com/chelof100/decision-boundary-model) | En preparación |
-| **Paper 1** | Agent Control Protocol (ACP) — este repo | [acp-framework](https://github.com/chelof100/acp-framework) | **Publicado** — arXiv:2603.18829 |
-| **Paper 2** | De Admisión a Invariantes (IML) | [iml-benchmark](https://github.com/chelof100/iml-benchmark) | En preparación |
-| **Paper 3** | Gobernanza Atómica Justa | [fair-atomic-governance](https://github.com/chelof100/fair-atomic-governance) | En preparación |
-| **Paper 4** | Gobernanza Multi-Escala Irreducible | [compositional-governance](https://github.com/chelof100/compositional-governance) | En preparación |
+| **Paper 0** | Fronteras de Decisión Atómica | [decision-boundary-model](https://github.com/chelof100/decision-boundary-model) | [Zenodo](https://doi.org/10.5281/zenodo.19670649) · [arXiv:2604.17511](https://arxiv.org/abs/2604.17511) |
+| **Paper 1** | Agent Control Protocol (ACP) — este repo | [acp-framework](https://github.com/chelof100/acp-framework) | [Zenodo](https://doi.org/10.5281/zenodo.19672575) · [arXiv:2603.18829](https://arxiv.org/abs/2603.18829) |
+| **Paper 2** | De Admisión a Invariantes (IML) | [iml-benchmark](https://github.com/chelof100/iml-benchmark) | [Zenodo](https://doi.org/10.5281/zenodo.19672589) · [arXiv:2604.17517](https://arxiv.org/abs/2604.17517) |
+| **Paper 3** | Gobernanza Atómica Justa | [fair-atomic-governance](https://github.com/chelof100/fair-atomic-governance) | [Zenodo](https://doi.org/10.5281/zenodo.19672597) · arXiv: bajo revisión |
+| **Paper 4** | Gobernanza Multi-Escala Irreducible | [compositional-governance](https://github.com/chelof100/compositional-governance) | [Zenodo](https://doi.org/10.5281/zenodo.19672608) · arXiv: bajo revisión |
+| **Paper 5** | Modelo de Autoridad Reconstructiva (RAM) | [reconstructive-authority-model](https://github.com/chelof100/reconstructive-authority-model) | [Zenodo](https://doi.org/10.5281/zenodo.19669430) · arXiv: bajo revisión |
 
-**Lógica de la serie:** Paper 0 prueba *cuándo* puede garantizarse admisibilidad → Paper 1 (ACP) construye el protocolo → Paper 2 detecta deriva invisible al enforcement → Paper 3 prueba que enforcement correcto ≠ asignación justa → Paper 4 compone las cuatro capas y prueba su necesidad conjunta.
+**Lógica de la serie:** Paper 0 prueba *cuándo* puede garantizarse admisibilidad → Paper 1 (ACP) construye el protocolo → Paper 2 detecta deriva invisible al enforcement → Paper 3 prueba que enforcement correcto ≠ asignación justa → Paper 4 compone todas las capas y prueba su necesidad conjunta → Paper 5 (RAM) provee cierre operacional: cuándo ejecutar bajo observabilidad parcial.
 
 ---
 
@@ -660,6 +659,7 @@ curl http://localhost:8080/acp/v1/health
 | Sección LLM Agent Integration movida a §Technical Mechanisms | ✅ Completo — v1.28 · después de §Deterministic Risk Evaluation · composable con filtros IPI |
 | Exp 14: Comparación de capacidad OPA vs ACP (`compliance/adversarial/exp_opa_benchmark.go`) | ✅ Completo — v1.29 · 3 escenarios · motores stateless no pueden aplicar frecuencia/cooldown sin estado externo · ACP aplica de forma nativa · ~852 ns/op ACP vs ~16,000 ns/op OPA |
 | §Related Work — Verificación Formal y Aplicación en Runtime (ampliado) | ✅ Completo — v1.29 · límite de expresividad OPA · alineación con autómata de seguridad de Schneider · referencia cruzada Exp 14 |
+| Integración serie de gobernanza: Papers 3–4 citados en §15; entrada bib `fernandez2026comp` | ✅ Completo — v1.30 |
 | Modelo de confianza ITA (paper §Trust Model and Failure Modes) | ✅ Completo — v1.20 · bootstrap / compromise window / revocation authority — claims semi-formales |
 | TypeScript SDK (`impl/typescript/`) | ✅ Completo — v1.4.0 · zero-deps · 68 tests |
 | Rust SDK (`impl/rust/`) | ✅ Completo — v1.4.0 · ed25519-dalek v2 · 43 tests |

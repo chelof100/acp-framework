@@ -1,33 +1,33 @@
 ARQUITECTURA SOBERANA DE IA
 Framework Completo v1.0
 TraslaIA | 23 de febrero de 2026
-Estructura Óptima (Tu Marco Completo)
-Nivel 1 – Marco Estratégico
-Arquitectura Soberana de IA
+Optimal Structure (Your Complete Framework)
+Level 1 – Strategic Framework
+Sovereign AI Architecture
 
-Define independencia institucional
-Define sustitución de modelos y proveedores
-Define control institucional real
+Defines institutional independence
+Defines model and provider substitution
+Defines real institutional control
 
-Este es el por qué: la decisión estratégica de alto nivel de toda organización que quiere operar agentes autónomos sin perder su soberanía.
-Nivel 2 – Marco Arquitectónico
-Modelo GAT – Gobernanza Arquitectónica de Agentes
+This is the WHY: the high-level strategic decision for any organization that wants to operate autonomous agents without losing its sovereignty.
+Level 2 – Architectural Framework
+GAT Model – Architectural Governance of Agents
 
-Define separación estricta entre decisión y ejecución
-Define trazabilidad estructural obligatoria
-Define gobernanza multiagente
+Defines strict separation between decision and execution
+Defines mandatory structural traceability
+Defines multi-agent governance
 
-Este es el qué: el modelo de referencia arquitectónica que transforma la gobernanza abstracta en principios de diseño concretos.
-Nivel 3 – Protocolo Operativo
+This is the WHAT: the architectural reference model that transforms abstract governance into concrete design principles.
+Level 3 – Operational Protocol
 ACP – Agent Control Protocol
 
-Define exactamente cómo se valida una acción
-Define estructura de mensajes y tokens
-Define control dinámico de permisos
-Define auditoría estructurada
-Define límites de delegación encadenada
+Defines exactly how an action is validated
+Defines message and token structure
+Defines dynamic permission control
+Defines structured auditing
+Defines chained delegation limits
 
-Este es el cómo: el lenguaje técnico que hace ejecutable el GAT dentro de una Arquitectura Soberana.
+This is the HOW: the technical language that makes GAT executable within a Sovereign Architecture.
 ACP es el lenguaje técnico que implementa GAT dentro de una Arquitectura Soberana de IA.
 
 Por qué esta estructura importa
@@ -38,39 +38,11 @@ Decisión Estratégica → Diseño Arquitectónico → Ejecución Operativa
 
 Cómo se mapean los niveles a la implementación real
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-NivelNombreResponsabilidadEntregables claveObjetivo de madurez1Arquitectura Soberana de IAEstrategia institucional y soberaníaPolítica de board, roadmap de sustituciónTodas las organizaciones2Modelo GATArquitectura de sistemas y principiosModelo de 6 capas, matriz de madurez, reglas de orquestaciónEquipos de arquitectura3Protocolo ACPEjecución en tiempo real y auditoríaCapability Tokens, Execution Tokens, Audit Ledger, Motor de RiesgoEquipos de ingeniería
+| Nivel | Nombre | Responsabilidad | Entregables clave | Objetivo de madurez |
+|---|---|---|---|---|
+| 1 | Arquitectura Soberana de IA | Estrategia institucional y soberanía | Política de board, roadmap de sustitución | Todas las organizaciones |
+| 2 | Modelo GAT | Arquitectura de sistemas y principios | Modelo de 6 capas, matriz de madurez, reglas de orquestación | Equipos de arquitectura |
+| 3 | Protocolo ACP | Ejecución en tiempo real y auditoría | Capability Tokens, Execution Tokens, Audit Ledger, Motor de Riesgo | Equipos de ingeniería |
 
 Las Seis Capas del Agente (Nivel 2)
 Todo agente en producción se construye con estas seis capas explícitas:
@@ -86,57 +58,19 @@ Principio fundamental (P1): Separación estricta entre Decisión y Ejecución.
 
 Matriz de Madurez GAT (Nivel 2)
 
+| Nivel | Nombre | Capacidad clave | Tiempo típico |
+|---|---|---|---|
+| 0 | Automatización básica | Decisión y ejecución acopladas | — |
+| 1 | Validación estructural | Separación básica | 4-6 semanas |
+| 2 | Trazabilidad completa | Logs estructurados + Audit Ledger ACP | 8-12 semanas |
+| 3 | Control dinámico | Gestión de permisos en tiempo real | 12-16 semanas |
+| 4 | Gobernanza multiagente | Orquestación + límites de delegación | 4-6 meses |
+| 5 | Arquitectura soberana completa | Desacoplamiento total de proveedor | 6-9 meses |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-NivelNombreCapacidad claveTiempo típico0Automatización básicaDecisión y ejecución acopladas—1Validación estructuralSeparación básica4-6 semanas2Trazabilidad completaLogs estructurados + Audit Ledger ACP8-12 semanas3Control dinámicoGestión de permisos en tiempo real12-16 semanas4Gobernanza multiagenteOrquestación + límites de delegación4-6 meses5Arquitectura soberana completaDesacoplamiento total de proveedor6-9 meses
 La mayoría de implementaciones actuales no superan el Nivel 1.
 
 Conclusión
-La era de “simplemente conectar el LLM a tus sistemas” ha terminado.
+La era de "simplemente conectar el LLM a tus sistemas" ha terminado.
 Las organizaciones ahora enfrentan una elección clara:
 
 Operar agentes con una Arquitectura Soberana de IA (GAT + ACP)

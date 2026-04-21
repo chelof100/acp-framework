@@ -1,66 +1,52 @@
-Objetivo
+## Objetivo
 
 Construir una versión mínima operativa del sistema ACP que permita:
 
-Emisión de Capability Tokens
-
-Verificación criptográfica
-
-Validación contextual
-
-Revocación básica
-
-Prevención de replay
+- Emisión de Capability Tokens
+- Verificación criptográfica
+- Validación contextual
+- Revocación básica
+- Prevención de replay
 
 Sin dependencia de infraestructura compleja.
 
-1.1 Componentes del MVP
-A. Issuer
+## 1.1 Componentes del MVP
+
+### A. Issuer
 
 Servicio que:
 
-Genera clave Ed25519
+- Genera clave Ed25519
+- Emite tokens firmados
+- Asigna:
+  - subject_id
+  - capability_set
+  - constraints
+  - expiry
+  - nonce
 
-Emite tokens firmados
-
-Asigna:
-
-subject_id
-
-capability_set
-
-constraints
-
-expiry
-
-nonce
-
-B. Verifier
+### B. Verifier
 
 Servicio que:
 
-Verifica firma
+- Verifica firma
+- Verifica expiry
+- Verifica nonce
+- Evalúa constraints
+- Consulta lista de revocación
 
-Verifica expiry
-
-Verifica nonce
-
-Evalúa constraints
-
-Consulta lista de revocación
-
-C. Revocation Store
+### C. Revocation Store
 
 Implementación simple:
 
-Lista hash de token_id revocados
+- Lista hash de token_id revocados
+- Opcional: Bloom filter para eficiencia
 
-Opcional: Bloom filter para eficiencia
-
-1.2 Especificación del Token (MVP)
+## 1.2 Especificación del Token (MVP)
 
 Formato serializado JSON canónico:
 
+```json
 {
   "iss": "did:acp:issuer01",
   "sub": "did:acp:user123",
@@ -78,70 +64,68 @@ Formato serializado JSON canónico:
     }
   ]
 }
+```
 
 Firmado con:
 
+```
 Ed25519
 signature = Sign(sk_issuer, hash(canonical_token))
-1.3 Flujo Operativo
-Emisión
+```
 
-Cliente autenticado
+## 1.3 Flujo Operativo
 
-Issuer construye payload
+### Emisión
 
-Firma
+1. Cliente autenticado
+2. Issuer construye payload
+3. Firma
+4. Devuelve token firmado
 
-Devuelve token firmado
+### Acceso
 
-Acceso
+1. Cliente presenta token
+2. Verifier:
+   - Verifica firma
+   - Verifica exp
+   - Verifica nonce no usado
+   - Evalúa constraints
+   - Verifica no revocado
+3. Si todo válido → acceso
 
-Cliente presenta token
+## 1.4 Código de Referencia (Pseudo)
 
-Verifier:
+### Firma
 
-Verifica firma
-
-Verifica exp
-
-Verifica nonce no usado
-
-Evalúa constraints
-
-Verifica no revocado
-
-Si todo válido → acceso
-
-1.4 Código de Referencia (Pseudo)
-Firma
+```python
 from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
 
 sk = SigningKey.generate()
 signed = sk.sign(token_bytes)
-Verificación
+```
+
+### Verificación
+
+```python
 from nacl.signing import VerifyKey
 
 vk = VerifyKey(pubkey_bytes)
 vk.verify(signed_token)
-1.5 Seguridad del MVP
+```
+
+## 1.5 Seguridad del MVP
 
 Protege contra:
 
-Falsificación
-
-Replay (con nonce store)
-
-Escalada de privilegios
-
-Token forging
-
-Token tampering
+- Falsificación
+- Replay (con nonce store)
+- Escalada de privilegios
+- Token forging
+- Token tampering
 
 No protege aún contra:
 
-Issuer malicioso
-
-Compromiso de clave privada
-
-Collusión verificadores
+- Issuer malicioso
+- Compromiso de clave privada
+- Collusión verificadores
